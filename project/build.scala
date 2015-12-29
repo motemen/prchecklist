@@ -21,6 +21,7 @@ object GithubReleasePullRequestsChecklistBuild extends Build {
       version := Version,
       scalaVersion := ScalaVersion,
       scalacOptions += "-deprecation",
+      scalacOptions += "-feature",
       resolvers += Classpaths.typesafeReleases,
       resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
       libraryDependencies ++= Seq(
@@ -49,7 +50,19 @@ object GithubReleasePullRequestsChecklistBuild extends Build {
             Some("templates")
           )
         )
-      }
+      },
+      fork in Test := true,
+      javaOptions in Test += "-Ddatabase.url=jdbc:postgresql:prchecklist_test",
+      testOptions in Test += Tests.Setup(
+        () => {
+          import scala.sys.process._
+          import scala.language.postfixOps
+
+          "dropdb prchecklist_test" #&&
+          "createdb prchecklist_test" #&&
+          "psql prchecklist_test -f db/prchecklist.sql" !!
+        }
+      )
     )
   )
 }

@@ -18,6 +18,34 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
+  def withChecklist[T](repo: GitHubRepository, number: Int)(f: Checklist => T): Any = {
+    GitHubPullRequestService
+      .getPullRequestFull(repo, number)
+      .attemptRun.fold(
+        e => BadRequest(s"reason: $e"),
+        pr =>
+          new AsyncResult {
+            val is =
+              ChecklistService.getChecklist(pr).map {
+                case None =>
+                  NotFound()
+
+                case Some(checklist) =>
+                  f(checklist)
+              }
+          }
+      )
+  }
+
+  def getVisitor: Option[Visitor] = {
+    for {
+      login <- session.get("userLogin")
+      accessToken <- session.get("accessToken")
+    } yield {
+      Visitor(login = login.asInstanceOf[String], accessToken = accessToken.asInstanceOf[String])
+    }
+  }
+
   get("/") {
     <html>
       <body>
@@ -28,6 +56,28 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     </html>
   }
 
+  // POST /example/webapp/pull/456/checks/@me/123 {"checked":true}
+  post("/:owner/:project/pull/:number/checks/@me/:featureNumber") {
+    val owner         = params('owner)
+    val project       = params('project)
+    val number        = params('number).toInt
+    val featureNumber = params('featureNumber).toInt
+
+    val repo = GitHubRepository(owner, project)
+
+    getVisitor match {
+      case None => Forbidden()
+
+      case Some(visitor) =>
+        withChecklist(repo, number) {
+          checklist =>
+            ChecklistService.checkChecklist(
+              checklist, visitor, featureNumber
+            )
+        }
+    }
+  }
+
   get("/:owner/:project/pull/:number") {
     val owner   = params('owner)
     val project = params('project)
@@ -35,24 +85,20 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
 
     val repo = GitHubRepository(owner, project)
 
-    val res = GitHubPullRequestService.getPullRequestFull(repo, number)
-    res.attemptRun.fold(
-      e => BadRequest(s"reason: $e"),
-      pr =>
-        new AsyncResult {
-          val is =
-            ChecklistService.getChecklist(pr).map {
-              checklists =>
-                <html>
-                  <body>
-                    <pre>
-                      {checklists.toList}
-                    </pre>
-                  </body>
-                </html>
+    withChecklist(repo, number) {
+      checklist =>
+        <html>
+          <body>
+            <ul>
+            {
+              checklist.checks.map {
+                check => <li>{check}</li>
+              }
             }
-        }
-    )
+          </ul>
+        </body>
+      </html>
+    }
   }
 
   get("/auth") {
