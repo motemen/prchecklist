@@ -8,6 +8,9 @@ import com.github.tarao.nonempty.NonEmpty
 
 import org.scalatra._
 
+import org.json4s
+import org.json4s.native.Serialization
+
 import scalaz.syntax.std.option._
 
 class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with FutureSupport {
@@ -79,7 +82,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     val repo = GitHubRepo(owner, repoName)
 
     getVisitor match {
-      case None => ???
+      case None => redirect("/auth")
       case Some(visitor) =>
         withChecklist(visitor, repo, number) {
           checklist =>
@@ -94,6 +97,24 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
                 </ul>
               </body>
             </html>
+        }
+    }
+  }
+
+  get("/api/:owner/:repoName/pull/:number") {
+    val owner = params('owner)
+    val repoName = params('repoName)
+    val number = params('number).toInt
+
+    val repo = GitHubRepo(owner, repoName)
+    getVisitor match {
+      case None => redirect("/auth")
+      case Some(visitor) =>
+        withChecklist(visitor, repo, number) {
+          checklist =>
+            implicit val formats = Serialization.formats(json4s.NoTypeHints)
+            response.setHeader("Content-Type", "application/json; charset=utf-8")
+            Serialization.write(checklist)
         }
     }
   }
