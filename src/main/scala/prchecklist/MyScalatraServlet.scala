@@ -50,13 +50,13 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
   }
 
   // POST /example/webapp/pull/456/checks/@me/123 {"checked":true}
-  post("/:owner/:project/pull/:number/checks/@me/:featureNumber") {
+  post("/:owner/:repoName/pull/:number/checks/@me/:featureNumber") {
     val owner         = params('owner)
-    val project       = params('project)
+    val repoName       = params('repoName)
     val number        = params('number).toInt
     val featureNumber = params('featureNumber).toInt
 
-    val repo = GitHubRepo(owner, project)
+    val repo = GitHubRepo(owner, repoName)
 
     getVisitor match {
       case None => Forbidden()
@@ -71,12 +71,12 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     }
   }
 
-  get("/:owner/:project/pull/:number") {
+  get("/:owner/:repoName/pull/:number") {
     val owner   = params('owner)
-    val project = params('project)
+    val repoName = params('repoName)
     val number  = params('number).toInt
 
-    val repo = GitHubRepo(owner, project)
+    val repo = GitHubRepo(owner, repoName)
 
     getVisitor match {
       case None => ???

@@ -4,6 +4,7 @@ import org.scalatra.sbt._
 import org.scalatra.sbt.PluginKeys._
 import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
+import com.typesafe.sbt.SbtScalariform._
 
 object GithubReleasePullRequestsChecklistBuild extends Build {
   val Organization = "net.tokyoenvious"
@@ -15,7 +16,7 @@ object GithubReleasePullRequestsChecklistBuild extends Build {
   lazy val project = Project (
     "github-release-pull-requests-checklist",
     file("."),
-    settings = ScalatraPlugin.scalatraSettings ++ scalateSettings ++ Seq(
+    settings = ScalatraPlugin.scalatraSettings ++ scalateSettings ++ scalariformSettings ++ Seq(
       organization := Organization,
       name := Name,
       version := Version,

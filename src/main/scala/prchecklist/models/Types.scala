@@ -14,8 +14,8 @@ case class ReleasePullRequest(
   def url: String = s"https://github.com/${repo.fullName}/pull/$number"
 }
 
-case class GitHubRepo(owner: String, project: String) {
-  def fullName = s"$owner/$project"
+case class GitHubRepo(owner: String, name: String) {
+  def fullName = s"$owner/$name"
 }
 
 case class Check(pullRequestNumber: Int, checkedUsers: List[User]) {
