@@ -10,19 +10,15 @@ object JsonTypes {
     title: String,
     body: String,
     head: GitHubCommitRef,
-    base: GitHubCommitRef
-  )
+    base: GitHubCommitRef)
 
   case class GitHubCommit(
     sha: String,
-    commit: GitHubCommitDetail
-  )
+    commit: GitHubCommitDetail)
 
   case class GitHubCommitDetail(
-    message: String
-  )
+    message: String)
 
   case class GitHubCommitRef(
-    sha: String
-  )
+    sha: String)
 }

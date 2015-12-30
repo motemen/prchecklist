@@ -2,7 +2,7 @@ package prchecklist.services
 
 import prchecklist.models._
 
-import com.github.tarao.slickjdbc.interpolation.{SQLInterpolation,CompoundParameter}
+import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
 
 import slick.driver.PostgresDriver.api.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
@@ -56,17 +56,16 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
          |   AND feature_pr_number IN (${releasePR.featurePullRequestNumbers})
           """.as[(Int, String)]
     ).map {
-      rows =>
-        val prNumberToUserNames: Map[Int, List[String]]
-        = rows.toList.groupBy(_._1) .mapValues { _.map(_._2) }
+        rows =>
+          val prNumberToUserNames: Map[Int, List[String]] = rows.toList.groupBy(_._1).mapValues { _.map(_._2) }
 
-        releasePR.featurePullRequestNumbers.map {
-          nr =>
-            val checkedUsers = prNumberToUserNames.getOrElse(nr, List()).map {
-              name => User(name)
-            }
-            (nr, Check(nr, checkedUsers))
-        }.toMap
-    }
+          releasePR.featurePullRequestNumbers.map {
+            nr =>
+              val checkedUsers = prNumberToUserNames.getOrElse(nr, List()).map {
+                name => User(name)
+              }
+              (nr, Check(nr, checkedUsers))
+          }.toMap
+      }
   }
 }

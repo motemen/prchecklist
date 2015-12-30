@@ -12,9 +12,10 @@ import com.github.tarao.nonempty.NonEmpty
 class GitHubPullRequestService(val visitor: Visitor) {
   def mergedPullRequestNumbers(commits: List[JsonTypes.GitHubCommit]): List[Int] = {
     commits.flatMap {
-      c => """^Merge pull request #(\d+) """.r.findFirstMatchIn(c.commit.message) map {
-        m => m.group(1).toInt
-      }
+      c =>
+        """^Merge pull request #(\d+) """.r.findFirstMatchIn(c.commit.message) map {
+          m => m.group(1).toInt
+        }
     }
   }
 

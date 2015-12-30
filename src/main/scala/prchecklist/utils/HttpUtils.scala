@@ -3,7 +3,7 @@ package prchecklist.utils
 import org.json4s
 import org.json4s.native.JsonMethods
 
-import scalaj.http.{Http, HttpRequest, HttpResponse}
+import scalaj.http.{ Http, HttpRequest, HttpResponse }
 
 import scalaz.\/
 import scalaz.syntax.std.option._

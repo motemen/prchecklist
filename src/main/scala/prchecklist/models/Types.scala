@@ -2,15 +2,14 @@ package prchecklist.models
 
 import com.github.tarao.nonempty.NonEmpty
 
-case class ReleaseChecklist(pullRequest: ReleasePullRequest, checks: Map[Int,Check])
+case class ReleaseChecklist(pullRequest: ReleasePullRequest, checks: Map[Int, Check])
 
 case class ReleasePullRequest(
-  repo: GitHubRepo,
-  number: Int,
-  title: String,
-  body: String,
-  featurePullRequestNumbers: NonEmpty[Int]
-) {
+    repo: GitHubRepo,
+    number: Int,
+    title: String,
+    body: String,
+    featurePullRequestNumbers: NonEmpty[Int]) {
   def url: String = s"https://github.com/${repo.fullName}/pull/$number"
 }
 

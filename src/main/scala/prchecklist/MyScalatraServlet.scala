@@ -13,7 +13,7 @@ import scalaz.syntax.std.option._
 class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with FutureSupport {
   import HttpUtils._
 
-  val CLIENT_ID     = System.getProperty("github.clientId").ensuring(_ != null)
+  val CLIENT_ID = System.getProperty("github.clientId").ensuring(_ != null)
   val CLIENT_SECRET = System.getProperty("github.clientSecret").ensuring(_ != null)
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
@@ -44,16 +44,16 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
       <body>
         <h1>Hello, world!</h1>
         <a href="/auth">auth</a>
-        <span>{session.get("userLogin")}</span>
+        <span>{ session.get("userLogin") }</span>
       </body>
     </html>
   }
 
   // POST /example/webapp/pull/456/checks/@me/123 {"checked":true}
   post("/:owner/:repoName/pull/:number/checks/@me/:featureNumber") {
-    val owner         = params('owner)
-    val repoName       = params('repoName)
-    val number        = params('number).toInt
+    val owner = params('owner)
+    val repoName = params('repoName)
+    val number = params('number).toInt
     val featureNumber = params('featureNumber).toInt
 
     val repo = GitHubRepo(owner, repoName)
@@ -72,9 +72,9 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
   }
 
   get("/:owner/:repoName/pull/:number") {
-    val owner   = params('owner)
+    val owner = params('owner)
     val repoName = params('repoName)
-    val number  = params('number).toInt
+    val number = params('number).toInt
 
     val repo = GitHubRepo(owner, repoName)
 
@@ -87,9 +87,9 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
               <body>
                 <ul>
                   {
-                  checklist.checks.map {
-                    check => <li>{check}</li>
-                  }
+                    checklist.checks.map {
+                      check => <li>{ check }</li>
+                    }
                   }
                 </ul>
               </body>
