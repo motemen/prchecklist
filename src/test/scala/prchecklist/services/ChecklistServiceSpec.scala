@@ -1,34 +1,24 @@
 package prchecklist.services
 
+import com.github.tarao.nonempty.NonEmpty
 import org.scalatest._
 
 import prchecklist.models._
 
-import scala.concurrent._
-import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.scalatest.time._
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures {
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))
 
-  val emptyPullRequest = JsonTypes.GitHubPullRequest(number = 0, url = "", title = "", body = "")
-
   test("checkChecklist succeeds") {
-    val checklist = Checklist(
-      pullRequest = GitHubPullRequestFull(
-        repository = GitHubRepository("test-owner", "test-project"),
-        detail = emptyPullRequest.copy(number = 1),
-        commits = List(
-          JsonTypes.GitHubCommit(
-            sha = "",
-            commit = JsonTypes.GitHubCommitDetail("Merge pull request #2 from ...")
-          ),
-          JsonTypes.GitHubCommit(
-            sha = "",
-            commit = JsonTypes.GitHubCommitDetail("Merge pull request #3 from ...")
-          )
-        )
+    val checklist = ReleaseChecklist(
+      pullRequest = ReleasePullRequest(
+        repo = GitHubRepo("test-owner", "test-project"),
+        number = 1,
+        title = "",
+        body = "",
+        featurePullRequestNumbers = NonEmpty(2, 3)
       ),
       checks = Map.empty
     )
@@ -43,10 +33,10 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     }
 
     whenReady(fut) {
-      checklistOption =>
-        checklistOption.flatMap(_.checks.get(2)).value shouldBe 'checked
-        checklistOption.flatMap(_.checks.get(3)).value shouldNot be ('checked)
-        checklistOption.flatMap(_.checks.get(4)) shouldBe 'empty
+      checklist =>
+        checklist.checks.get(2).value shouldBe 'checked
+        checklist.checks.get(3).value shouldNot be ('checked)
+        checklist.checks.get(4) shouldBe 'empty
     }
   }
 }

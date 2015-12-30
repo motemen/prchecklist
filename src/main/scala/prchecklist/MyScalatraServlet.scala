@@ -18,21 +18,14 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
-  def withChecklist[T](repo: GitHubRepository, number: Int)(f: Checklist => T): Any = {
-    GitHubPullRequestService
-      .getPullRequestFull(repo, number)
+  def withChecklist[T](visitor: Visitor, repo: GitHubRepo, number: Int)(f: ReleaseChecklist => T): Any = {
+    new GitHubPullRequestService(visitor)
+      .getReleasePullRequest(repo, number)
       .attemptRun.fold(
         e => BadRequest(s"reason: $e"),
         pr =>
           new AsyncResult {
-            val is =
-              ChecklistService.getChecklist(pr).map {
-                case None =>
-                  NotFound()
-
-                case Some(checklist) =>
-                  f(checklist)
-              }
+            val is = ChecklistService.getChecklist(pr).map(f)
           }
       )
   }
@@ -63,13 +56,13 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     val number        = params('number).toInt
     val featureNumber = params('featureNumber).toInt
 
-    val repo = GitHubRepository(owner, project)
+    val repo = GitHubRepo(owner, project)
 
     getVisitor match {
       case None => Forbidden()
 
       case Some(visitor) =>
-        withChecklist(repo, number) {
+        withChecklist(visitor, repo, number) {
           checklist =>
             ChecklistService.checkChecklist(
               checklist, visitor, featureNumber
@@ -83,21 +76,25 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     val project = params('project)
     val number  = params('number).toInt
 
-    val repo = GitHubRepository(owner, project)
+    val repo = GitHubRepo(owner, project)
 
-    withChecklist(repo, number) {
-      checklist =>
-        <html>
-          <body>
-            <ul>
-            {
-              checklist.checks.map {
-                check => <li>{check}</li>
-              }
-            }
-          </ul>
-        </body>
-      </html>
+    getVisitor match {
+      case None => ???
+      case Some(visitor) =>
+        withChecklist(visitor, repo, number) {
+          checklist =>
+            <html>
+              <body>
+                <ul>
+                  {
+                  checklist.checks.map {
+                    check => <li>{check}</li>
+                  }
+                  }
+                </ul>
+              </body>
+            </html>
+        }
     }
   }
 
