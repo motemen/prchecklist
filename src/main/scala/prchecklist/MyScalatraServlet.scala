@@ -1,5 +1,7 @@
 package prchecklist
 
+import java.net.URLEncoder
+
 import prchecklist.models._
 import prchecklist.utils.HttpUtils
 import prchecklist.services._
@@ -95,6 +97,8 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
                     }
                   }
                 </ul>
+                <div id="main"></div>
+                <script src="/javascripts/app.js"></script>
               </body>
             </html>
         }
@@ -108,7 +112,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
 
     val repo = GitHubRepo(owner, repoName)
     getVisitor match {
-      case None => redirect("/auth")
+      case None => redirect(s"/auth?location=${request.uri.getPath}")
       case Some(visitor) =>
         withChecklist(visitor, repo, number) {
           checklist =>
@@ -120,7 +124,8 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
   }
 
   get("/auth") {
-    Found(s"https://github.com/login/oauth/authorize?client_id=$CLIENT_ID")
+    val redirectURI = s"http://localhost:8080/auth/callback?location=${request.parameters.getOrElse("location", "/")}"
+    Found(s"https://github.com/login/oauth/authorize?client_id=$CLIENT_ID&redirect_uri=${URLEncoder.encode(redirectURI)}")
   }
 
   get("/auth/callback") {
@@ -148,7 +153,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
 
     res.fold(
       msg => BadRequest(s"reason: $msg"),
-      _ => Found("/")
+      _ => Found(request.parameters.getOrElse("location", "/"))
     )
   }
 }
