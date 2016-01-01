@@ -63,7 +63,13 @@ object GithubReleasePullRequestsChecklistBuild extends Build {
           "createdb prchecklist_test" #&&
           "psql prchecklist_test -f db/prchecklist.sql" !!
         }
-      )
+      ),
+      watchSources ~= {
+        _.filterNot {
+          f =>
+            """^\..*\.sw.$""".r.findFirstIn(f.getName).isDefined || f.isDirectory
+        }
+      }
     )
   )
 
