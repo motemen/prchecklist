@@ -1,8 +1,11 @@
 -@ val checklist: prchecklist.models.ReleaseChecklist
 
-h1 #{checklist.pullRequest.title}
+h1
+  a(href="#")
+    | ##{checklist.pullRequest.number}
+  | #{checklist.pullRequest.title}
 
-.description
+p.description
   | blah blah blah
   | meh meh meh
 
@@ -11,7 +14,9 @@ ul#checklist
     - case (nr, check) =>
       li
         a(href="#") ##{nr}
-        | なんとか機能
-        |  #{check.checkedUsers}
+        | TODO なんとか機能
+        = check.checkedUsers.map
+          - user =>
+            img(src={user.profileImageUrl} width=32)
         form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number}/check/#{check.pullRequestNumber}")
-          button.btn(type="submit" is="ChecklistCheckButton" data-repo={checklist.pullRequest.repo.fullName} data-pr={checklist.pullRequest.number} data-feature-pr={check.pullRequestNumber}) +
+          button.btn.btn-sm(type="submit" is="ChecklistCheckButton" data-repo={checklist.pullRequest.repo.fullName} data-pr={checklist.pullRequest.number} data-feature-pr={check.pullRequestNumber}) +
