@@ -1,12 +1,28 @@
--@ val title: String
+-@ val title: String = "prchecklist"
 -@ val headline: String = title
 -@ val body: String
 
-!!!
+!!! 5
 html
   head
     title= title
+    link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous")
+    link(href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css")
+    script(src="https://code.jquery.com/jquery-2.1.4.min.js")
+    style
+      | body {
+      |   font-size: 18px;
+      |   font-family: "Lato";
+      |   line-height: 1.8;
+      | }
+      | h1, h2 { font-weight: 700; }
+      | #checklist form {
+      |   display: inline;
+      | }
   body
-    #content
-      h1= headline
+    nav.navbar
+      .container-fluid
+        .navbar-header
+          a.navbar-brand(href="/") prchecklist
+    .container
       != body

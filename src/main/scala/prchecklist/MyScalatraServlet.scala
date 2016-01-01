@@ -1,39 +1,37 @@
 package prchecklist
 
-import java.net.URLEncoder
-
 import prchecklist.models._
-import prchecklist.utils.HttpUtils
+import prchecklist.utils.HttpUtils._
 import prchecklist.services._
 
-import com.github.tarao.nonempty.NonEmpty
-
 import org.scalatra._
+import org.scalatra.scalate.ScalateSupport
 
 import org.json4s
 import org.json4s.native.Serialization
 
 import scalaz.syntax.std.option._
 
-class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with FutureSupport {
-  import HttpUtils._
+import scala.concurrent.Future
 
-  val CLIENT_ID = System.getProperty("github.clientId").ensuring(_ != null)
-  val CLIENT_SECRET = System.getProperty("github.clientSecret").ensuring(_ != null)
+import java.net.URLEncoder
+
+class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with FutureSupport with ScalateSupport {
+  val CLIENT_ID = System.getProperty("github.clientId").ensuring(_ != null, "github.clientId must be defined")
+  val CLIENT_SECRET = System.getProperty("github.clientSecret").ensuring(_ != null, "github.clientSecret must be defined")
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
-  def withChecklist[T](visitor: Visitor, repo: GitHubRepo, number: Int)(f: ReleaseChecklist => T): Any = {
+  /*
+  def withChecklist[T](visitor: Visitor, repo: GitHubRepo, number: Int)(f: Future[ReleaseChecklist] => Any): Any = {
     new GitHubPullRequestService(visitor)
       .getReleasePullRequest(repo, number)
       .attemptRun.fold(
         e => BadRequest(s"reason: $e"),
-        pr =>
-          new AsyncResult {
-            val is = ChecklistService.getChecklist(pr).map(f)
-          }
+        pr => ChecklistService.getChecklist(pr).map(f)
       )
   }
+  */
 
   def getVisitor: Option[Visitor] = {
     for {
@@ -54,8 +52,9 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     </html>
   }
 
+  /*
   // POST /example/webapp/pull/456/checks/@me/123 {"checked":true}
-  post("/:owner/:repoName/pull/:number/checks/@me/:featureNumber") {
+  post("/api/:owner/:repoName/pull/:number/checks/@me/:featureNumber") {
     val owner = params('owner)
     val repoName = params('repoName)
     val number = params('number).toInt
@@ -72,9 +71,13 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
             ChecklistService.checkChecklist(
               checklist, visitor, featureNumber
             )
+            new AsyncResult {
+              val is = ???
+            }
         }
     }
   }
+  */
 
   get("/:owner/:repoName/pull/:number") {
     val owner = params('owner)
@@ -84,27 +87,54 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     val repo = GitHubRepo(owner, repoName)
 
     getVisitor match {
-      case None => redirect("/auth")
+      case None => redirect(s"/auth?location=${request.uri.getPath}")
       case Some(visitor) =>
-        withChecklist(visitor, repo, number) {
-          checklist =>
-            <html>
-              <body>
-                <ul>
-                  {
-                    checklist.checks.map {
-                      check => <li>{ check }</li>
-                    }
+        new GitHubPullRequestService(visitor).getReleasePullRequest(repo, number)
+          .attemptRun.fold(
+            e => BadRequest(s"error: $e"),
+            pr =>
+              new AsyncResult {
+                contentType = "text/html"
+                val is =
+                  ChecklistService.getChecklist(pr).map {
+                    checklist =>
+                      jade("/pullRequest", "checklist" -> checklist)
                   }
-                </ul>
-                <div id="main"></div>
-                <script src="/javascripts/app.js"></script>
-              </body>
-            </html>
-        }
+              }
+          )
     }
   }
 
+  post("/:owner/:repoName/pull/:number/check/:featureNumber") {
+    val owner = params('owner)
+    val repoName = params('repoName)
+    val number = params('number).toInt
+    val featureNumber = params('featureNumber).toInt
+
+    val repo = GitHubRepo(owner, repoName)
+
+    getVisitor match {
+      case None => Forbidden()
+
+      case Some(visitor) =>
+        new GitHubPullRequestService(visitor).getReleasePullRequest(repo, number)
+          .attemptRun.fold(
+            e => BadRequest(s"error: $e"),
+            pr =>
+              new AsyncResult {
+                val is =
+                  ChecklistService.getChecklist(pr).map {
+                    checklist =>
+                      ChecklistService.checkChecklist(checklist, visitor, featureNumber).map {
+                        _ => redirect(s"/$owner/$repoName/pull/$number")
+                      }
+                  }
+              }
+          )
+    }
+  }
+
+  /*
   get("/api/:owner/:repoName/pull/:number") {
     val owner = params('owner)
     val repoName = params('repoName)
@@ -116,12 +146,15 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
       case Some(visitor) =>
         withChecklist(visitor, repo, number) {
           checklist =>
-            implicit val formats = Serialization.formats(json4s.NoTypeHints)
-            response.setHeader("Content-Type", "application/json; charset=utf-8")
-            Serialization.write(checklist)
+            new AsyncResult {
+              implicit val formats = Serialization.formats(json4s.NoTypeHints)
+              contentType = "application/json; charset=utf-8"
+              val is = Future.successful { Serialization.write(checklist) }
+            }
         }
     }
   }
+  */
 
   get("/auth") {
     val redirectURI = s"http://localhost:8080/auth/callback?location=${request.parameters.getOrElse("location", "/")}"

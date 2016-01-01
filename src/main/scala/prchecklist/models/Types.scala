@@ -25,4 +25,6 @@ case class Check(pullRequestNumber: Int, checkedUsers: List[User]) {
 
 case class Visitor(login: String, accessToken: String)
 
-case class User(login: String)
+case class User(login: String) {
+  def profileImageUrl: String = s"https://github.com/$login.png"
+}
