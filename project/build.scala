@@ -11,12 +11,12 @@ object GithubReleasePullRequestsChecklistBuild extends Build {
   val Name = "GitHub Release Pull Requests Checklist"
   val Version = "0.1.0-SNAPSHOT"
   val ScalaVersion = "2.11.7"
-  val ScalatraVersion = "2.4.0.RC3"
+  val ScalatraVersion = "2.4.0"
 
   lazy val project = Project (
     "github-release-pull-requests-checklist",
     file("."),
-    settings = ScalatraPlugin.scalatraSettings ++ scalateSettings ++ scalariformSettings ++ Seq(
+    settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings ++ scalariformSettings ++ Seq(
       organization := Organization,
       name := Name,
       version := Version,

@@ -2,8 +2,6 @@ package prchecklist.services
 
 import java.net.URI
 
-import org.json4s.JsonAST.JArray
-import org.json4s.native.Serialization
 import org.json4s._
 import prchecklist.models._
 import prchecklist.utils.HttpUtils
@@ -12,9 +10,6 @@ import com.redis._
 
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
-import scalaz.syntax.std.option._
-
-import com.github.tarao.nonempty.NonEmpty
 
 class GitHubPullRequestService(val visitor: Visitor) {
   def mergedPullRequestNumbers(commits: List[JsonTypes.GitHubCommit]): List[Int] = {
@@ -36,13 +31,7 @@ class GitHubPullRequestService(val visitor: Visitor) {
     val redis = new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
     val redisKey = s"pull:${repo.fullName}:$number"
     redis.get[String](redisKey).flatMap {
-      s =>
-        val x = try {
-          JsonMethods.parse(s).extract[ReleasePullRequest]
-        } catch {
-          case e: Exception => println(e); ???
-        }
-        Some(x)
+      s => JsonMethods.parse(s).extractOpt[ReleasePullRequest]
     }.map {
       pr => Task.now(pr)
     }.getOrElse {
@@ -56,16 +45,14 @@ class GitHubPullRequestService(val visitor: Visitor) {
         HttpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"https://api.github.com/repos/${repo.fullName}/pulls/$number/commits")
       }
 
-      (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
+      (getPullRequestTask |@| getPullRequestCommitsTask) apply {
         case (pr, commits) =>
-          Task.fromDisjunction {
-            val prNumbers = mergedPullRequestNumbers(commits)
-            // TODO: check if pr.base points to "master"
-            // TODO: check if prNumbers.nonEmpty
-            val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, prNumbers)
-            redis.set(redisKey, json4s.native.Serialization.write(releasePR))
-            Some(releasePR) \/> ???
-          }
+          val prNumbers = mergedPullRequestNumbers(commits)
+          // TODO: check if pr.base points to "master"
+          // TODO: check if prNumbers.nonEmpty
+          val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, prNumbers)
+          redis.set(redisKey, json4s.native.Serialization.write(releasePR))
+          releasePR
       }
     }
   }
