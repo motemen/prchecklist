@@ -11,7 +11,7 @@ case class ReleasePullRequest(
     title: String,
     body: String,
     // TODO: featurePullRequests
-    featurePullRequestNumbers: NonEmpty[Int]) {
+    featurePullRequestNumbers: List[Int]) {
   def url: String = s"https://github.com/${repo.fullName}/pull/$number"
 }
 

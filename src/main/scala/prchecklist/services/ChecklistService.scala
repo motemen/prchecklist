@@ -1,5 +1,6 @@
 package prchecklist.services
 
+import com.github.tarao.nonempty.NonEmpty
 import prchecklist.models._
 
 import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
@@ -47,25 +48,31 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
   private[this] def getChecklistChecks(releasePR: ReleasePullRequest): Future[Map[Int, Check]] = {
     val db = Database.get
 
-    db.run(
-      sql"""
-         | SELECT feature_pr_number,user_login
-         | FROM checks
-         | WHERE repository_full_name = ${releasePR.repo.fullName}
-         |   AND release_pr_number = ${releasePR.number}
-         |   AND feature_pr_number IN (${releasePR.featurePullRequestNumbers})
-          """.as[(Int, String)]
-    ).map {
-        rows =>
-          val prNumberToUserNames: Map[Int, List[String]] = rows.toList.groupBy(_._1).mapValues { _.map(_._2) }
+    NonEmpty.fromTraversable(releasePR.featurePullRequestNumbers) match {
+      case None =>
+        Future.successful(Map.empty)
 
-          releasePR.featurePullRequestNumbers.map {
-            nr =>
-              val checkedUsers = prNumberToUserNames.getOrElse(nr, List()).map {
-                name => User(name)
-              }
-              (nr, Check(nr, checkedUsers))
-          }.toMap
-      }
+      case Some(featurePRNrs) =>
+        db.run(
+          sql"""
+             | SELECT feature_pr_number,user_login
+             | FROM checks
+             | WHERE repository_full_name = ${releasePR.repo.fullName}
+             |   AND release_pr_number = ${releasePR.number}
+             |   AND feature_pr_number IN (${featurePRNrs})
+          """.as[(Int, String)]
+        ).map {
+            rows =>
+              val prNumberToUserNames: Map[Int, List[String]] = rows.toList.groupBy(_._1).mapValues { _.map(_._2) }
+
+              releasePR.featurePullRequestNumbers.map {
+                nr =>
+                  val checkedUsers = prNumberToUserNames.getOrElse(nr, List()).map {
+                    name => User(name)
+                  }
+                  (nr, Check(nr, checkedUsers))
+              }.toMap
+          }
+    }
   }
 }

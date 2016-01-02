@@ -18,7 +18,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
         number = 1,
         title = "",
         body = "",
-        featurePullRequestNumbers = NonEmpty(2, 3)
+        featurePullRequestNumbers = List(2, 3)
       ),
       checks = Map.empty
     )
@@ -29,13 +29,13 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
       checkerUser = checkerUser,
       featurePRNumber = 2
     ).flatMap {
-      _ => ChecklistService.getChecklist(checklist.pullRequest)
-    }
+        _ => ChecklistService.getChecklist(checklist.pullRequest)
+      }
 
     whenReady(fut) {
       checklist =>
         checklist.checks.get(2).value shouldBe 'checked
-        checklist.checks.get(3).value shouldNot be ('checked)
+        checklist.checks.get(3).value shouldNot be('checked)
         checklist.checks.get(4) shouldBe 'empty
     }
   }
