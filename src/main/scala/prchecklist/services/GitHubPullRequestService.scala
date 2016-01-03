@@ -30,6 +30,7 @@ class GitHubPullRequestService(val visitor: Visitor) {
     val redisURL = new URI(System.getProperty("redis.url", "redis://127.0.0.1:6379"))
     val redis = new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
     val redisKey = s"pull:${repo.fullName}:$number"
+    // TODO: redis parser
     redis.get[String](redisKey).flatMap {
       s => JsonMethods.parse(s).extractOpt[ReleasePullRequest]
     }.map {

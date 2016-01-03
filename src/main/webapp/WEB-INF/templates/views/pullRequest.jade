@@ -6,8 +6,7 @@ h1
   | #{checklist.pullRequest.title}
 
 p.description
-  | blah blah blah
-  | meh meh meh
+  | #{checklist.pullRequest.body}
 
 ul#checklist
   = checklist.checks.map

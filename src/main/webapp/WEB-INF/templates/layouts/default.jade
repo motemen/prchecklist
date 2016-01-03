@@ -7,17 +7,20 @@ html
   head
     title= title
     link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous")
-    link(href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css")
+    link(href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet" type="text/css")
     script(src="https://code.jquery.com/jquery-2.1.4.min.js")
     style
       | body {
       |   font-size: 18px;
-      |   font-family: "Lato";
+      |   font-family: "Droid Sans", sans-serif;
       |   line-height: 1.8;
       | }
       | h1, h2 { font-weight: 700; }
       | #checklist form {
       |   display: inline;
+      | }
+      | #checklist li {
+      |   line-height: 48px;
       | }
   body
     nav.navbar
