@@ -9,8 +9,11 @@ import scalaz.\/
 import scalaz.syntax.std.option._
 import scalaz.syntax.either._
 
+import org.slf4j.LoggerFactory
+
 object HttpUtils {
   val allowUnsafeSSL = System.getProperty("http.allowUnsafeSSL", "") == "true"
+  val logger = LoggerFactory.getLogger("prchecklist.utils.HttpUtils")
 
   def httpRequestJson[A](url: String, build: HttpRequest => HttpRequest = identity)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[A]): Throwable \/ A = {
     for {
@@ -25,10 +28,10 @@ object HttpUtils {
     } else {
       build(Http(url)).option(HttpOptions.allowUnsafeSSL)
     }
-    println(s"--> ${httpReq.method} ${httpReq.url}")
+    logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
     val httpRes = run(httpReq)
-    println(s"<-- ${httpReq.method} ${httpReq.url} -- ${httpRes.statusLine}")
+    logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${httpRes.statusLine}")
 
     if (httpRes.isSuccess) {
       httpRes.body.right
