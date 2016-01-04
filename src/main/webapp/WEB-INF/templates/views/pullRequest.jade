@@ -1,15 +1,16 @@
 -@ val checklist: prchecklist.models.ReleaseChecklist
 
-.row
+.row(class={if (checklist.allGreen) "all-green" else ""})
   .col-md-9
 
-    h1
-      small
-        a(href={checklist.pullRequest.repo.url}) #{checklist.pullRequest.repo.fullName}
-      br
-      a(href={checklist.pullRequest.url})
-        | ##{checklist.pullRequest.number}
-      | #{checklist.pullRequest.title}
+    h1.headline
+      i.fa.fa-check-circle.checklist-check-mark
+      div
+        small
+          a(href={checklist.pullRequest.repo.url}) #{checklist.pullRequest.repo.fullName}
+        a(href={checklist.pullRequest.url})
+          | ##{checklist.pullRequest.number}
+        | #{checklist.pullRequest.title}
 
     pre.description><
       ~ checklist.pullRequest.body
