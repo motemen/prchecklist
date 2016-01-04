@@ -4,13 +4,17 @@ import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
 import com.typesafe.sbt.SbtScalariform._
 import scalariform.formatter.preferences._
+import com.typesafe.sbt.SbtStartScript
 
 val Organization = "net.tokyoenvious"
 val Version = "0.1.0-SNAPSHOT"
 val ScalaVersion = "2.11.7"
 val ScalatraVersion = "2.4.0"
 
+seq(SbtStartScript.startScriptForClassesSettings: _*)
+
 lazy val prchecklist = (project in file(".")).
+  settings(Defaults.defaultSettings).
   settings(ScalatraPlugin.scalatraWithJRebel).
   settings(scalateSettings).
   settings(scalariformSettings).
@@ -34,7 +38,7 @@ lazy val prchecklist = (project in file(".")).
         "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
         "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % "test",
         "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime",
-        "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container",
+        "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container;compile",
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
         "org.scalaj" %% "scalaj-http" % "1.1.6",
         "org.json4s" %% "json4s-native" % "3.3.0",
