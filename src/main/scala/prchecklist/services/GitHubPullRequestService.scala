@@ -11,7 +11,9 @@ import com.redis._
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
-class GitHubPullRequestService(val visitor: Visitor) {
+class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
+  def accessToken = visitor.accessToken
+
   def mergedPullRequests(commits: List[JsonTypes.GitHubCommit]): List[PullRequestReference] = {
     commits.flatMap {
       c =>
@@ -38,12 +40,12 @@ class GitHubPullRequestService(val visitor: Visitor) {
     }.getOrElse {
       // TODO: access cache, getPullRequestFull if not exists
       val getPullRequestTask = Task.fromDisjunction {
-        HttpUtils.httpRequestJson[JsonTypes.GitHubPullRequest](s"https://api.github.com/repos/${repo.fullName}/pulls/$number")
+        HttpUtils.httpRequestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number", _.header("Authorization", s"token $accessToken"))
       }
 
       // TODO: paging
       val getPullRequestCommitsTask = Task.fromDisjunction {
-        HttpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"https://api.github.com/repos/${repo.fullName}/pulls/$number/commits")
+        HttpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits", _.header("Authorization", s"token $accessToken"))
       }
 
       (getPullRequestTask |@| getPullRequestCommitsTask) apply {
