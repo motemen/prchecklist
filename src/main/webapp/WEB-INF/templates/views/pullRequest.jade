@@ -4,18 +4,21 @@
   .col-md-9
 
     h1
-      a(href="#")
+      small
+        a(href={checklist.pullRequest.repo.url}) #{checklist.pullRequest.repo.fullName}
+      br
+      a(href={checklist.pullRequest.url})
         | ##{checklist.pullRequest.number}
       | #{checklist.pullRequest.title}
 
-    pre.description>
-      | #{checklist.pullRequest.body}
+    pre.description><
+      ~ checklist.pullRequest.body
 
     ul#checklist
       = checklist.checks.map
         - case (nr, check) =>
           li(class={if (check.isChecked) "checked" else ""})
-            a.number(href="#") ##{nr}
+            a.number(href={checklist.pullRequestUrl(nr)}) ##{nr}
             span.title
               | #{check.pullRequest.title}
             span.checkers
