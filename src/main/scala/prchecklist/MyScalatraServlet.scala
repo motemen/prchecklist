@@ -100,6 +100,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
       code <- Task.fromDisjunction { params.get("code") \/> new Error("code required") }
       visitor <- GitHubAuthService.authorize(code)
     } yield {
+      // TODO
       session += "accessToken" -> visitor.accessToken
       session += "userLogin" -> visitor.login
 

@@ -2,7 +2,6 @@ package prchecklist.models
 
 import com.github.tarao.nonempty.NonEmpty
 
-// TODO case class ReleaseChecklist(repo, number, title, body, featurePullRequests, checkers)
 case class ReleaseChecklist(pullRequest: ReleasePullRequest, checks: Map[Int, Check]) {
   def pullRequestUrl(number: Int) = pullRequest.repo.pullRequestUrl(number)
 

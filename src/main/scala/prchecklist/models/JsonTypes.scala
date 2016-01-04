@@ -20,5 +20,6 @@ object JsonTypes {
     message: String)
 
   case class GitHubCommitRef(
-    sha: String)
+    sha: String,
+    ref: String)
 }

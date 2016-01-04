@@ -23,6 +23,16 @@ class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
     }
   }
 
+  def validateReleasePullRequest(pr: JsonTypes.GitHubPullRequest, featurePRs: List[PullRequestReference]): Option[String] = {
+    if (pr.base.ref != "master") {
+      Some("not a pull request to master")
+    } else if (featurePRs.isEmpty) {
+      Some("no feature pull requests merged")
+    } else {
+      None
+    }
+  }
+
   def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
     import org.json4s
     import org.json4s.native.JsonMethods
@@ -38,7 +48,6 @@ class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
     }.map {
       pr => Task.now(pr)
     }.getOrElse {
-      // TODO: access cache, getPullRequestFull if not exists
       val getPullRequestTask = Task.fromDisjunction {
         HttpUtils.httpRequestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number", _.header("Authorization", s"token $accessToken"))
       }
@@ -48,14 +57,18 @@ class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
         HttpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits", _.header("Authorization", s"token $accessToken"))
       }
 
-      (getPullRequestTask |@| getPullRequestCommitsTask) apply {
+      (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
         case (pr, commits) =>
           val featurePRs = mergedPullRequests(commits)
-          // TODO: check if pr.base points to "master"
-          // TODO: check if featurePRs.nonEmpty
-          val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
-          redis.set(redisKey, json4s.native.Serialization.write(releasePR))
-          releasePR
+          validateReleasePullRequest(pr, featurePRs) match {
+            case Some(msg) =>
+              Task.fail(new Error(msg))
+
+            case None =>
+              val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
+              redis.set(redisKey, json4s.native.Serialization.write(releasePR))
+              Task.now(releasePR)
+          }
       }
     }
   }
