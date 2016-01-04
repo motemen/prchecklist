@@ -7,25 +7,37 @@ html
   head
     title= title
     link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous")
-    link(href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet" type="text/css")
+    link(href="https://fonts.googleapis.com/css?family=Lato:400,700,700italic" rel="stylesheet" type="text/css")
     script(src="https://code.jquery.com/jquery-2.1.4.min.js")
     style
       | body {
       |   font-size: 18px;
-      |   font-family: "Droid Sans", sans-serif;
+      |   font-family: "Lato", sans-serif;
       |   line-height: 1.8;
+      |   padding-top: 40px;
       | }
       | h1, h2 { font-weight: 700; }
-      | #checklist form {
-      |   display: inline;
+      | h1 { font-style: italic; }
+      | #checklist {
+      |   list-style: none;
+      |   padding: 0;
+      |   margin-top: 2em;
       | }
       | #checklist li {
       |   line-height: 48px;
+      |   padding: 0.2em 0.8em;
+      |   margin-bottom: 0.6em;
+      |   border: 1px solid #DDD;
+      | }
+      | #checklist li.checked {
+      |   opacity: 0.3;
+      | }
+      | #checklist .checkers {
+      |   margin-left: 0.5em;
+      | }
+      | #checklist form {
+      |   display: inline;
       | }
   body
-    nav.navbar
-      .container-fluid
-        .navbar-header
-          a.navbar-brand(href="/") prchecklist
     .container
       != body

@@ -1,21 +1,26 @@
 -@ val checklist: prchecklist.models.ReleaseChecklist
 
-h1
-  a(href="#")
-    | ##{checklist.pullRequest.number}
-  | #{checklist.pullRequest.title}
+.row
+  .col-md-9
 
-p.description
-  | #{checklist.pullRequest.body}
+    h1
+      a(href="#")
+        | ##{checklist.pullRequest.number}
+      | #{checklist.pullRequest.title}
 
-ul#checklist
-  = checklist.checks.map
-    - case (nr, check) =>
-      li
-        a(href="#") ##{nr}
-        | TODO なんとか機能
-        = check.checkedUsers.map
-          - user =>
-            img(src={user.profileImageUrl} width=32)
-        form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number}/check/#{check.pullRequestNumber}")
-          button.btn.btn-sm(type="submit" is="ChecklistCheckButton" data-repo={checklist.pullRequest.repo.fullName} data-pr={checklist.pullRequest.number} data-feature-pr={check.pullRequestNumber}) +
+    pre.description>
+      | #{checklist.pullRequest.body}
+
+    ul#checklist
+      = checklist.checks.map
+        - case (nr, check) =>
+          li(class={if (check.isChecked) "checked" else ""})
+            a.number(href="#") ##{nr}
+            span.title
+              | #{check.pullRequest.title}
+            span.checkers
+              = check.checkedUsers.map
+                - user =>
+                  img(src={user.profileImageUrl} width=32)
+            form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number}/check/#{check.pullRequest.number}")
+              button.btn.btn-sm(type="submit" is="ChecklistCheckButton" data-repo={checklist.pullRequest.repo.fullName} data-pr={checklist.pullRequest.number} data-feature-pr={check.pullRequest.number}) +

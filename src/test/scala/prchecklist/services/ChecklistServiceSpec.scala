@@ -18,7 +18,10 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
         number = 1,
         title = "",
         body = "",
-        featurePullRequestNumbers = List(2, 3)
+        featurePullRequests = List(
+          PullRequestReference(2, "blah blah"),
+          PullRequestReference(3, "foo")
+        )
       ),
       checks = Map.empty
     )

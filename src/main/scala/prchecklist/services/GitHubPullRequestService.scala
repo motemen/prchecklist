@@ -12,11 +12,11 @@ import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
 class GitHubPullRequestService(val visitor: Visitor) {
-  def mergedPullRequestNumbers(commits: List[JsonTypes.GitHubCommit]): List[Int] = {
+  def mergedPullRequests(commits: List[JsonTypes.GitHubCommit]): List[PullRequestReference] = {
     commits.flatMap {
       c =>
-        """^Merge pull request #(\d+) """.r.findFirstMatchIn(c.commit.message) map {
-          m => m.group(1).toInt
+        """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r.findFirstMatchIn(c.commit.message) map {
+          m => PullRequestReference(m.group(1).toInt, m.group(2))
         }
     }
   }
@@ -48,10 +48,10 @@ class GitHubPullRequestService(val visitor: Visitor) {
 
       (getPullRequestTask |@| getPullRequestCommitsTask) apply {
         case (pr, commits) =>
-          val prNumbers = mergedPullRequestNumbers(commits)
+          val featurePRs = mergedPullRequests(commits)
           // TODO: check if pr.base points to "master"
-          // TODO: check if prNumbers.nonEmpty
-          val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, prNumbers)
+          // TODO: check if featurePRs.nonEmpty
+          val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
           redis.set(redisKey, json4s.native.Serialization.write(releasePR))
           releasePR
       }

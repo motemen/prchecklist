@@ -48,7 +48,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
   private[this] def getChecklistChecks(releasePR: ReleasePullRequest): Future[Map[Int, Check]] = {
     val db = Database.get
 
-    NonEmpty.fromTraversable(releasePR.featurePullRequestNumbers) match {
+    NonEmpty.fromTraversable(releasePR.featurePullRequests.map(_.number)) match {
       case None =>
         Future.successful(Map.empty)
 
@@ -65,12 +65,12 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
             rows =>
               val prNumberToUserNames: Map[Int, List[String]] = rows.toList.groupBy(_._1).mapValues { _.map(_._2) }
 
-              releasePR.featurePullRequestNumbers.map {
-                nr =>
-                  val checkedUsers = prNumberToUserNames.getOrElse(nr, List()).map {
+              releasePR.featurePullRequests.map {
+                pr =>
+                  val checkedUsers = prNumberToUserNames.getOrElse(pr.number, List()).map {
                     name => User(name)
                   }
-                  (nr, Check(nr, checkedUsers))
+                  (pr.number, Check(pr, checkedUsers))
               }.toMap
           }
     }
