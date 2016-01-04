@@ -39,7 +39,7 @@ lazy val prchecklist = (project in file(".")).
         "org.json4s" %% "json4s-native" % "3.3.0",
         "org.scalaz" %% "scalaz-core" % "7.1.4",
         "org.scalaz" %% "scalaz-concurrent" % "7.1.4",
-        "com.typesafe.slick" % "slick_2.11" % "3.0.0",
+        "com.typesafe.slick" %% "slick" % "3.0.0",
         "org.postgresql" % "postgresql" % "9.4.1207",
         "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
         "net.debasishg" %% "redisclient" % "3.1"

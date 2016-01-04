@@ -3,7 +3,7 @@ package prchecklist.utils
 import org.json4s
 import org.json4s.native.JsonMethods
 
-import scalaj.http.{ Http, HttpRequest, HttpResponse }
+import scalaj.http.{ Http, HttpRequest, HttpResponse, HttpOptions }
 
 import scalaz.\/
 import scalaz.syntax.std.option._
@@ -18,7 +18,7 @@ object HttpUtils {
   }
 
   def httpRequest[A](url: String, run: HttpRequest => HttpResponse[A], build: HttpRequest => HttpRequest = identity): Throwable \/ A = {
-    val httpReq = build(Http(url))
+    val httpReq = build(Http(url)).option(HttpOptions.allowUnsafeSSL) // FIXME
     println(s"--> ${httpReq.method} ${httpReq.url}")
 
     val httpRes = run(httpReq)
