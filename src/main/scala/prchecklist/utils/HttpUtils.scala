@@ -10,6 +10,8 @@ import scalaz.syntax.std.option._
 import scalaz.syntax.either._
 
 object HttpUtils {
+  val allowUnsafeSSL = System.getProperty("http.allowUnsafeSSL", "") == "true"
+
   def httpRequestJson[A](url: String, build: HttpRequest => HttpRequest = identity)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[A]): Throwable \/ A = {
     for {
       body <- httpRequest(url, _.asString, build)
@@ -18,7 +20,11 @@ object HttpUtils {
   }
 
   def httpRequest[A](url: String, run: HttpRequest => HttpResponse[A], build: HttpRequest => HttpRequest = identity): Throwable \/ A = {
-    val httpReq = build(Http(url)).option(HttpOptions.allowUnsafeSSL) // FIXME
+    val httpReq = if (allowUnsafeSSL) {
+      build(Http(url))
+    } else {
+      build(Http(url)).option(HttpOptions.allowUnsafeSSL)
+    }
     println(s"--> ${httpReq.method} ${httpReq.url}")
 
     val httpRes = run(httpReq)
