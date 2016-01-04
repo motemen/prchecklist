@@ -27,4 +27,5 @@
                 - user =>
                   img(src={user.profileImageUrl} width=32)
             form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number}/check/#{check.pullRequest.number}")
-              button.btn.btn-sm(type="submit" is="ChecklistCheckButton" data-repo={checklist.pullRequest.repo.fullName} data-pr={checklist.pullRequest.number} data-feature-pr={check.pullRequest.number}) +
+              button.btn.btn-sm.btn-default(type="submit" is="ChecklistCheckButton" data-repo={checklist.pullRequest.repo.fullName} data-pr={checklist.pullRequest.number} data-feature-pr={check.pullRequest.number})
+                i.fa.fa-check
