@@ -1,23 +1,18 @@
-import org.scalatra.sbt._
-import org.scalatra.sbt.PluginKeys._
-import com.mojolly.scalate.ScalatePlugin._
-import ScalateKeys._
-import com.typesafe.sbt.SbtScalariform._
-import scalariform.formatter.preferences._
-import com.typesafe.sbt.SbtStartScript
+import org.scalatra.sbt.ScalatraPlugin
+import com.mojolly.scalate.ScalatePlugin
+import com.typesafe.sbt.{SbtScalariform, SbtStartScript}
 
 val Organization = "net.tokyoenvious"
 val Version = "0.1.0-SNAPSHOT"
 val ScalaVersion = "2.11.7"
 val ScalatraVersion = "2.4.0"
 
-seq(SbtStartScript.startScriptForClassesSettings: _*)
-
 lazy val prchecklist = (project in file(".")).
   settings(Defaults.defaultSettings).
   settings(ScalatraPlugin.scalatraWithJRebel).
-  settings(scalateSettings).
-  settings(scalariformSettings).
+  settings(ScalatePlugin.scalateSettings).
+  settings(SbtScalariform.scalariformSettings).
+  settings(SbtStartScript.startScriptForClassesSettings).
   settings(
       organization := Organization,
       name := "prchecklist",
@@ -51,7 +46,7 @@ lazy val prchecklist = (project in file(".")).
       )
     ).
     settings(
-      scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
+      ScalateKeys.scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
         Seq(
           TemplateConfig(
             base / "webapp" / "WEB-INF" / "templates",
@@ -78,6 +73,3 @@ lazy val prchecklist = (project in file(".")).
         }
       )
     )
-
-ScalariformKeys.preferences := ScalariformKeys.preferences.value
-  .setPreference(PreserveDanglingCloseParenthesis, true)
