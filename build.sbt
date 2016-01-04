@@ -1,30 +1,34 @@
-import sbt._
-import Keys._
 import org.scalatra.sbt._
 import org.scalatra.sbt.PluginKeys._
 import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
 import com.typesafe.sbt.SbtScalariform._
+import scalariform.formatter.preferences._
 
-object GithubReleasePullRequestsChecklistBuild extends Build {
-  val Organization = "net.tokyoenvious"
-  val Name = "GitHub Release Pull Requests Checklist"
-  val Version = "0.1.0-SNAPSHOT"
-  val ScalaVersion = "2.11.7"
-  val ScalatraVersion = "2.4.0"
+val Organization = "net.tokyoenvious"
+val Version = "0.1.0-SNAPSHOT"
+val ScalaVersion = "2.11.7"
+val ScalatraVersion = "2.4.0"
 
-  lazy val project = Project (
-    "github-release-pull-requests-checklist",
-    file("."),
-    settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings ++ scalariformSettings ++ Seq(
+lazy val prchecklist = (project in file(".")).
+  settings(ScalatraPlugin.scalatraWithJRebel).
+  settings(scalateSettings).
+  settings(scalariformSettings).
+  settings(
       organization := Organization,
-      name := Name,
+      name := "prchecklist",
       version := Version,
       scalaVersion := ScalaVersion,
-      scalacOptions += "-deprecation",
-      scalacOptions += "-feature",
+
+      scalacOptions ++= Seq(
+        "-unchecked",
+        "-deprecation",
+        "-feature"
+      ),
+
       resolvers += Classpaths.typesafeReleases,
       resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
+
       libraryDependencies ++= Seq(
         "org.scalatra" %% "scalatra" % ScalatraVersion,
         "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
@@ -40,7 +44,9 @@ object GithubReleasePullRequestsChecklistBuild extends Build {
         "org.postgresql" % "postgresql" % "9.4.1207",
         "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
         "net.debasishg" %% "redisclient" % "3.1"
-      ),
+      )
+    ).
+    settings(
       scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
         Seq(
           TemplateConfig(
@@ -52,7 +58,9 @@ object GithubReleasePullRequestsChecklistBuild extends Build {
             Some("templates")
           )
         )
-      },
+      }
+    ).
+    settings(
       fork in Test := true,
       javaOptions in Test += "-Ddatabase.url=jdbc:postgresql:prchecklist_test",
       testOptions in Test += Tests.Setup(
@@ -64,18 +72,8 @@ object GithubReleasePullRequestsChecklistBuild extends Build {
           "createdb prchecklist_test" #&&
           "psql prchecklist_test -f db/prchecklist.sql" !!
         }
-      ),
-      watchSources ~= {
-        _.filterNot {
-          f =>
-            """^\..*\.sw.$""".r.findFirstIn(f.getName).isDefined || f.isDirectory
-        }
-      }
+      )
     )
-  )
 
-  import scalariform.formatter.preferences._
-
-  ScalariformKeys.preferences := ScalariformKeys.preferences.value
-    .setPreference(PreserveDanglingCloseParenthesis, true)
-}
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(PreserveDanglingCloseParenthesis, true)

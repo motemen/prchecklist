@@ -158,7 +158,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
 
   get("/auth") {
     val redirectURI = s"http://localhost:8080/auth/callback?location=${request.parameters.getOrElse("location", "/")}"
-    Found(s"https://github.com/login/oauth/authorize?client_id=$CLIENT_ID&redirect_uri=${URLEncoder.encode(redirectURI)}")
+    Found(s"https://github.com/login/oauth/authorize?client_id=$CLIENT_ID&redirect_uri=${URLEncoder.encode(redirectURI, "UTF-8")}")
   }
 
   get("/auth/callback") {
