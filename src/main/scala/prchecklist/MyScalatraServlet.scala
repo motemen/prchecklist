@@ -17,6 +17,8 @@ import java.net.URLEncoder
 class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with FutureSupport with ScalateSupport {
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
+  override def isScalateErrorPageEnabled = false
+
   def getVisitor: Option[Visitor] = {
     for {
       login <- session.get("userLogin")
