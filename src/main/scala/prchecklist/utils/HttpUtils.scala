@@ -24,9 +24,9 @@ object HttpUtils {
 
   def httpRequest[A](url: String, run: HttpRequest => HttpResponse[A], build: HttpRequest => HttpRequest = identity): Throwable \/ A = {
     val httpReq = if (allowUnsafeSSL) {
-      build(Http(url))
-    } else {
       build(Http(url)).option(HttpOptions.allowUnsafeSSL)
+    } else {
+      build(Http(url))
     }
     logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
