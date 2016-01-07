@@ -54,7 +54,7 @@ class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
 
       // TODO: paging
       val getPullRequestCommitsTask = Task.fromDisjunction {
-        HttpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits", _.header("Authorization", s"token $accessToken"))
+        HttpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100", _.header("Authorization", s"token $accessToken"))
       }
 
       (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
