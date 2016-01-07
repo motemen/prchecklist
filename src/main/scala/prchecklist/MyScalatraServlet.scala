@@ -94,7 +94,8 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
   }
 
   get("/auth") {
-    Found(GitHubAuthService.authorizationURL(s"http://localhost:8080/auth/callback?location=${request.parameters.getOrElse("location", "/")}"))
+    val scheme = request.headers.getOrElse("X-Forwarded-Proto", "http")
+    Found(GitHubAuthService.authorizationURL(s"${scheme}://${request.uri.getAuthority}/auth/callback?location=${request.parameters.getOrElse("location", "/")}"))
   }
 
   get("/auth/callback") {

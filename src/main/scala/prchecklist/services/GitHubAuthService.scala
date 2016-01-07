@@ -8,8 +8,13 @@ import java.net.URLEncoder
 import scalaz.concurrent.Task
 import scalaz.syntax.std.option._
 
+import org.slf4j.LoggerFactory
+
 object GitHubAuthService extends GitHubConfig {
+  val logger = LoggerFactory.getLogger("prchecklist.services.GitHubAuthService")
+
   def authorizationURL(redirectURI: String): String = {
+    logger.debug(s"redirectURI: $redirectURI")
     s"https://$githubDomain/login/oauth/authorize?client_id=$githubClientId&redirect_uri=${URLEncoder.encode(redirectURI, "UTF-8")}"
   }
 
