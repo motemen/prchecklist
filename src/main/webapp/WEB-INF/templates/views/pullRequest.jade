@@ -9,7 +9,7 @@
         small
           a(href={checklist.pullRequest.repo.url}) #{checklist.pullRequest.repo.fullName}
         a(href={checklist.pullRequest.url})
-          | ##{checklist.pullRequest.number}
+          | ##{checklist.pullRequest.number.toString}
         | #{checklist.pullRequest.title}
 
     pre.description><
@@ -19,13 +19,13 @@
       = checklist.checks.map
         - case (nr, check) =>
           li(class={if (check.isChecked) "checked" else ""})
-            a.number(href={checklist.pullRequestUrl(nr)}) ##{nr}
+            a.number(href={checklist.pullRequestUrl(nr)}) ##{nr.toString}
             span.title
               | #{check.pullRequest.title}
             span.checkers
               = check.checkedUsers.map
                 - user =>
                   img(src={user.profileImageUrl} width=32)
-            form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number}/check/#{check.pullRequest.number}")
-              button.btn.btn-sm.btn-default(type="submit" is="ChecklistCheckButton" data-repo={checklist.pullRequest.repo.fullName} data-pr={checklist.pullRequest.number} data-feature-pr={check.pullRequest.number})
+            form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/check/#{check.pullRequest.number.toString}")
+              button.btn.btn-sm.btn-default(type="submit")
                 i.fa.fa-check
