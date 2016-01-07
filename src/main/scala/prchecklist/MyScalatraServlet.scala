@@ -29,13 +29,8 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
   }
 
   get("/") {
-    <html>
-      <body>
-        <h1>Hello, world!??xe</h1>
-        <a href="/auth">auth</a>
-        <span>{ getVisitor }</span>
-      </body>
-    </html>
+    contentType = "text/html"
+    layoutTemplate("/WEB-INF/templates/views/index.jade", "visitor" -> getVisitor)
   }
 
   get("/:owner/:repoName/pull/:number") {
@@ -57,7 +52,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
                 val is =
                   ChecklistService.getChecklist(pr).map {
                     checklist =>
-                      jade("/pullRequest", "checklist" -> checklist)
+                      layoutTemplate("/WEB-INF/templates/views/pullRequest.jade", "checklist" -> checklist)
                   }
               }
           )
