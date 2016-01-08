@@ -1,4 +1,5 @@
 -@ val checklist: prchecklist.models.ReleaseChecklist
+-@ val visitor: prchecklist.models.Visitor
 
 .row(class={if (checklist.allGreen) "all-green" else ""})
   .col-md-9
@@ -28,5 +29,5 @@
                   - user =>
                     img(src={user.avatarUrl} width=32)
               form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/check/#{check.pullRequest.number.toString}")
-                button.btn.btn-sm.btn-default(type="submit")
+                button.btn.btn-sm.btn-default(type="submit" class={if (check.isCheckedBy(visitor)) "btn-success" else ""})
                   i.fa.fa-check

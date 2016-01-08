@@ -48,7 +48,11 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
                 val is =
                   ChecklistService.getChecklist(pr).map {
                     checklist =>
-                      layoutTemplate("/WEB-INF/templates/views/pullRequest.jade", "checklist" -> checklist)
+                      layoutTemplate(
+                        "/WEB-INF/templates/views/pullRequest.jade",
+                        "checklist" -> checklist,
+                        "visitor" -> visitor
+                      )
                   }
               }
           )

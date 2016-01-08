@@ -1,7 +1,5 @@
 package prchecklist.models
 
-import com.github.tarao.nonempty.NonEmpty
-
 case class ReleaseChecklist(pullRequest: ReleasePullRequest, checks: Map[Int, Check]) {
   def pullRequestUrl(number: Int) = pullRequest.repo.pullRequestUrl(number)
 
@@ -30,6 +28,8 @@ case class GitHubRepo(owner: String, name: String) {
 
 case class Check(pullRequest: PullRequestReference, checkedUsers: List[User]) {
   def isChecked: Boolean = checkedUsers.nonEmpty
+
+  def isCheckedBy(user: UserLike) = checkedUsers.exists(_.login == user.login)
 }
 
 case class Visitor(login: String, accessToken: String) extends UserLike
