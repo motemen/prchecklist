@@ -34,12 +34,10 @@ case class Check(pullRequest: PullRequestReference, checkedUsers: List[User]) {
 
 case class Visitor(login: String, accessToken: String) extends UserLike
 
-case class User(login: String) extends UserLike {
-}
+case class User(login: String) extends UserLike
 
-trait UserLike {
+trait UserLike extends GitHubConfig {
   val login: String
 
-  // TODO: use API response
-  def profileImageUrl: String = s"https://github.com/$login.png"
+  def avatarUrl: String = s"$githubOrigin/$login.png"
 }
