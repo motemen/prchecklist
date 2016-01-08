@@ -2,17 +2,13 @@ package prchecklist
 
 import prchecklist.models._
 import prchecklist.services._
+import prchecklist.utils.UriStringContext._
 
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 
-import org.json4s
-import org.json4s.native.Serialization
-
 import scalaz.syntax.std.option._
 import scalaz.concurrent.Task
-
-import java.net.URLEncoder
 
 class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with FutureSupport with ScalateSupport {
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
@@ -41,7 +37,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     val repo = GitHubRepo(owner, repoName)
 
     getVisitor match {
-      case None => redirect(s"/auth?location=${request.uri.getPath}")
+      case None => redirect(uri"/auth?location=${request.uri.getPath}".toString)
       case Some(visitor) =>
         new GitHubPullRequestService(visitor).getReleasePullRequest(repo, number)
           .attemptRun.fold(
@@ -90,7 +86,11 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
 
   get("/auth") {
     val scheme = request.headers.getOrElse("X-Forwarded-Proto", "http")
-    Found(GitHubAuthService.authorizationURL(s"${scheme}://${request.uri.getAuthority}/auth/callback?location=${request.parameters.getOrElse("location", "/")}"))
+    val origin = new java.net.URI(scheme, request.uri.getAuthority, null, null, null)
+    val location = request.parameters.getOrElse("location", "/")
+
+    val redirectUri = uri"$origin/auth/callback?location=$location"
+    Found(GitHubAuthService.authorizationURL(redirectUri.toString))
   }
 
   get("/auth/callback") {
