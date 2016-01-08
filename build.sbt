@@ -2,22 +2,20 @@ import org.scalatra.sbt.ScalatraPlugin
 import com.mojolly.scalate.ScalatePlugin
 import com.typesafe.sbt.{SbtScalariform, SbtStartScript}
 
-val Organization = "net.tokyoenvious"
-val Version = "0.1.0-SNAPSHOT"
-val ScalaVersion = "2.11.7"
-val ScalatraVersion = "2.4.0"
-
 lazy val prchecklist = (project in file(".")).
+  enablePlugins(
+    BuildInfoPlugin,
+    GitVersioning
+  ).
   settings(Defaults.defaultSettings).
   settings(ScalatraPlugin.scalatraWithJRebel).
   settings(ScalatePlugin.scalateSettings).
   settings(SbtScalariform.scalariformSettings).
   settings(SbtStartScript.startScriptForClassesSettings).
   settings(
-      organization := Organization,
+      organization := "net.tokyoenvious",
       name := "prchecklist",
-      version := Version,
-      scalaVersion := ScalaVersion,
+      scalaVersion := "2.11.7",
 
       scalacOptions ++= Seq(
         "-unchecked",
@@ -29,9 +27,9 @@ lazy val prchecklist = (project in file(".")).
       resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
 
       libraryDependencies ++= Seq(
-        "org.scalatra" %% "scalatra" % ScalatraVersion,
-        "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
-        "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % "test",
+        "org.scalatra" %% "scalatra" % "2.4.0",
+        "org.scalatra" %% "scalatra-scalate" % "2.4.0",
+        "org.scalatra" %% "scalatra-scalatest" % "2.4.0" % "test",
         "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime",
         "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container;compile",
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
@@ -42,7 +40,8 @@ lazy val prchecklist = (project in file(".")).
         "com.typesafe.slick" %% "slick" % "3.0.0",
         "org.postgresql" % "postgresql" % "9.4.1207",
         "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
-        "net.debasishg" %% "redisclient" % "3.1"
+        "net.debasishg" %% "redisclient" % "3.1",
+        "org.pegdown" % "pegdown" % "1.6.0"
       )
     ).
     settings(
@@ -72,4 +71,15 @@ lazy val prchecklist = (project in file(".")).
           "psql prchecklist_test -f db/prchecklist.sql" !!
         }
       )
+    ).
+    settings(
+      sourceGenerators in Compile <+= buildInfo in Compile,
+      buildInfoKeys := Seq[BuildInfoKey](
+        name, version, scalaVersion, sbtVersion
+      ),
+      buildInfoOptions += BuildInfoOption.BuildTime,
+      buildInfoPackage := "prchecklist"
+    ).
+    settings(
+      git.useGitDescribe := true
     )
