@@ -68,7 +68,7 @@ lazy val prchecklist = (project in file(".")).
           import scala.sys.process._
           import scala.language.postfixOps
 
-          "dropdb prchecklist_test" #&&
+          "dropdb prchecklist_test" ###
           "createdb prchecklist_test" #&&
           "psql prchecklist_test -f db/prchecklist.sql" !!
         }
