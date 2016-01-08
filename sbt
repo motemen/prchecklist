@@ -102,7 +102,7 @@ make_url () {
   category="$2"
   version="$3"
 
-  echo "http://repo.typesafe.com/typesafe/ivy-$category/$groupid/sbt-launch/$version/sbt-launch.jar"
+  echo "https://repo.typesafe.com/typesafe/ivy-$category/$groupid/sbt-launch/$version/sbt-launch.jar"
 }
 
 declare -r default_jvm_opts="-Dfile.encoding=UTF8"
@@ -168,7 +168,7 @@ sbt_groupid () {
 sbt_artifactory_list () {
   local version0=$(sbt_version)
   local version=${version0%-SNAPSHOT}
-  local url="http://typesafe.artifactoryonline.com/typesafe/ivy-snapshots/$(sbt_groupid)/sbt-launch/"
+  local url="https://typesafe.artifactoryonline.com/typesafe/ivy-snapshots/$(sbt_groupid)/sbt-launch/"
   dlog "Looking for snapshot list at: $url "
 
   curl -s --list-only "$url" | \
@@ -196,7 +196,7 @@ make_snapshot_url () {
 
 jar_url () {
   case $(sbt_version) in
-             0.7.*) echo "http://simple-build-tool.googlecode.com/files/sbt-launch-0.7.7.jar" ;;
+             0.7.*) echo "https://simple-build-tool.googlecode.com/files/sbt-launch-0.7.7.jar" ;;
         *-SNAPSHOT) make_snapshot_url ;;
                  *) make_release_url ;;
   esac
