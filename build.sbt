@@ -62,7 +62,11 @@ lazy val prchecklist = (project in file(".")).
     ).
     settings(
       fork in Test := true,
-      javaOptions in Test += "-Ddatabase.url=jdbc:postgresql:prchecklist_test",
+      javaOptions in Test ++= Seq(
+        "-Ddatabase.url=jdbc:postgresql:prchecklist_test",
+        "-Dgithub.clientId=",
+        "-Dgithub.clientSecret="
+      ),
       testOptions in Test += Tests.Setup(
         () => {
           import scala.sys.process._
