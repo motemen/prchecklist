@@ -66,7 +66,9 @@ class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
 
             case None =>
               val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
-              redis.set(redisKey, json4s.native.Serialization.write(releasePR))
+              if (pr.repo.`private` == false) {
+                redis.set(redisKey, json4s.native.Serialization.write(releasePR))
+              }
               Task.now(releasePR)
           }
       }

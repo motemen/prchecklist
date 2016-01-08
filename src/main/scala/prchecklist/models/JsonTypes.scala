@@ -6,11 +6,17 @@ object JsonTypes {
   // https://developer.github.com/v3/pulls/#get-a-single-pull-request
   case class GitHubPullRequest(
     number: Int,
+    repo: GitHubRepo,
     url: String,
     title: String,
     body: String,
     head: GitHubCommitRef,
     base: GitHubCommitRef)
+
+  case class GitHubRepo(
+    fullName: String,
+    `private`: Boolean,
+    url: String)
 
   case class GitHubCommit(
     sha: String,
