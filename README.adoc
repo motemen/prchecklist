@@ -1,0 +1,6 @@
+= prchecklist
+
+----
+$ ./sbt
+> ~re-start
+----

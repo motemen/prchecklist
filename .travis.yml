@@ -3,3 +3,6 @@ scala:
   - 2.11.7
 services:
   - postgresql
+cache:
+  directories:
+    - $HOME/.ivy2/cache
