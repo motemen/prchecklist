@@ -12,8 +12,8 @@
           | ##{checklist.pullRequest.number.toString}
         | #{checklist.pullRequest.title}
 
-    pre.description><
-      ~ checklist.pullRequest.body
+    .description
+      != formatMarkdown(checklist.pullRequest.body)
 
     ul#checklist
       = checklist.checks.map
@@ -22,10 +22,11 @@
             a.number(href={checklist.pullRequestUrl(nr)}) ##{nr.toString}
             span.title
               | #{check.pullRequest.title}
-            span.checkers
-              = check.checkedUsers.map
-                - user =>
-                  img(src={user.avatarUrl} width=32)
-            form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/check/#{check.pullRequest.number.toString}")
-              button.btn.btn-sm.btn-default(type="submit")
-                i.fa.fa-check
+            .checkers-container
+              span.checkers
+                = check.checkedUsers.map
+                  - user =>
+                    img(src={user.avatarUrl} width=32)
+              form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/check/#{check.pullRequest.number.toString}")
+                button.btn.btn-sm.btn-default(type="submit")
+                  i.fa.fa-check

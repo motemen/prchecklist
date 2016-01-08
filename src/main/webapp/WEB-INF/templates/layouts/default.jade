@@ -29,11 +29,16 @@ html
       | h1 small a {
       |   color: grey;
       | }
-      | pre {
-      |   font-size: 95%;
-      |   line-height: 1;
-      |   padding: 1em;
-      |   border-radius: 0;
+      | .description {
+      |   font-family: 90%;
+      |   padding: 1em 2em;
+      |   background-color: #EEE;
+      | }
+      | .task-list-item {
+      |   list-style: none;
+      | }
+      | .task-list-item input[type=checkbox] {
+      |   margin-right: 0.5em;
       | }
       | .checklist-check-mark {
       |   color: silver;
@@ -41,10 +46,13 @@ html
       |   margin-right: 0.3em;
       | }
       | .all-green .checklist-check-mark {
-      |   color: green;
+      |   color: #6b8e23;
       | }
       | .headline {
       |   display: flex;
+      | }
+      | .headline i {
+      |   margin-top: 5px;
       | }
       | .headline small {
       |   display: block;
@@ -56,18 +64,33 @@ html
       | }
       | #checklist li {
       |   line-height: 48px;
-      |   padding: 0.2em 0.8em;
+      |   padding: 0.5em 1em;
       |   margin-bottom: 0.6em;
+      |   font-size: 105%;
       |   border: 1px solid #DDD;
+      |   display: flex;
+      | }
+      | #checklist li a {
+      |   margin-right: 0.5em;
+      | }
+      | #checklist li {
+      |   transition: opacity 0.5s;
       | }
       | #checklist li.checked {
       |   opacity: 0.3;
       | }
-      | #checklist .checkers {
+      | #checklist li:hover {
+      |   opacity: 1;
+      | }
+      | #checklist .checkers-container {
+      |   flex: 1;
+      |   text-align: right;
+      | }
+      | #checklist .checkers-container .checkers {
       |   margin-left: 0.5em;
       |   margin-right: 0.5em;
       | }
-      | #checklist form {
+      | #checklist .checkers-container form {
       |   display: inline;
       | }
   body

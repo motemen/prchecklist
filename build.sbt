@@ -45,14 +45,16 @@ lazy val prchecklist = (project in file(".")).
       )
     ).
     settings(
-      ScalateKeys.scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
+      ScalateKeys.scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) { base =>
         Seq(
           TemplateConfig(
             base / "webapp" / "WEB-INF" / "templates",
-            Seq.empty,  /* default imports should be added here */
+            Seq(
+              "import prchecklist.views.Helper._"
+            ),
             Seq(
               Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
-            ),  /* add extra bindings here */
+            ),
             Some("templates")
           )
         )
