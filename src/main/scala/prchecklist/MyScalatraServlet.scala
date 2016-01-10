@@ -2,15 +2,16 @@ package prchecklist
 
 import prchecklist.models._
 import prchecklist.services._
-import prchecklist.utils.UriStringContext._
 
 import org.scalatra._
-import org.scalatra.scalate.ScalateSupport
+import org.scalatra.scalate.{ ScalateUrlGeneratorSupport, ScalateSupport }
 
 import scalaz.syntax.std.option._
 import scalaz.concurrent.Task
 
-class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with FutureSupport with ScalateSupport {
+class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
+    with FutureSupport with ScalateSupport with UrlGeneratorSupport {
+
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
   override def isScalateErrorPageEnabled = false
@@ -29,7 +30,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     layoutTemplate("/WEB-INF/templates/views/index.jade", "visitor" -> getVisitor)
   }
 
-  get("/:owner/:repoName/pull/:number") {
+  val viewPullRequest = get("/:owner/:repoName/pull/:number") {
     val owner = params('owner)
     val repoName = params('repoName)
     val number = params('number).toInt
@@ -37,7 +38,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     val repo = GitHubRepo(owner, repoName)
 
     getVisitor match {
-      case None => redirect(uri"/auth?location=${request.uri.getPath}".toString)
+      case None => redirect(url(enterAuth, Map("location" -> request.uri.getPath), Seq.empty))
       case Some(visitor) =>
         new GitHubPullRequestService(visitor).getReleasePullRequest(repo, number)
           .attemptRun.fold(
@@ -59,7 +60,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     }
   }
 
-  post("/:owner/:repoName/pull/:number/check/:featureNumber") {
+  val checkFeaturePR = post("/:owner/:repoName/pull/:number/check/:featureNumber") {
     val owner = params('owner)
     val repoName = params('repoName)
     val number = params('number).toInt
@@ -80,7 +81,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
                   ChecklistService.getChecklist(pr).map {
                     checklist =>
                       ChecklistService.checkChecklist(checklist, visitor, featureNumber).map {
-                        _ => redirect(s"/$owner/$repoName/pull/$number")
+                        _ => redirect(url(viewPullRequest, "owner" -> owner, "repoName" -> repoName, "number" -> number.toString))
                       }
                   }
               }
@@ -88,16 +89,16 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack with Fut
     }
   }
 
-  get("/auth") {
+  val enterAuth = get("/auth") {
     val scheme = request.headers.getOrElse("X-Forwarded-Proto", "http")
     val origin = new java.net.URI(scheme, request.uri.getAuthority, null, null, null)
     val location = request.parameters.getOrElse("location", "/")
 
-    val redirectUri = uri"$origin/auth/callback?location=$location"
-    Found(GitHubAuthService.authorizationURL(redirectUri.toString))
+    val redirectUri = origin + url(authCallback, Map("location" -> location), Seq.empty)
+    Found(GitHubAuthService.authorizationURL(redirectUri))
   }
 
-  get("/auth/callback") {
+  val authCallback = get("/auth/callback") {
     val res = for {
       code <- Task.fromDisjunction { params.get("code") \/> new Error("code required") }
       visitor <- GitHubAuthService.authorize(code)

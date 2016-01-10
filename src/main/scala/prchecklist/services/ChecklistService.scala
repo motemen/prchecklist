@@ -45,6 +45,20 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     db.run(q.transactionally)
   }
 
+  def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
+    val db = Database.get
+
+    val q = sqlu"""
+      | DELETE checks
+      | WHERE repository_full_name = ${checklist.pullRequest.repo.fullName}
+      |   AND release_pr_number = ${checklist.pullRequest.number}
+      |   AND feature_pr_number = ${featurePRNumber}
+      |   AND user_login = ${checkerUser.login}
+    """.map(_ => ())
+
+    db.run(q)
+  }
+
   private[this] def getChecklistChecks(releasePR: ReleasePullRequest): Future[Map[Int, Check]] = {
     val db = Database.get
 
