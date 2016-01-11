@@ -13,6 +13,15 @@ object JsonTypes {
     head: GitHubCommitRef,
     base: GitHubCommitRef)
 
+  // https://developer.github.com/v3/activity/events/types/#pullrequestevent
+  case class GitHubWebhookPullRequestEvent(
+      action: String,
+      number: Int,
+      pullRequest: GitHubPullRequest) {
+    def isOpened = action == "opened"
+    def isSynchronize = action == "synchronize"
+  }
+
   case class GitHubRepo(
     fullName: String,
     `private`: Boolean,
