@@ -89,6 +89,11 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
     }
   }
 
+  val receiveWebhook = post("/webhook") {
+    println(request.body)
+    "OK"
+  }
+
   val enterAuth = get("/auth") {
     val scheme = request.headers.getOrElse("X-Forwarded-Proto", "http")
     val origin = new java.net.URI(scheme, request.uri.getAuthority, null, null, null)
