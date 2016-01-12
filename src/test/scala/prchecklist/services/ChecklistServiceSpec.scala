@@ -1,12 +1,13 @@
 package prchecklist.services
 
-import com.github.tarao.nonempty.NonEmpty
-import org.scalatest._
-
 import prchecklist.models._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import com.github.tarao.nonempty.NonEmpty
+
+import org.scalatest._
 import org.scalatest.time._
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures {
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))

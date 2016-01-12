@@ -11,27 +11,8 @@ import com.redis._
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
-class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
+class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig with GitHubPullRequestUtils {
   def accessToken = visitor.accessToken
-
-  def mergedPullRequests(commits: List[JsonTypes.GitHubCommit]): List[PullRequestReference] = {
-    commits.flatMap {
-      c =>
-        """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r.findFirstMatchIn(c.commit.message) map {
-          m => PullRequestReference(m.group(1).toInt, m.group(2))
-        }
-    }
-  }
-
-  def validateReleasePullRequest(pr: JsonTypes.GitHubPullRequest, featurePRs: List[PullRequestReference]): Option[String] = {
-    if (pr.base.ref != "master") {
-      Some("not a pull request to master")
-    } else if (featurePRs.isEmpty) {
-      Some("no feature pull requests merged")
-    } else {
-      None
-    }
-  }
 
   def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
     import org.json4s
@@ -41,6 +22,11 @@ class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
 
     val redisURL = new URI(System.getProperty("redis.url", "redis://127.0.0.1:6379"))
     val redis = new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
+    Option(redisURL.getUserInfo()).map(_.split(":", 2)) match {
+      case Some(Array(_, password)) => redis.auth(password)
+      case _ =>
+    }
+
     val redisKey = s"pull:${repo.fullName}:$number"
     // TODO: redis parser
     redis.get[String](redisKey).flatMap {
@@ -66,12 +52,33 @@ class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig {
 
             case None =>
               val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
-              if (pr.repo.`private` == false) {
+              if (pr.base.repo.`private` == false) {
                 redis.set(redisKey, json4s.native.Serialization.write(releasePR))
               }
               Task.now(releasePR)
           }
       }
+    }
+  }
+}
+
+trait GitHubPullRequestUtils {
+  def mergedPullRequests(commits: List[JsonTypes.GitHubCommit]): List[PullRequestReference] = {
+    commits.flatMap {
+      c =>
+        """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r.findFirstMatchIn(c.commit.message) map {
+          m => PullRequestReference(m.group(1).toInt, m.group(2))
+        }
+    }
+  }
+
+  def validateReleasePullRequest(pr: JsonTypes.GitHubPullRequest, featurePRs: List[PullRequestReference]): Option[String] = {
+    if (pr.base.ref != "master") {
+      Some("not a pull request to master")
+    } else if (featurePRs.isEmpty) {
+      Some("no feature pull requests merged")
+    } else {
+      None
     }
   }
 }

@@ -3,7 +3,7 @@ package prchecklist.utils
 import org.json4s
 import org.json4s.native.JsonMethods
 
-import scalaj.http.{ Http, HttpRequest, HttpResponse, HttpOptions }
+import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
 
 import scalaz.\/
 import scalaz.syntax.std.option._
@@ -11,14 +11,20 @@ import scalaz.syntax.either._
 
 import org.slf4j.LoggerFactory
 
-object HttpUtils {
+object HttpUtils extends HttpUtils {
+  object Http extends BaseHttp
+}
+
+trait HttpUtils {
+  val Http: BaseHttp
+
   val allowUnsafeSSL = System.getProperty("http.allowUnsafeSSL", "") == "true"
   val logger = LoggerFactory.getLogger("prchecklist.utils.HttpUtils")
 
   def httpRequestJson[A](url: String, build: HttpRequest => HttpRequest = identity)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[A]): Throwable \/ A = {
     for {
       body <- httpRequest(url, _.asString, build)
-      obj <- JsonMethods.parse(body).extractOpt[A] \/> new Error("parsing JSON failed")
+      obj <- \/.fromTryCatchNonFatal { JsonMethods.parse(body).camelizeKeys.extract[A] }
     } yield obj
   }
 
