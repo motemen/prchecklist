@@ -78,7 +78,7 @@ html
       |   margin-bottom: 0.6em;
       |   font-size: 105%;
       |   border: 1px solid #DDD;
-      |   display: flex;
+      |   position: relative;
       | }
       | #checklist li a {
       |   margin-right: 0.5em;
@@ -93,8 +93,10 @@ html
       |   opacity: 1;
       | }
       | #checklist .checkers-container {
-      |   flex: 1;
+      |   position: absolute;
       |   text-align: right;
+      |   right: 1em;
+      |   top: 0.5em;
       | }
       | #checklist .checkers-container .checkers {
       |   margin-left: 0.5em;
@@ -131,5 +133,6 @@ html
         p.navbar-text
           small
             = BuildInfo.version
+            small Built: #{BuildInfo.builtAtString}
     .container
       != body
