@@ -49,7 +49,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     val db = Database.get
 
     val q = sqlu"""
-      | DELETE checks
+      | DELETE FROM checks
       | WHERE repository_full_name = ${checklist.pullRequest.repo.fullName}
       |   AND release_pr_number = ${checklist.pullRequest.number}
       |   AND feature_pr_number = ${featurePRNumber}

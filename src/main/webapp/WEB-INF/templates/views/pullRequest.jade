@@ -28,8 +28,12 @@
                 = check.checkedUsers.map
                   - user =>
                     img(src={user.avatarUrl} width=32)
-              form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/check/#{check.pullRequest.number.toString}")
-                button.btn.btn-sm.btn-default(type="submit" class={if (check.isCheckedBy(visitor)) "btn-success" else ""})
-                  i.fa.fa-check
-                  - if (check.isCheckedBy(visitor))
+              - if (check.isCheckedBy(visitor))
+                form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/-/uncheck/#{check.pullRequest.number.toString}")
+                  button.btn.btn-sm.btn-success(type="submit")
+                    i.fa.fa-check
                     i.fa.fa-times
+              - else
+                form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/-/check/#{check.pullRequest.number.toString}")
+                  button.btn.btn-sm.btn-default(type="submit")
+                    i.fa.fa-check

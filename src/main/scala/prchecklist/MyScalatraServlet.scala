@@ -60,7 +60,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
     }
   }
 
-  val checkFeaturePR = post("/:owner/:repoName/pull/:number/check/:featureNumber") {
+  val checkFeaturePR = post("/:owner/:repoName/pull/:number/-/check/:featureNumber") {
     val owner = params('owner)
     val repoName = params('repoName)
     val number = params('number).toInt
@@ -81,6 +81,35 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
                   ChecklistService.getChecklist(pr).map {
                     checklist =>
                       ChecklistService.checkChecklist(checklist, visitor, featureNumber).map {
+                        _ => redirect(url(viewPullRequest, "owner" -> owner, "repoName" -> repoName, "number" -> number.toString))
+                      }
+                  }
+              }
+          )
+    }
+  }
+
+  val uncheckFeaturePR = post("/:owner/:repoName/pull/:number/-/uncheck/:featureNumber") {
+    val owner = params('owner)
+    val repoName = params('repoName)
+    val number = params('number).toInt
+    val featureNumber = params('featureNumber).toInt
+
+    val repo = GitHubRepo(owner, repoName)
+
+    getVisitor match {
+      case None => Forbidden()
+
+      case Some(visitor) =>
+        new GitHubPullRequestService(visitor).getReleasePullRequest(repo, number)
+          .attemptRun.fold(
+            e => BadRequest(s"error: $e"),
+            pr =>
+              new AsyncResult {
+                val is =
+                  ChecklistService.getChecklist(pr).map {
+                    checklist =>
+                      ChecklistService.uncheckChecklist(checklist, visitor, featureNumber).map {
                         _ => redirect(url(viewPullRequest, "owner" -> owner, "repoName" -> repoName, "number" -> number.toString))
                       }
                   }
