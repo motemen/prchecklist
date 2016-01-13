@@ -50,7 +50,8 @@ lazy val prchecklist = (project in file(".")).
           TemplateConfig(
             base / "webapp" / "WEB-INF" / "templates",
             Seq(
-              "import prchecklist.views.Helper._"
+              "import prchecklist.views.Helper._",
+              "import prchecklist.BuildInfo"
             ),
             Seq(
               Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)

@@ -15,7 +15,12 @@ html
       |   font-size: 18px;
       |   font-family: "Lato", sans-serif;
       |   line-height: 1.8;
-      |   padding-top: 40px;
+      | }
+      | nav *, nav .navbar-brand {
+      |   line-height: 1;
+      | }
+      | nav small {
+      |   font-size: 80%;
       | }
       | h1, h2 { font-weight: 700; }
       | h1 {
@@ -51,7 +56,7 @@ html
       |   margin-right: 0.3em;
       | }
       | .all-green .checklist-check-mark {
-      |   color: #6b8e23;
+      |   color: #5CB85C;
       | }
       | .headline {
       |   display: flex;
@@ -118,5 +123,13 @@ html
       |   display: inline;
       | }
   body
+    nav.navbar.navbar-default.navbar-static-top
+      .container-fluid
+        .navbar-header
+          a.navbar-brand(href="/")
+            | prchecklist
+        p.navbar-text
+          small
+            = BuildInfo.version
     .container
       != body
