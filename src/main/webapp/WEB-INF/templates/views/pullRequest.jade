@@ -31,3 +31,5 @@
               form(method="post" action="/#{checklist.pullRequest.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/check/#{check.pullRequest.number.toString}")
                 button.btn.btn-sm.btn-default(type="submit" class={if (check.isCheckedBy(visitor)) "btn-success" else ""})
                   i.fa.fa-check
+                  - if (check.isCheckedBy(visitor))
+                    i.fa.fa-times

@@ -13,6 +13,7 @@ trait GitHubConfig {
   val githubClientId = System.getProperty("github.clientId").ensuring(_ != null, "github.clientId must be defined")
   val githubClientSecret = System.getProperty("github.clientSecret").ensuring(_ != null, "github.clientSecret must be defined")
   val githubDomain = System.getProperty("github.domain", "github.com")
+  val githubDefaultToken = Option(System.getProperty("github.defaultToken"))
 
   def githubOrigin = s"https://$githubDomain"
 

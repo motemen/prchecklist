@@ -40,6 +40,7 @@ html
       | }
       | .task-list-item {
       |   list-style: none;
+      |   margin-left: -2em;
       | }
       | .task-list-item input[type=checkbox] {
       |   margin-right: 0.5em;
@@ -81,7 +82,7 @@ html
       |   transition: opacity 0.5s;
       | }
       | #checklist li.checked {
-      |   opacity: 0.3;
+      |   // opacity: 0.3;
       | }
       | #checklist li:hover {
       |   opacity: 1;
@@ -95,6 +96,25 @@ html
       |   margin-right: 0.5em;
       | }
       | #checklist .checkers-container form {
+      |   display: inline;
+      | }
+      | #checklist .checkers-container form:hover .btn-success {
+      |   background-color: #D9534F; /* btn-danger */
+      |   border-color: #D43F3A;
+      |   transition-property: background-color, border-color;
+      |   /* transition-duration: 0.2s; */
+      | }
+      | #checklist .checkers-container form .btn {
+      |   width: 3em;
+      | }
+      | #checklist .checkers-container form .btn-success i.fa-times {
+      |   font-size: 115%;
+      |   display: none;
+      | }
+      | #checklist .checkers-container form:hover .btn-success i.fa-check {
+      |   display: none;
+      | }
+      | #checklist .checkers-container form:hover .btn-success i.fa-times {
       |   display: inline;
       | }
   body
