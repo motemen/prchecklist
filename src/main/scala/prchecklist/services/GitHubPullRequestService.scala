@@ -4,16 +4,14 @@ import java.net.URI
 
 import org.json4s._
 import prchecklist.models._
-import prchecklist.utils.HttpUtils
+import prchecklist.utils.{ HttpUtils, GitHubHttpClient }
 
 import com.redis._
 
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
-class GitHubPullRequestService(val visitor: Visitor, val httpUtils: HttpUtils) extends GitHubConfig with GitHubPullRequestUtils {
-  def accessToken = visitor.accessToken
-
+class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends GitHubConfig with GitHubPullRequestUtils {
   def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
     import org.json4s
     import org.json4s.native.JsonMethods
@@ -22,7 +20,7 @@ class GitHubPullRequestService(val visitor: Visitor, val httpUtils: HttpUtils) e
 
     val redisURL = new URI(System.getProperty("redis.url", "redis://127.0.0.1:6379"))
     val redis = new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
-    Option(redisURL.getUserInfo()).map(_.split(":", 2)) match {
+    Option(redisURL.getUserInfo).map(_.split(":", 2)) match {
       case Some(Array(_, password)) => redis.auth(password)
       case _ =>
     }
@@ -35,12 +33,12 @@ class GitHubPullRequestService(val visitor: Visitor, val httpUtils: HttpUtils) e
       pr => Task.now(pr)
     }.getOrElse {
       val getPullRequestTask = Task.fromDisjunction {
-        httpUtils.httpRequestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number", _.header("Authorization", s"token $accessToken"))
+        githubHttpClient.httpRequestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number")
       }
 
       // TODO: paging
       val getPullRequestCommitsTask = Task.fromDisjunction {
-        httpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100", _.header("Authorization", s"token $accessToken"))
+        githubHttpClient.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100")
       }
 
       (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {

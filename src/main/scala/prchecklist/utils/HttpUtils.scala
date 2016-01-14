@@ -15,11 +15,27 @@ object HttpUtils extends HttpUtils {
   object Http extends BaseHttp
 }
 
+class GitHubHttpClient(accessToken: String) extends HttpUtils {
+  object Http extends BaseHttp
+
+  override def defaultBuild(req: HttpRequest): HttpRequest = {
+    super.defaultBuild(req).header("Authorization", s"token $accessToken")
+  }
+}
+
 trait HttpUtils {
   val Http: BaseHttp
 
   val allowUnsafeSSL = System.getProperty("http.allowUnsafeSSL", "") == "true"
   val logger = LoggerFactory.getLogger("prchecklist.utils.HttpUtils")
+
+  def defaultBuild(req: HttpRequest): HttpRequest = {
+    if (allowUnsafeSSL) {
+      req.option(HttpOptions.allowUnsafeSSL)
+    } else {
+      req
+    }
+  }
 
   def httpRequestJson[A](url: String, build: HttpRequest => HttpRequest = identity)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[A]): Throwable \/ A = {
     for {
@@ -29,11 +45,7 @@ trait HttpUtils {
   }
 
   def httpRequest[A](url: String, run: HttpRequest => HttpResponse[A], build: HttpRequest => HttpRequest = identity): Throwable \/ A = {
-    val httpReq = if (allowUnsafeSSL) {
-      build(Http(url)).option(HttpOptions.allowUnsafeSSL)
-    } else {
-      build(Http(url))
-    }
+    val httpReq = build(defaultBuild(Http(url)))
     logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
     val httpRes = run(httpReq)

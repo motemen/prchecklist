@@ -1,32 +1,31 @@
 package prchecklist.web
 
-import org.mockito.MockSettings
 import org.scalatest.{ Matchers, OptionValues, mock }
 import org.scalatra.test.scalatest._
 import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.mockito.Matchers.{ eq => matchEq }
 
-import prchecklist.{ MyScalatraServlet }
+import prchecklist.MyScalatraServlet
 import prchecklist.models._
 import prchecklist.utils._
 
 import scalaz.\/-
 
 class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar {
-  addServlet(new MyScalatraServlet {
+  val testServlet = new MyScalatraServlet {
     put("/@user") {
-      session("userLogin") = params("login")
-      session("accessToken") = ""
+      session += "userLogin" -> params("login")
+      session += "accessToken" -> ""
     }
 
-    override def httpUtils = {
-      val hu = mock[HttpUtils]
+    override def mkGitHubHttpClient(visitor: Visitor): GitHubHttpClient = {
+      val client = mock[GitHubHttpClient]
 
       import JsonTypes._
 
       def stubJson[A](url: String, data: A) {
-        when(hu.httpRequestJson[A](matchEq(url), any())(any(), any()))
+        when(client.httpRequestJson[A](matchEq(url), any())(any(), any()))
           .thenReturn(\/-(data))
       }
 
@@ -74,9 +73,11 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
         )
       )
 
-      hu
+      client
     }
-  }, "/*")
+  }
+
+  addServlet(testServlet, "/*")
 
   test("index") {
     get("/") {
@@ -88,9 +89,6 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     session {
       get("/motemen/test-repository/pull/2") {
         status should equal (302)
-        println(header.get("Location").map {
-          loc => new java.net.URI(loc).getPath
-        })
       }
 
       put("/@user?login=test-user") {
@@ -100,6 +98,15 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       get("/motemen/test-repository/pull/2") {
         status should equal (200)
       }
+    }
+  }
+
+  test("postWebhook") {
+    import scala.io.Source
+
+    val payload = Source.fromInputStream(getClass.getResourceAsStream("/webhook/pr-synchronize.json")).toArray.map(_.toByte)
+    post("/webhook", payload) {
+      status should equal (200)
     }
   }
 }
