@@ -2,6 +2,7 @@ package prchecklist
 
 import prchecklist.models._
 import prchecklist.services._
+import prchecklist.utils.{ HttpUtils }
 
 import org.scalatra._
 import org.scalatra.scalate.{ ScalateUrlGeneratorSupport, ScalateSupport }
@@ -11,6 +12,8 @@ import scalaz.concurrent.Task
 
 class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
     with FutureSupport with ScalateSupport with UrlGeneratorSupport {
+
+  def httpUtils: HttpUtils = HttpUtils
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
@@ -40,7 +43,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
     getVisitor match {
       case None => redirect(url(enterAuth, Map("location" -> request.uri.getPath), Seq.empty))
       case Some(visitor) =>
-        new GitHubPullRequestService(visitor).getReleasePullRequest(repo, number)
+        new GitHubPullRequestService(visitor, httpUtils).getReleasePullRequest(repo, number)
           .attemptRun.fold(
             e => BadRequest(s"error: $e"),
             pr =>
@@ -72,7 +75,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
       case None => Forbidden()
 
       case Some(visitor) =>
-        new GitHubPullRequestService(visitor).getReleasePullRequest(repo, number)
+        new GitHubPullRequestService(visitor, httpUtils).getReleasePullRequest(repo, number)
           .attemptRun.fold(
             e => BadRequest(s"error: $e"),
             pr =>
@@ -101,7 +104,7 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
       case None => Forbidden()
 
       case Some(visitor) =>
-        new GitHubPullRequestService(visitor).getReleasePullRequest(repo, number)
+        new GitHubPullRequestService(visitor, httpUtils).getReleasePullRequest(repo, number)
           .attemptRun.fold(
             e => BadRequest(s"error: $e"),
             pr =>

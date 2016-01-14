@@ -41,7 +41,8 @@ lazy val prchecklist = (project in file(".")).
         "org.postgresql" % "postgresql" % "9.4.1207",
         "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
         "net.debasishg" %% "redisclient" % "3.1",
-        "org.pegdown" % "pegdown" % "1.6.0"
+        "org.pegdown" % "pegdown" % "1.6.0",
+        "org.mockito" % "mockito-core" % "2.0.36-beta" % "test"
       )
     ).
     settings(
@@ -65,6 +66,7 @@ lazy val prchecklist = (project in file(".")).
       fork in Test := true,
       javaOptions in Test ++= Seq(
         "-Ddatabase.url=jdbc:postgresql:prchecklist_test",
+        "-Dgithub.domain=github.com",
         "-Dgithub.clientId=",
         "-Dgithub.clientSecret="
       ),

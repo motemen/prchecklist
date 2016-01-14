@@ -11,7 +11,7 @@ import com.redis._
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
-class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig with GitHubPullRequestUtils {
+class GitHubPullRequestService(val visitor: Visitor, val httpUtils: HttpUtils) extends GitHubConfig with GitHubPullRequestUtils {
   def accessToken = visitor.accessToken
 
   def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
@@ -35,12 +35,12 @@ class GitHubPullRequestService(val visitor: Visitor) extends GitHubConfig with G
       pr => Task.now(pr)
     }.getOrElse {
       val getPullRequestTask = Task.fromDisjunction {
-        HttpUtils.httpRequestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number", _.header("Authorization", s"token $accessToken"))
+        httpUtils.httpRequestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number", _.header("Authorization", s"token $accessToken"))
       }
 
       // TODO: paging
       val getPullRequestCommitsTask = Task.fromDisjunction {
-        HttpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100", _.header("Authorization", s"token $accessToken"))
+        httpUtils.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100", _.header("Authorization", s"token $accessToken"))
       }
 
       (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
