@@ -5,6 +5,7 @@ scala:
   - 2.11.7
 services:
   - postgresql
+  - redis-server
 cache:
   directories:
     - $HOME/.ivy2/cache
