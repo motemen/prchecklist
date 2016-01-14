@@ -11,20 +11,16 @@ import scalaz.syntax.either._
 
 import org.slf4j.LoggerFactory
 
-object HttpUtils extends HttpUtils {
-  object Http extends BaseHttp
-}
-
 class GitHubHttpClient(accessToken: String) extends HttpUtils {
-  object Http extends BaseHttp
-
   override def defaultBuild(req: HttpRequest): HttpRequest = {
     super.defaultBuild(req).header("Authorization", s"token $accessToken")
   }
 }
 
+object HttpUtils extends HttpUtils
+
 trait HttpUtils {
-  val Http: BaseHttp
+  object Http extends BaseHttp
 
   val allowUnsafeSSL = System.getProperty("http.allowUnsafeSSL", "") == "true"
   val logger = LoggerFactory.getLogger("prchecklist.utils.HttpUtils")

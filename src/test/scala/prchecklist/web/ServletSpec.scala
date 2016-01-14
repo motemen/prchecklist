@@ -1,6 +1,6 @@
 package prchecklist.web
 
-import org.scalatest.{ Matchers, OptionValues, mock }
+import org.scalatest.{ Outcome, Matchers, OptionValues, mock }
 import org.scalatra.test.scalatest._
 import org.mockito.Mockito._
 import org.mockito.Matchers._
@@ -96,7 +96,9 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       }
 
       get("/motemen/test-repository/pull/2") {
-        status should equal (200)
+        withClue(body) {
+          status should equal (200)
+        }
       }
     }
   }
