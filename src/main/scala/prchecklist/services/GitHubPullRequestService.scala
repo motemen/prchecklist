@@ -33,35 +33,28 @@ class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends G
     }
 
     val redisKey = s"pull:${repo.fullName}:$number"
-    redis.get[ReleasePullRequest](redisKey) match {
-      case Some(pr) =>
-        Task.now(pr)
+    Redis.getOrUpdate(redisKey) {
+      val getPullRequestTask = Task.fromDisjunction {
+        githubHttpClient.requestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number")
+      }
 
-      case None =>
-        val getPullRequestTask = Task.fromDisjunction {
-          githubHttpClient.requestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number")
-        }
+      // TODO: paging
+      val getPullRequestCommitsTask = Task.fromDisjunction {
+        githubHttpClient.requestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100")
+      }
 
-        // TODO: paging
-        val getPullRequestCommitsTask = Task.fromDisjunction {
-          githubHttpClient.requestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100")
-        }
+      (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
+        case (pr, commits) =>
+          val featurePRs = mergedPullRequests(commits)
+          validateReleasePullRequest(pr, featurePRs) match {
+            case Some(msg) =>
+              Task.fail(new Error(msg))
 
-        (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
-          case (pr, commits) =>
-            val featurePRs = mergedPullRequests(commits)
-            validateReleasePullRequest(pr, featurePRs) match {
-              case Some(msg) =>
-                Task.fail(new Error(msg))
-
-              case None =>
-                val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
-                if (pr.base.repo.isPublic) {
-                  redis.set(redisKey, json4s.native.Serialization.write(releasePR))
-                }
-                Task.now(releasePR)
-            }
-        }
+            case None =>
+              val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
+              Task.now((releasePR, pr.base.repo.isPublic))
+          }
+      }
     }
   }
 }
