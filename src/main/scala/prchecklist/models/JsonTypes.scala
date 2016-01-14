@@ -22,9 +22,11 @@ object JsonTypes {
   }
 
   case class GitHubRepo(
-    fullName: String,
-    `private`: Boolean,
-    url: String)
+      fullName: String,
+      `private`: Boolean,
+      url: String) {
+    def isPublic = !`private`
+  }
 
   case class GitHubCommit(
     sha: String,

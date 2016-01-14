@@ -1,6 +1,6 @@
 package prchecklist.web
 
-import org.scalatest.{ Outcome, Matchers, OptionValues, mock }
+import org.scalatest.{ Matchers, OptionValues, mock }
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
 import org.mockito.Mockito._
@@ -30,7 +30,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       import JsonTypes._
 
       def stubJson[A](url: String, data: A) {
-        when(client.httpRequestJson[A](matchEq(url), any())(any(), any()))
+        when(client.requestJson[A](matchEq(url), any())(any(), any()))
           .thenReturn(\/-(data))
       }
 

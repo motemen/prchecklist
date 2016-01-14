@@ -21,7 +21,7 @@ object GitHubAuthService extends GitHubConfig {
   def authorize(code: String): Task[Visitor] = {
     Task.fromDisjunction {
       for {
-        accessTokenResBody <- httpRequest(
+        accessTokenResBody <- request(
           s"https://$githubDomain/login/oauth/access_token",
           _.asParamMap,
           _.postForm(Seq(
@@ -31,7 +31,7 @@ object GitHubAuthService extends GitHubConfig {
           ))
         )
         accessToken <- accessTokenResBody.get("access_token") \/> new Error(s"could not get access_token $accessTokenResBody")
-        user <- httpRequestJson[JsonTypes.GitHubUser](s"$githubApiBase/user", _.header("Authorization", s"token $accessToken"))
+        user <- requestJson[JsonTypes.GitHubUser](s"$githubApiBase/user", _.header("Authorization", s"token $accessToken"))
       } yield Visitor(user.login, accessToken)
     }
   }

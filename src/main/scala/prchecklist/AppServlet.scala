@@ -2,10 +2,10 @@ package prchecklist
 
 import prchecklist.models._
 import prchecklist.services._
-import prchecklist.utils.{ GitHubHttpClient, HttpUtils }
+import prchecklist.utils.GitHubHttpClient
 
 import org.scalatra._
-import org.scalatra.scalate.{ ScalateUrlGeneratorSupport, ScalateSupport }
+import org.scalatra.scalate.ScalateSupport
 
 import scalaz.syntax.std.option._
 import scalaz.concurrent.Task

@@ -6,7 +6,6 @@ import org.json4s.native.JsonMethods
 import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
 
 import scalaz.\/
-import scalaz.syntax.std.option._
 import scalaz.syntax.either._
 
 import org.slf4j.LoggerFactory
@@ -33,14 +32,14 @@ trait HttpUtils {
     }
   }
 
-  def httpRequestJson[A](url: String, build: HttpRequest => HttpRequest = identity)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[A]): Throwable \/ A = {
+  def requestJson[A](url: String, build: HttpRequest => HttpRequest = identity)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[A]): Throwable \/ A = {
     for {
-      body <- httpRequest(url, _.asString, build)
+      body <- request(url, _.asString, build)
       obj <- \/.fromTryCatchNonFatal { JsonMethods.parse(body).camelizeKeys.extract[A] }
     } yield obj
   }
 
-  def httpRequest[A](url: String, run: HttpRequest => HttpResponse[A], build: HttpRequest => HttpRequest = identity): Throwable \/ A = {
+  def request[A](url: String, run: HttpRequest => HttpResponse[A], build: HttpRequest => HttpRequest = identity): Throwable \/ A = {
     val httpReq = build(defaultBuild(Http(url)))
     logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 

@@ -1,12 +1,15 @@
 package prchecklist.services
 
+import java.io.ByteArrayInputStream
 import java.net.URI
 
-import org.json4s._
 import prchecklist.models._
-import prchecklist.utils.{ HttpUtils, GitHubHttpClient }
+import prchecklist.utils.GitHubHttpClient
+
+import org.json4s._
 
 import com.redis._
+import com.redis.serialization.Parse
 
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
@@ -18,6 +21,10 @@ class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends G
 
     implicit val formats = json4s.native.Serialization.formats(json4s.NoTypeHints)
 
+    implicit def redisParseJson[A](implicit formats: Formats, mf: Manifest[A]) = Parse {
+      b => JsonMethods.parse(new ByteArrayInputStream(b)).extract[A]
+    }
+
     val redisURL = new URI(System.getProperty("redis.url", "redis://127.0.0.1:6379"))
     val redis = new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
     Option(redisURL.getUserInfo).map(_.split(":", 2)) match {
@@ -26,36 +33,35 @@ class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends G
     }
 
     val redisKey = s"pull:${repo.fullName}:$number"
-    // TODO: redis parser
-    redis.get[String](redisKey).flatMap {
-      s => JsonMethods.parse(s).extractOpt[ReleasePullRequest]
-    }.map {
-      pr => Task.now(pr)
-    }.getOrElse {
-      val getPullRequestTask = Task.fromDisjunction {
-        githubHttpClient.httpRequestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number")
-      }
+    redis.get[ReleasePullRequest](redisKey) match {
+      case Some(pr) =>
+        Task.now(pr)
 
-      // TODO: paging
-      val getPullRequestCommitsTask = Task.fromDisjunction {
-        githubHttpClient.httpRequestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100")
-      }
+      case None =>
+        val getPullRequestTask = Task.fromDisjunction {
+          githubHttpClient.requestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number")
+        }
 
-      (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
-        case (pr, commits) =>
-          val featurePRs = mergedPullRequests(commits)
-          validateReleasePullRequest(pr, featurePRs) match {
-            case Some(msg) =>
-              Task.fail(new Error(msg))
+        // TODO: paging
+        val getPullRequestCommitsTask = Task.fromDisjunction {
+          githubHttpClient.requestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100")
+        }
 
-            case None =>
-              val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
-              if (pr.base.repo.`private` == false) {
-                redis.set(redisKey, json4s.native.Serialization.write(releasePR))
-              }
-              Task.now(releasePR)
-          }
-      }
+        (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
+          case (pr, commits) =>
+            val featurePRs = mergedPullRequests(commits)
+            validateReleasePullRequest(pr, featurePRs) match {
+              case Some(msg) =>
+                Task.fail(new Error(msg))
+
+              case None =>
+                val releasePR = ReleasePullRequest(repo, number, pr.title, pr.body, featurePRs)
+                if (pr.base.repo.isPublic) {
+                  redis.set(redisKey, json4s.native.Serialization.write(releasePR))
+                }
+                Task.now(releasePR)
+            }
+        }
     }
   }
 }
