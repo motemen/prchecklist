@@ -16,6 +16,6 @@ class ScalatraBootstrap extends LifeCycle {
           }
       }
 
-    context.mount(new MyScalatraServlet, "/*")
+    context.mount(new AppServlet, "/*")
   }
 }

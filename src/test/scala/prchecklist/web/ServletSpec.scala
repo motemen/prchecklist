@@ -7,7 +7,7 @@ import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.mockito.Matchers.{ eq => matchEq }
 
-import prchecklist.MyScalatraServlet
+import prchecklist.AppServlet
 import prchecklist.models._
 import prchecklist.utils._
 
@@ -18,7 +18,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     withClue(body) { f }
   }
 
-  val testServlet = new MyScalatraServlet {
+  val testServlet = new AppServlet {
     put("/@user") {
       session += "userLogin" -> params("login")
       session += "accessToken" -> ""

@@ -10,8 +10,12 @@ import org.scalatra.scalate.{ ScalateUrlGeneratorSupport, ScalateSupport }
 import scalaz.syntax.std.option._
 import scalaz.concurrent.Task
 
-class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
-    with FutureSupport with ScalateSupport with UrlGeneratorSupport {
+class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport with UrlGeneratorSupport {
+
+  notFound {
+    contentType = null
+    serveStaticResource() getOrElse resourceNotFound()
+  }
 
   def mkGitHubHttpClient(visitor: Visitor): GitHubHttpClient = {
     new GitHubHttpClient(visitor.accessToken)
@@ -127,6 +131,8 @@ class MyScalatraServlet extends GithubReleasePullRequestsChecklistStack
   }
 
   val receiveWebhook = post("/webhook") {
+    // TODO: Add comment (checklist created, checklist completed)
+    // TODO: Set status (pending, success)
     "OK"
   }
 
