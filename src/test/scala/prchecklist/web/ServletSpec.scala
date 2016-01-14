@@ -1,6 +1,7 @@
 package prchecklist.web
 
 import org.scalatest.{ Outcome, Matchers, OptionValues, mock }
+import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
 import org.mockito.Mockito._
 import org.mockito.Matchers._
@@ -13,6 +14,10 @@ import prchecklist.utils._
 import scalaz.\/-
 
 class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar {
+  override protected def withResponse[A](res: ClientResponse)(f: => A): A = super.withResponse(res) {
+    withClue(body) { f }
+  }
+
   val testServlet = new MyScalatraServlet {
     put("/@user") {
       session += "userLogin" -> params("login")
@@ -96,9 +101,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       }
 
       get("/motemen/test-repository/pull/2") {
-        withClue(body) {
-          status should equal (200)
-        }
+        status should equal (200)
       }
     }
   }
