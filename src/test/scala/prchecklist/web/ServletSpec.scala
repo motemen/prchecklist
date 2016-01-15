@@ -106,6 +106,19 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     }
   }
 
+  test("checkFeaturePR") {
+    session {
+      put("/@user?login=test-uesr") {
+        status should equal (200)
+      }
+
+      post("/motemen/test-repository/pull/2/-/check/1") {
+        status should equal (302)
+        header.get("Location").value should endWith ("/motemen/test-repository/pull/2")
+      }
+    }
+  }
+
   test("postWebhook") {
     import scala.io.Source
 

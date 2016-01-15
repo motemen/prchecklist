@@ -27,12 +27,12 @@ object Redis {
     new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
   }
 
-  def getOrUpdate[A <: AnyRef, M[_]](key: String)(notFound: => M[(A, Boolean)])(implicit M: Monad[M], rf: RedisFormat, jf: JsonFormats, mf: Manifest[A]): M[A] = {
+  def getOrUpdate[A <: AnyRef, M[_]](key: String)(ifNotFound: => M[(A, Boolean)])(implicit M: Monad[M], rf: RedisFormat, jf: JsonFormats, mf: Manifest[A]): M[A] = {
     val redis = mkRedis()
     redis.get[A](key) match {
       case Some(v) => M.pure(v)
       case None =>
-        notFound.map {
+        ifNotFound.map {
           case (v, ok) =>
             if (ok) redis.set(key, json4s.native.Serialization.write(v))
             v

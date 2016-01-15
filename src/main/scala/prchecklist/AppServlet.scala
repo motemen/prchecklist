@@ -85,7 +85,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
         val client = mkGitHubHttpClient(visitor)
         new GitHubPullRequestService(client).getReleasePullRequest(repo, number)
           .attemptRun.fold(
-            e => BadRequest(s"error: $e"),
+            e => BadRequest(s"error: $e"), // TODO handle error
             pr =>
               new AsyncResult {
                 val is =
