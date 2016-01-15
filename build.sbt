@@ -4,8 +4,7 @@ import com.typesafe.sbt.{SbtScalariform, SbtStartScript}
 
 lazy val prchecklist = (project in file(".")).
   enablePlugins(
-    BuildInfoPlugin,
-    GitVersioning
+    BuildInfoPlugin
   ).
   settings(Defaults.defaultSettings).
   settings(ScalatraPlugin.scalatraWithJRebel).
@@ -16,6 +15,9 @@ lazy val prchecklist = (project in file(".")).
       organization := "net.tokyoenvious",
       name := "prchecklist",
       scalaVersion := "2.11.7",
+      version := {
+        "git describe --tags --match v* --dirty=-SNAPSHOT" !!
+      },
 
       scalacOptions ++= Seq(
         "-unchecked",
@@ -88,7 +90,4 @@ lazy val prchecklist = (project in file(".")).
       ),
       buildInfoOptions += BuildInfoOption.BuildTime,
       buildInfoPackage := "prchecklist"
-    ).
-    settings(
-      git.useGitDescribe := true
     )
