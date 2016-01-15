@@ -28,7 +28,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
       )
 
     val fut = ChecklistService.getChecklist(pr).flatMap {
-      checklist =>
+      case (checklist, created) =>
         ChecklistService.checkChecklist(
           checklist = checklist,
           checkerUser = checkerUser,
@@ -39,7 +39,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     }
 
     whenReady(fut) {
-      checklist =>
+      case (checklist, created) =>
         checklist.checks.get(2).value shouldBe 'checked
         checklist.checks.get(3).value shouldNot be('checked)
         checklist.checks.get(4) shouldBe 'empty

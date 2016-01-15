@@ -13,36 +13,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object ChecklistService extends SQLInterpolation with CompoundParameter {
-  def getChecklist(releasePR: ReleasePullRequest): Future[ReleaseChecklist] = {
+  def getChecklist(releasePR: ReleasePullRequest): Future[(ReleaseChecklist, Boolean)] = {
     val db = Database.get
 
-    val q = sql"""
-      | SELECT id
-      | FROM checklist
-      | WHERE repository_full_name = ${releasePR.repo.fullName}
-      |   AND release_pr_number = ${releasePR.number}
-      | LIMIT 1
-    """.as[Int].map(_.headOption).flatMap {
-      case Some(v) => DBIO.successful(v)
-      case None =>
-        sql"""
-          | INSERT INTO checklist
-          |   (repository_full_name, release_pr_number)
-          | VALUES
-          |   (${releasePR.repo.fullName}, ${releasePR.number})
-          | RETURNING id
-        """.as[Int].head
-    }.flatMap {
-      id =>
-        queryChecklistChecks(id, releasePR).map {
-          checks => (id, checks)
-        }
-    }
+    val q = for {
+      (id, created) <- ensureChecklist(releasePR)
+      checks <- queryChecklistChecks(id, releasePR)
+    } yield (ReleaseChecklist(id, releasePR, checks), created)
 
-    db.run(q.transactionally).map {
-      case (id, checks) =>
-        ReleaseChecklist(id, releasePR, checks)
-    }
+    db.run(q.transactionally)
   }
 
   def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
@@ -84,7 +63,27 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     db.run(q)
   }
 
-  private[this] def queryChecklistChecks(id: Int, releasePR: ReleasePullRequest) = {
+  private def ensureChecklist(releasePR: ReleasePullRequest) = {
+    sql"""
+      | SELECT id
+      | FROM checklist
+      | WHERE repository_full_name = ${releasePR.repo.fullName}
+      |   AND release_pr_number = ${releasePR.number}
+      | LIMIT 1
+    """.as[Int].map(_.headOption).flatMap {
+      case Some(v) => DBIO.successful((v, false))
+      case None =>
+        sql"""
+          | INSERT INTO checklist
+          |   (repository_full_name, release_pr_number)
+          | VALUES
+          |   (${releasePR.repo.fullName}, ${releasePR.number})
+          | RETURNING id
+        """.as[Int].head.map((_, true))
+    }
+  }
+
+  private def queryChecklistChecks(id: Int, releasePR: ReleasePullRequest) = {
     NonEmpty.fromTraversable(releasePR.featurePullRequests.map(_.number)) match {
       case None =>
         DBIO.successful(Map.empty[Int, Check])

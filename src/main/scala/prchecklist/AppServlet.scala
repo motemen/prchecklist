@@ -90,7 +90,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
               new AsyncResult {
                 val is =
                   ChecklistService.getChecklist(pr).map {
-                    checklist =>
+                    case (checklist, created) =>
                       ChecklistService.checkChecklist(checklist, visitor, featureNumber).map {
                         _ => redirect(url(viewPullRequest, "owner" -> owner, "repoName" -> repoName, "number" -> number.toString))
                       }
@@ -120,7 +120,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
               new AsyncResult {
                 val is =
                   ChecklistService.getChecklist(pr).map {
-                    checklist =>
+                    case (checklist, created) =>
                       ChecklistService.uncheckChecklist(checklist, visitor, featureNumber).map {
                         _ => redirect(url(viewPullRequest, "owner" -> owner, "repoName" -> repoName, "number" -> number.toString))
                       }
