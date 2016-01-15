@@ -12,9 +12,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures {
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))
 
-  test("checkChecklist succeeds") {
-    val checklist = ReleaseChecklist(
-      pullRequest = ReleasePullRequest(
+  test("getChecklist && checkChecklist succeeds") {
+    val checkerUser = Visitor(login = "test", accessToken = "")
+
+    val pr =
+      ReleasePullRequest(
         repo = GitHubRepo("test-owner", "test-project"),
         number = 1,
         title = "",
@@ -23,18 +25,18 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
           PullRequestReference(2, "blah blah"),
           PullRequestReference(3, "foo")
         )
-      ),
-      checks = Map.empty
-    )
-    val checkerUser = Visitor(login = "test", accessToken = "")
+      )
 
-    val fut = ChecklistService.checkChecklist(
-      checklist = checklist,
-      checkerUser = checkerUser,
-      featurePRNumber = 2
-    ).flatMap {
-        _ => ChecklistService.getChecklist(checklist.pullRequest)
-      }
+    val fut = ChecklistService.getChecklist(pr).flatMap {
+      checklist =>
+        ChecklistService.checkChecklist(
+          checklist = checklist,
+          checkerUser = checkerUser,
+          featurePRNumber = 2
+        )
+    }.flatMap {
+      _ => ChecklistService.getChecklist(pr)
+    }
 
     whenReady(fut) {
       checklist =>

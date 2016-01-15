@@ -1,6 +1,6 @@
 package prchecklist.models
 
-case class ReleaseChecklist(pullRequest: ReleasePullRequest, checks: Map[Int, Check]) {
+case class ReleaseChecklist(id: Int, pullRequest: ReleasePullRequest, checks: Map[Int, Check]) {
   def pullRequestUrl(number: Int) = pullRequest.repo.pullRequestUrl(number)
 
   def allGreen = checks.values.forall(_.isChecked)
