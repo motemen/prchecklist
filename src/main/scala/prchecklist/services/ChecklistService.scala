@@ -1,10 +1,9 @@
 package prchecklist.services
 
-import com.github.tarao.nonempty.NonEmpty
 import prchecklist.models._
 
 import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
-import slick.dbio.{ Effect, NoStream, DBIOAction }
+import com.github.tarao.nonempty.NonEmpty
 
 import slick.driver.PostgresDriver.api.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
@@ -63,7 +62,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     db.run(q)
   }
 
-  private def ensureChecklist(releasePR: ReleasePullRequest) = {
+  private def ensureChecklist(releasePR: ReleasePullRequest): DBIO[(Int, Boolean)] = {
     sql"""
       | SELECT id
       | FROM checklist
@@ -83,30 +82,29 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     }
   }
 
-  private def queryChecklistChecks(id: Int, releasePR: ReleasePullRequest) = {
-    NonEmpty.fromTraversable(releasePR.featurePullRequests.map(_.number)) match {
+  private def queryChecklistChecks(id: Int, releasePR: ReleasePullRequest): DBIO[Map[Int, Check]] = {
+    NonEmpty.fromTraversable(releasePR.featurePRNumbers) match {
       case None =>
         DBIO.successful(Map.empty[Int, Check])
 
-      case Some(featurePRNrs) =>
+      case Some(featurePRNumbers) =>
         sql"""
           | SELECT feature_pr_number,user_login
           | FROM checks
           | WHERE id = ${id}
-          |   AND feature_pr_number IN (${featurePRNrs})
+          |   AND feature_pr_number IN (${featurePRNumbers})
         """.as[(Int, String)]
           .map {
             rows =>
-              val prNumberToUserNames: Map[Int, List[String]] =
-                rows.toList.groupBy(_._1).mapValues { _.map(_._2) }
+              val prNumberToUser: Map[Int, List[User]] =
+                rows.toList.groupBy(_._1)
+                  .mapValues { _.map { case (_, name) => User(name) } }
+                  .withDefault { _ => List() }
 
               releasePR.featurePullRequests.map {
                 pr =>
-                  val checkedUsers =
-                    prNumberToUserNames.getOrElse(pr.number, List()).map {
-                      name => User(name)
-                    }
-                  (pr.number, Check(pr, checkedUsers))
+                  val checkedUsers = prNumberToUser(pr.number)
+                  pr.number -> Check(pr, checkedUsers)
               }.toMap
           }
     }

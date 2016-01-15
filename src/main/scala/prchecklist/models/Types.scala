@@ -16,6 +16,8 @@ case class ReleasePullRequest(
     featurePullRequests: List[PullRequestReference]) {
 
   def url = repo.pullRequestUrl(number)
+
+  def featurePRNumbers = featurePullRequests.map(_.number)
 }
 
 case class GitHubRepo(owner: String, name: String) {
