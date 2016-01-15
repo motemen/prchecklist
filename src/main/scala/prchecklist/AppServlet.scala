@@ -58,7 +58,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
                 contentType = "text/html"
                 val is =
                   ChecklistService.getChecklist(pr).map {
-                    checklist =>
+                    case (checklist, created) =>
                       layoutTemplate(
                         "/WEB-INF/templates/views/pullRequest.jade",
                         "checklist" -> checklist,
