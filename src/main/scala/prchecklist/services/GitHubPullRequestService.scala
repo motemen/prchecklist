@@ -1,39 +1,18 @@
 package prchecklist.services
 
-import java.io.ByteArrayInputStream
-import java.net.URI
-
 import prchecklist.models._
 import prchecklist.utils.GitHubHttpClient
 
-import org.json4s._
-
-import com.redis._
-import com.redis.serialization.Parse
+import org.json4s
 
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
 class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends GitHubConfig with GitHubPullRequestUtils {
   def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
-    import org.json4s
-    import org.json4s.native.JsonMethods
-
     implicit val formats = json4s.native.Serialization.formats(json4s.NoTypeHints)
 
-    implicit def redisParseJson[A](implicit formats: Formats, mf: Manifest[A]) = Parse {
-      b => JsonMethods.parse(new ByteArrayInputStream(b)).extract[A]
-    }
-
-    val redisURL = new URI(System.getProperty("redis.url", "redis://127.0.0.1:6379"))
-    val redis = new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
-    Option(redisURL.getUserInfo).map(_.split(":", 2)) match {
-      case Some(Array(_, password)) => redis.auth(password)
-      case _ =>
-    }
-
-    val redisKey = s"pull:${repo.fullName}:$number"
-    Redis.getOrUpdate(redisKey) {
+    Redis.getOrUpdate(s"pull:${repo.fullName}:$number") {
       val getPullRequestTask = Task.fromDisjunction {
         githubHttpClient.requestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number")
       }

@@ -16,8 +16,6 @@ import scalaz.syntax.monad._ // M.map(v) => v.map
 import scala.language.higherKinds
 
 object Redis {
-  implicit val formats = json4s.native.Serialization.formats(json4s.NoTypeHints)
-
   implicit def redisParseJson[A](implicit formats: JsonFormats, mf: Manifest[A]) = RedisParse {
     b => JsonMethods.parse(new ByteArrayInputStream(b)).extract[A]
   }

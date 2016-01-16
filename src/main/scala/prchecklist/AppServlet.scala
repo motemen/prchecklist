@@ -133,6 +133,11 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   val receiveWebhook = post("/webhook") {
     // TODO: Add comment (checklist created, checklist completed)
     // TODO: Set status (pending, success)
+    // val githubService = new GitHubService
+    // getChecklist(pr).map { case (checklist, created) =>
+    //   if (created) githubService.addComment(pr, s"Created: $checklistUrl")
+    // ChecklistService.invalidateCache(pr)
+    // githubService.setStatus(pr.head, checklist.status)
     "OK"
   }
 
