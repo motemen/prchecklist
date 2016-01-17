@@ -12,6 +12,7 @@ import prchecklist.models._
 import prchecklist.utils._
 
 import scalaz.\/-
+import scalaz.concurrent.Task
 
 class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar {
   override protected def withResponse[A](res: ClientResponse)(f: => A): A = super.withResponse(res) {
@@ -30,8 +31,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       import JsonTypes._
 
       def stubJson[A](url: String, data: A) {
-        when(client.requestJson[A](matchEq(url), any())(any(), any()))
-          .thenReturn(\/-(data))
+        when(client.getJson[A](matchEq(url))(any(), any()))
+          .thenReturn(Task { data })
       }
 
       val repo = GitHubRepo(

@@ -8,19 +8,17 @@ import org.json4s
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
-class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends GitHubConfig with GitHubPullRequestUtils {
+class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends GitHubPullRequestUtils {
   def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
     implicit val formats = json4s.native.Serialization.formats(json4s.NoTypeHints)
 
     Redis.getOrUpdate(s"pull:${repo.fullName}:$number") {
-      val getPullRequestTask = Task.fromDisjunction {
-        githubHttpClient.requestJson[JsonTypes.GitHubPullRequest](s"$githubApiBase/repos/${repo.fullName}/pulls/$number")
-      }
+      val getPullRequestTask =
+        githubHttpClient.getJson[JsonTypes.GitHubPullRequest](s"/repos/${repo.fullName}/pulls/$number")
 
       // TODO: paging
-      val getPullRequestCommitsTask = Task.fromDisjunction {
-        githubHttpClient.requestJson[List[JsonTypes.GitHubCommit]](s"$githubApiBase/repos/${repo.fullName}/pulls/$number/commits?per_page=100")
-      }
+      val getPullRequestCommitsTask =
+        githubHttpClient.getJson[List[JsonTypes.GitHubCommit]](s"/repos/${repo.fullName}/pulls/$number/commits?per_page=100")
 
       (getPullRequestTask |@| getPullRequestCommitsTask).tupled.flatMap {
         case (pr, commits) =>

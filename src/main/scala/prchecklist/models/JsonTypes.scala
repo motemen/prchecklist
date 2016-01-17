@@ -40,3 +40,13 @@ object JsonTypes {
     sha: String,
     ref: String)
 }
+
+object GitHubTypes {
+  case class IssueComment(body: String)
+
+  case class CommitStatus(
+    state: String,
+    targetUrl: String,
+    description: String,
+    context: String = "prchecklist")
+}

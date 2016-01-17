@@ -1,6 +1,7 @@
 package prchecklist.services
 
 import prchecklist.models._
+import prchecklist.utils.GitHubHttpClient
 import prchecklist.utils.HttpUtils._
 
 import java.net.URLEncoder
@@ -31,8 +32,12 @@ object GitHubAuthService extends GitHubConfig {
           ))
         )
         accessToken <- accessTokenResBody.get("access_token") \/> new Error(s"could not get access_token $accessTokenResBody")
-        user <- requestJson[JsonTypes.GitHubUser](s"$githubApiBase/user", _.header("Authorization", s"token $accessToken"))
-      } yield Visitor(user.login, accessToken)
+      } yield accessToken
+    }.flatMap {
+      accessToken =>
+        for {
+          user <- new GitHubHttpClient(accessToken).getJson[JsonTypes.GitHubUser]("/user") // FIXME
+        } yield Visitor(user.login, accessToken)
     }
   }
 }
