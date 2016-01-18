@@ -72,35 +72,17 @@ trait HttpUtils extends BaseHttp {
   def doRequest[A](httpReq: HttpRequest)(parser: InputStream => A): Task[A] = {
     logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
-    Task.fromDisjunction {
-      \/.fromTryCatchNonFatal {
-        httpReq.exec({
+    Task {
+      val httpRes = httpReq.exec({
           case (code, headers, is) =>
             logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}")
             parser(is)
         })
-      }.flatMap {
-        httpRes =>
-          if (httpRes.isSuccess) {
-            httpRes.body.right
-          } else {
-            new Error(s"${httpReq.method} ${httpReq.url} failed: ${httpRes.statusLine}").left
-          }
+      if (httpRes.isSuccess) {
+        httpRes.body
+      } else {
+        throw new Error(s"${httpReq.method} ${httpReq.url} failed: ${httpRes.statusLine}")
       }
-    }
-  }
-
-  def request[A](url: String, run: HttpRequest => HttpResponse[A], build: HttpRequest => HttpRequest = identity): Throwable \/ A = {
-    val httpReq = build(defaultBuild(apply(url)))
-    logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
-
-    val httpRes = run(httpReq)
-    logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${httpRes.statusLine}")
-
-    if (httpRes.isSuccess) {
-      httpRes.body.right
-    } else {
-      new Error(s"${httpReq.method} ${httpReq.url} failed: ${httpRes.statusLine}").left
     }
   }
 }
