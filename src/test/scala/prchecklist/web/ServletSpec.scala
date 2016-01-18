@@ -9,6 +9,7 @@ import org.mockito.Matchers.{ eq => matchEq }
 
 import prchecklist.AppServlet
 import prchecklist.models._
+import prchecklist.services._
 import prchecklist.utils._
 
 import scalaz.\/-
@@ -16,7 +17,7 @@ import scalaz.concurrent.Task
 
 class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar {
   override protected def withResponse[A](res: ClientResponse)(f: => A): A = super.withResponse(res) {
-    withClue(body) { f }
+    withClue(s"$body\n") { f }
   }
 
   val testServlet = new AppServlet {
@@ -41,7 +42,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
         url = "<url>"
       )
       stubJson(
-        "https://api.github.com/repos/motemen/test-repository/pulls/2",
+        "/repos/motemen/test-repository/pulls/2",
         GitHubPullRequest(
           number = 1,
           url = "url",
@@ -61,7 +62,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       )
 
       stubJson(
-        "https://api.github.com/repos/motemen/test-repository/pulls/2/commits?per_page=100",
+        "/repos/motemen/test-repository/pulls/2/commits?per_page=100",
         List(
           GitHubCommit(
             sha = "",
@@ -84,6 +85,12 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   }
 
   addServlet(testServlet, "/*")
+
+  import scala.concurrent.Await
+  import scala.concurrent.duration.Duration
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  Await.result(GitHubRepoService.create("motemen", "test-repository"), Duration.Inf)
 
   test("index") {
     get("/") {

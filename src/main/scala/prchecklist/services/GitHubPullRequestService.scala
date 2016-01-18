@@ -8,7 +8,11 @@ import org.json4s
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
+import org.slf4j.LoggerFactory
+
 class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends GitHubPullRequestUtils {
+  val logger = LoggerFactory.getLogger(getClass)
+
   def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
     implicit val formats = json4s.native.Serialization.formats(json4s.NoTypeHints)
 

@@ -80,6 +80,8 @@ lazy val prchecklist = (project in file(".")).
           "dropdb prchecklist_test" ###
           "createdb prchecklist_test" #&&
           "psql prchecklist_test -f db/prchecklist.sql" !!
+
+          "redis-cli FLUSHDB" !!
         }
       )
     ).

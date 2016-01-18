@@ -8,16 +8,20 @@ import org.scalatest._
 import org.scalatest.time._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures {
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))
+
+  val (repo, _) = Await.result(GitHubRepoService.create("motemen", "test-repository"), Duration.Inf)
 
   test("getChecklist && checkChecklist succeeds") {
     val checkerUser = Visitor(login = "test", accessToken = "")
 
     val pr =
       ReleasePullRequest(
-        repo = GitHubRepo("test-owner", "test-project"),
+        repo = repo,
         number = 1,
         title = "",
         body = "",
@@ -27,7 +31,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
         )
       )
 
-    val fut = ChecklistService.getChecklist(pr).flatMap {
+    val fut = ChecklistService.getChecklist(repo, pr).flatMap {
       case (checklist, created) =>
         ChecklistService.checkChecklist(
           checklist = checklist,
@@ -35,7 +39,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
           featurePRNumber = 2
         )
     }.flatMap {
-      _ => ChecklistService.getChecklist(pr)
+      _ => ChecklistService.getChecklist(repo, pr)
     }
 
     whenReady(fut) {

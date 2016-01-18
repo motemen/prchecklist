@@ -12,11 +12,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object ChecklistService extends SQLInterpolation with CompoundParameter {
-  def getChecklist(releasePR: ReleasePullRequest): Future[(ReleaseChecklist, Boolean)] = {
+  def getChecklist(repo: GitHubRepo, releasePR: ReleasePullRequest, useFresh: Boolean = false): Future[(ReleaseChecklist, Boolean)] = {
     val db = Database.get
 
     val q = for {
-      (id, created) <- ensureChecklist(releasePR)
+      (id, created) <- ensureChecklist(repo, releasePR)
       checks <- queryChecklistChecks(id, releasePR)
     } yield (ReleaseChecklist(id, releasePR, checks), created)
 
@@ -62,21 +62,21 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     db.run(q)
   }
 
-  private def ensureChecklist(releasePR: ReleasePullRequest): DBIO[(Int, Boolean)] = {
+  private def ensureChecklist(repo: GitHubRepo, releasePR: ReleasePullRequest): DBIO[(Int, Boolean)] = {
     sql"""
       | SELECT id
-      | FROM checklist
-      | WHERE repository_full_name = ${releasePR.repo.fullName}
+      | FROM checklists
+      | WHERE github_repo_id = ${repo.id}
       |   AND release_pr_number = ${releasePR.number}
       | LIMIT 1
     """.as[Int].map(_.headOption).flatMap {
       case Some(v) => DBIO.successful((v, false))
       case None =>
         sql"""
-          | INSERT INTO checklist
-          |   (repository_full_name, release_pr_number)
+          | INSERT INTO checklists
+          |   (github_repo_id, release_pr_number)
           | VALUES
-          |   (${releasePR.repo.fullName}, ${releasePR.number})
+          |   (${repo.id}, ${releasePR.number})
           | RETURNING id
         """.as[Int].head.map((_, true))
     }

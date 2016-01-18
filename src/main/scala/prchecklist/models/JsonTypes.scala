@@ -16,7 +16,8 @@ object JsonTypes {
   case class GitHubWebhookPullRequestEvent(
       action: String,
       number: Int,
-      pullRequest: GitHubPullRequest) {
+      pullRequest: GitHubPullRequest,
+      repository: GitHubRepo) {
     def isOpened = action == "opened"
     def isSynchronize = action == "synchronize"
   }

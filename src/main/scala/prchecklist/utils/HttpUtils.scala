@@ -73,20 +73,20 @@ trait HttpUtils extends BaseHttp {
     logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
     Task.fromDisjunction {
-    \/.fromTryCatchNonFatal {
-      httpReq.exec({
-        case (code, headers, is) =>
-          logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}")
-          parser(is)
-      })
-    }.flatMap {
-      httpRes =>
-      if (httpRes.isSuccess) {
-        httpRes.body.right
-      } else {
-        new Error(s"${httpReq.method} ${httpReq.url} failed: ${httpRes.statusLine}").left
+      \/.fromTryCatchNonFatal {
+        httpReq.exec({
+          case (code, headers, is) =>
+            logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}")
+            parser(is)
+        })
+      }.flatMap {
+        httpRes =>
+          if (httpRes.isSuccess) {
+            httpRes.body.right
+          } else {
+            new Error(s"${httpReq.method} ${httpReq.url} failed: ${httpRes.statusLine}").left
+          }
       }
-    }
     }
   }
 
