@@ -1,5 +1,5 @@
 -@ val repos: List[prchecklist.models.GitHubRepo]
--@ val visitorOption: Option[prchecklist.models.Visitor]
+-@ val visitor: Option[prchecklist.models.Visitor]
 
 .row
   .col-md-12
@@ -12,7 +12,7 @@
 
 .row
   .col-md-12
-    = visitorOption match
+    = visitor match
       - case Some(_) =>
         form.form-inline(method="POST" action="/repos")
           input.form-control(type="text" name="owner" placeholder="Owner")

@@ -21,6 +21,10 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     serveStaticResource() getOrElse resourceNotFound()
   }
 
+  before () {
+    templateAttributes("visitor") = getVisitor
+  }
+
   def mkGitHubHttpClient(visitor: Visitor): GitHubHttpClient = {
     new GitHubHttpClient(visitor.accessToken)
   }
@@ -40,7 +44,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
 
   val getRoot = get("/") {
     contentType = "text/html"
-    layoutTemplate("/WEB-INF/templates/views/index.jade", "visitor" -> getVisitor)
+    layoutTemplate("/WEB-INF/templates/views/index.jade")
   }
 
   private def requireVisitor(f: Visitor => Any): Any = {
@@ -90,8 +94,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
                         case (checklist, created) =>
                           layoutTemplate(
                             "/WEB-INF/templates/views/pullRequest.jade",
-                            "checklist" -> checklist,
-                            "visitor" -> visitor
+                            "checklist" -> checklist
                           )
                       }
                   }
@@ -160,12 +163,11 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   }
 
   val listRepos = get("/repos") {
-    val visitorOption = getVisitor
     new AsyncResult {
       contentType = "text/html"
       val is = GitHubRepoService.list().map {
         repos =>
-          layoutTemplate("/WEB-INF/templates/views/repos.jade", "visitorOption" -> visitorOption, "repos" -> repos)
+          layoutTemplate("/WEB-INF/templates/views/repos.jade", "repos" -> repos)
       }
     }
   }
