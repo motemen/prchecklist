@@ -16,9 +16,9 @@ class GitHubPullRequestUtilsSpec extends FunSuite with Matchers {
       """Implement feature-1"""
     ).map {
         message =>
-          JsonTypes.GitHubCommit(
+          GitHubTypes.Commit(
             sha = "x" * 40,
-            commit = JsonTypes.GitHubCommitDetail(message = message)
+            commit = GitHubTypes.CommitDetail(message = message)
           )
       }
 

@@ -34,7 +34,7 @@ object GitHubAuthService extends GitHubConfig {
     }.flatMap {
       accessToken =>
         for {
-          user <- new GitHubHttpClient(accessToken).getJson[JsonTypes.GitHubUser]("/user") // FIXME
+          user <- new GitHubHttpClient(accessToken).getJson[GitHubTypes.User]("/user") // FIXME
         } yield Visitor(user.login, accessToken)
     }
   }

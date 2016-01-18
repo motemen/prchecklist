@@ -29,31 +29,31 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     override def mkGitHubHttpClient(visitor: Visitor): GitHubHttpClient = {
       val client = mock[GitHubHttpClient]
 
-      import JsonTypes._
+      import GitHubTypes._
 
       def stubJson[A](url: String, data: A) {
         when(client.getJson[A](matchEq(url))(any(), any()))
           .thenReturn(Task { data })
       }
 
-      val repo = GitHubRepo(
+      val repo = Repo(
         fullName = "motemen/test-repository",
         `private` = false,
         url = "<url>"
       )
       stubJson(
         "/repos/motemen/test-repository/pulls/2",
-        GitHubPullRequest(
+        PullRequest(
           number = 1,
           url = "url",
           title = "title",
           body = "body",
-          head = GitHubCommitRef(
+          head = CommitRef(
             repo = repo,
             sha = "",
             ref = "feature-1"
           ),
-          base = GitHubCommitRef(
+          base = CommitRef(
             repo = repo,
             sha = "",
             ref = "master"
@@ -64,18 +64,18 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       stubJson(
         "/repos/motemen/test-repository/pulls/2/commits?per_page=100",
         List(
-          GitHubCommit(
+          Commit(
             sha = "",
-            commit = GitHubCommitDetail(
+            commit = CommitDetail(
               """Merge pull request #1 from motemen/feature-1
                 |
                 |feature-1
               """.stripMargin
             )
           ),
-          GitHubCommit(
+          Commit(
             sha = "",
-            commit = GitHubCommitDetail("Implement feature-1")
+            commit = CommitDetail("Implement feature-1")
           )
         )
       )
