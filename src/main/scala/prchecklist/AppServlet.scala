@@ -159,19 +159,28 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     }
   }
 
-  val listRepos = get("/repositories") {
-    ???
+  val listRepos = get("/repos") {
+    val visitorOption = getVisitor
+    new AsyncResult {
+      contentType = "text/html"
+      val is = GitHubRepoService.list().map {
+        repos =>
+          layoutTemplate("/WEB-INF/templates/views/repos.jade", "visitorOption" -> visitorOption, "repos" -> repos)
+      }
+    }
   }
 
-  val registerRepo = post("/repositories") {
-    val repoOwner = params('repoOwner)
-    val repoName = params('repoName)
+  val registerRepo = post("/repos") {
+    val repoOwner = params('owner)
+    val repoName = params('name)
 
     requireVisitor {
       visitor =>
-        GitHubRepoService.create(repoOwner, repoName, visitor.accessToken).map {
-          case (repo, created) =>
-            ???
+        new AsyncResult {
+          val is = GitHubRepoService.create(repoOwner, repoName, visitor.accessToken).map {
+            case (repo, created) =>
+              redirect(url(listRepos))
+          }
         }
     }
   }
@@ -183,10 +192,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
           repo =>
             contentType = "text/html"
             val client = mkGitHubHttpClient(visitor)
-            new GitHubPullRequestService(client).listReleasePullRequests(repo).map {
-              pullRequests =>
-                layoutTemplate("/WEB-INF/templates/views/repo.jade", "visitor" -> getVisitor, "repo" -> repo, "pullRequests" -> pullRequests)
-            }
+            val pullRequests = new GitHubPullRequestService(client).listReleasePullRequests(repo).run
+            layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
         }
     }
   }

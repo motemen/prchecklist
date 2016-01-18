@@ -16,18 +16,6 @@ object GitHubRepoService extends SQLInterpolation {
     db.run(getQuery(owner, name))
   }
 
-  private def getQuery(owner: String, name: String): DBIO[Option[GitHubRepo]] = {
-    sql"""
-      | SELECT id, default_access_token
-      | FROM github_repos
-      | WHERE owner = ${owner}
-      |   AND name = ${name}
-      | LIMIT 1
-    """.as[(Int, String)].map(_.headOption.map {
-      case (id, defaultAccessToken) => GitHubRepo(id, owner, name, defaultAccessToken)
-    })
-  }
-
   def create(owner: String, name: String, defaultAccessToken: String): Future[(GitHubRepo, Boolean)] = {
     val db = Database.get
 
@@ -49,4 +37,31 @@ object GitHubRepoService extends SQLInterpolation {
 
     db.run(q.transactionally)
   }
+
+  // TODO: visibility
+  // TODO: paging
+  def list(): Future[List[GitHubRepo]] = {
+    val db = Database.get
+
+    val q = sql"""
+      | SELECT id, owner, name, default_access_token FROM github_repos
+    """.as[(Int, String, String, String)].map {
+      _.map(GitHubRepo.tupled).toList
+    }
+
+    db.run(q)
+  }
+
+  private def getQuery(owner: String, name: String): DBIO[Option[GitHubRepo]] = {
+    sql"""
+      | SELECT id, default_access_token
+      | FROM github_repos
+      | WHERE owner = ${owner}
+      |   AND name = ${name}
+      | LIMIT 1
+    """.as[(Int, String)].map(_.headOption.map {
+      case (id, defaultAccessToken) => GitHubRepo(id, owner, name, defaultAccessToken)
+    })
+  }
+
 }

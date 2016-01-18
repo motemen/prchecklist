@@ -8,6 +8,11 @@ case class ReleaseChecklist(id: Int, pullRequest: ReleasePullRequest, checks: Ma
 
 case class PullRequestReference(number: Int, title: String)
 
+case class ReleasePullRequestReference(
+  repo: GitHubRepo,
+  number: Int,
+  title: String)
+
 case class ReleasePullRequest(
     repo: GitHubRepo,
     number: Int,

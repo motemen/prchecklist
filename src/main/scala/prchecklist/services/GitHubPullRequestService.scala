@@ -39,8 +39,13 @@ class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends G
     }
   }
 
-  def listReleasePullRequests(repo: GitHubRepo): Task[List[ReleasePullRequest]] = {
-    ???
+  def listReleasePullRequests(repo: GitHubRepo): Task[List[ReleasePullRequestReference]] = {
+    githubHttpClient.getJson[List[JsonTypes.GitHubPullRequest]](s"/repos/${repo.fullName}/pulls?base=master&state=all").map {
+      _.map {
+        pr =>
+          ReleasePullRequestReference(repo, pr.number, pr.title)
+      }
+    }
   }
 }
 
