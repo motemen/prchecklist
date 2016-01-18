@@ -13,44 +13,38 @@ import scala.concurrent.Future
 object GitHubRepoService extends SQLInterpolation {
   def get(owner: String, name: String): Future[Option[GitHubRepo]] = {
     val db = Database.get
-
-    val q = sql"""
-      | SELECT id
-      | FROM github_repos
-      | WHERE owner = $owner
-      |   AND name = $name
-      | LIMIT 1
-    """.as[Int].headOption.map {
-      _.map {
-        id =>
-          GitHubRepo(id, owner, name)
-      }
-    }
-
-    db.run(q)
+    db.run(getQuery(owner, name))
   }
 
-  def create(owner: String, name: String): Future[(GitHubRepo, Boolean)] = {
-    val db = Database.get
-
-    val q = sql"""
-      | SELECT id
+  private def getQuery(owner: String, name: String): DBIO[Option[GitHubRepo]] = {
+    sql"""
+      | SELECT id, default_access_token
       | FROM github_repos
       | WHERE owner = ${owner}
       |   AND name = ${name}
       | LIMIT 1
-    """.as[Int].map(_.headOption).flatMap {
-      case Some(v) => DBIO.successful((v, false))
+    """.as[(Int, String)].map(_.headOption.map {
+      case (id, defaultAccessToken) => GitHubRepo(id, owner, name, defaultAccessToken)
+    })
+  }
+
+  def create(owner: String, name: String, defaultAccessToken: String): Future[(GitHubRepo, Boolean)] = {
+    val db = Database.get
+
+    val q = getQuery(owner, name).flatMap {
+      case Some(repo) =>
+        DBIO.successful((repo, false))
+
       case None =>
         sql"""
           | INSERT INTO github_repos
-          |   (owner, name)
+          |   (owner, name, default_access_token)
           | VALUES
-          |   (${owner}, ${name})
+          |   (${owner}, ${name}, ${defaultAccessToken})
           | RETURNING id
-        """.as[Int].head.map((_, true))
-    }.map {
-      case (id, created) => (GitHubRepo(id, owner, name), created)
+        """.as[Int].head.map {
+          id => (GitHubRepo(id, owner, name, defaultAccessToken), true)
+        }
     }
 
     db.run(q.transactionally)

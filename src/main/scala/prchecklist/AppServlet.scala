@@ -64,7 +64,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
 
       case None =>
         // TODO: to the repo registration view
-        redirect(url(getRoot))
+        redirect(url(listRepos))
     }
   }
 
@@ -155,6 +155,38 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
                       }
                   }
               )
+        }
+    }
+  }
+
+  val listRepos = get("/repositories") {
+    ???
+  }
+
+  val registerRepo = post("/repositories") {
+    val repoOwner = params('repoOwner)
+    val repoName = params('repoName)
+
+    requireVisitor {
+      visitor =>
+        GitHubRepoService.create(repoOwner, repoName, visitor.accessToken).map {
+          case (repo, created) =>
+            ???
+        }
+    }
+  }
+
+  val viewRepo = get("/:repoOwner/:repoName") {
+    requireVisitor {
+      visitor =>
+        requireGitHubRepo {
+          repo =>
+            contentType = "text/html"
+            val client = mkGitHubHttpClient(visitor)
+            new GitHubPullRequestService(client).listReleasePullRequests(repo).map {
+              pullRequests =>
+                layoutTemplate("/WEB-INF/templates/views/repo.jade", "visitor" -> getVisitor, "repo" -> repo, "pullRequests" -> pullRequests)
+            }
         }
     }
   }

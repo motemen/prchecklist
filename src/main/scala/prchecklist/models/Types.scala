@@ -20,7 +20,7 @@ case class ReleasePullRequest(
   def featurePRNumbers = featurePullRequests.map(_.number)
 }
 
-case class GitHubRepo(id: Int, owner: String, name: String) {
+case class GitHubRepo(id: Int, owner: String, name: String, defaultAccessToken: String) {
   def fullName = s"$owner/$name"
 
   def pullRequestUrl(number: Int) = s"$url/pull/$number"

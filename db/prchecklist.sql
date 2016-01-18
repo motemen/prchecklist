@@ -1,7 +1,8 @@
 CREATE TABLE github_repos (
-    id    SERIAL NOT NULL PRIMARY KEY,
-    owner VARCHAR(255) NOT NULL,
-    name  VARCHAR(255) NOT NULL,
+    id                   SERIAL NOT NULL PRIMARY KEY,
+    owner                VARCHAR(255) NOT NULL,
+    name                 VARCHAR(255) NOT NULL,
+    default_access_token VARCHAR(255) NOT NULL,
     UNIQUE (owner, name)
 );
 

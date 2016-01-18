@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures {
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))
 
-  val (repo, _) = Await.result(GitHubRepoService.create("motemen", "test-repository"), Duration.Inf)
+  val (repo, _) = Await.result(GitHubRepoService.create("motemen", "test-repository", "<no token>"), Duration.Inf)
 
   test("getChecklist && checkChecklist succeeds") {
     val checkerUser = Visitor(login = "test", accessToken = "")

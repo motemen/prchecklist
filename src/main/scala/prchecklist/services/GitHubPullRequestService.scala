@@ -38,6 +38,10 @@ class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends G
       }
     }
   }
+
+  def listReleasePullRequests(repo: GitHubRepo): Task[List[ReleasePullRequest]] = {
+    ???
+  }
 }
 
 trait GitHubPullRequestUtils {
