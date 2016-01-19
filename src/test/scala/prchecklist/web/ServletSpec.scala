@@ -149,4 +149,15 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       }
     }
   }
+
+  test("listRepos") {
+    session {
+      put("/@user?login=test-user") { status should equal (200) }
+
+      get("/repos") {
+        status should equal (200)
+        body should include ("test-owner/test-name")
+      }
+    }
+  }
 }
