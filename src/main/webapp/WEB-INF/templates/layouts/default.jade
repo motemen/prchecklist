@@ -137,7 +137,13 @@ html
           small
             = BuildInfo.version
             small Built: #{BuildInfo.builtAtString}
-          a(href="/auth")
-            | TODO
+        p.navbar-text.navbar-right
+          = visitor match
+            - case Some(v) =>
+              span
+                | #{v.login}
+            - case None =>
+              a.navbar-link(href="/auth")
+                | Login
     .container
       != body
