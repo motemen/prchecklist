@@ -1,6 +1,7 @@
 -@ val title: String = "prchecklist"
 -@ val headline: String = title
 -@ val body: String
+-@ val visitor: Option[prchecklist.models.Visitor]
 
 !!! 5
 html
@@ -12,7 +13,6 @@ html
     script(src="https://code.jquery.com/jquery-2.1.4.min.js")
     style
       | body {
-      |   font-size: 18px;
       |   font-family: "Lato", sans-serif;
       |   line-height: 1.8;
       | }
@@ -132,9 +132,21 @@ html
         .navbar-header
           a.navbar-brand(href="/")
             | prchecklist
-        p.navbar-text
-          small
-            = BuildInfo.version
-            small Built: #{BuildInfo.builtAtString}
+            small(title="Built: #{BuildInfo.builtAtString}")
+              = BuildInfo.version
+        .collapse.navbar-collapse
+          ul.nav.navbar-nav
+            li
+              a(href="/repos") Repositories
+          = visitor match
+            - case Some(v) =>
+              ul.nav.navbar-nav.navbar-right
+                li.navbar-text
+                  img(src={v.avatarUrl} height=16)
+                  = v.login
+            - case None =>
+              form.navbar-form.navbar-right(action="/auth" method="GET")
+                button.btn.btn-default(type="submit")
+                  | Login
     .container
       != body

@@ -9,6 +9,7 @@ import org.mockito.Matchers.{ eq => matchEq }
 
 import prchecklist.AppServlet
 import prchecklist.models._
+import prchecklist.services._
 import prchecklist.utils._
 
 import scalaz.\/-
@@ -16,7 +17,7 @@ import scalaz.concurrent.Task
 
 class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar {
   override protected def withResponse[A](res: ClientResponse)(f: => A): A = super.withResponse(res) {
-    withClue(body) { f }
+    withClue(s"$body\n") { f }
   }
 
   val testServlet = new AppServlet {
@@ -25,34 +26,35 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       session += "accessToken" -> ""
     }
 
-    override def mkGitHubHttpClient(visitor: Visitor): GitHubHttpClient = {
+    override def mkGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
       val client = mock[GitHubHttpClient]
 
-      import JsonTypes._
+      import GitHubTypes._
 
       def stubJson[A](url: String, data: A) {
         when(client.getJson[A](matchEq(url))(any(), any()))
           .thenReturn(Task { data })
       }
 
-      val repo = GitHubRepo(
+      val repo = Repo(
         fullName = "motemen/test-repository",
         `private` = false,
         url = "<url>"
       )
       stubJson(
-        "https://api.github.com/repos/motemen/test-repository/pulls/2",
-        GitHubPullRequest(
+        "/repos/motemen/test-repository/pulls/2",
+        PullRequest(
           number = 1,
           url = "url",
           title = "title",
           body = "body",
-          head = GitHubCommitRef(
+          state = "open",
+          head = CommitRef(
             repo = repo,
             sha = "",
             ref = "feature-1"
           ),
-          base = GitHubCommitRef(
+          base = CommitRef(
             repo = repo,
             sha = "",
             ref = "master"
@@ -61,20 +63,20 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       )
 
       stubJson(
-        "https://api.github.com/repos/motemen/test-repository/pulls/2/commits?per_page=100",
+        "/repos/motemen/test-repository/pulls/2/commits?per_page=100",
         List(
-          GitHubCommit(
+          Commit(
             sha = "",
-            commit = GitHubCommitDetail(
+            commit = CommitDetail(
               """Merge pull request #1 from motemen/feature-1
                 |
                 |feature-1
               """.stripMargin
             )
           ),
-          GitHubCommit(
+          Commit(
             sha = "",
-            commit = GitHubCommitDetail("Implement feature-1")
+            commit = CommitDetail("Implement feature-1")
           )
         )
       )
@@ -84,6 +86,12 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   }
 
   addServlet(testServlet, "/*")
+
+  import scala.concurrent.Await
+  import scala.concurrent.duration.Duration
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  Await.result(GitHubRepoService.create("motemen", "test-repository", "<no token>"), Duration.Inf)
 
   test("index") {
     get("/") {
@@ -126,6 +134,19 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     val payload = Source.fromInputStream(getClass.getResourceAsStream("/webhook/pr-synchronize.json")).toArray.map(_.toByte)
     post("/webhook", payload) {
       status should equal (200)
+    }
+  }
+
+  test("registerRepo") {
+    session {
+      put("/@user?login=test-user") {
+        status should equal (200)
+      }
+
+      post("/repos", Map("owner" -> "test-owner", "name" -> "test-name")) {
+        status should equal (302)
+        header.get("Location").value should endWith ("/repos")
+      }
     }
   }
 }

@@ -16,6 +16,7 @@ import scalaz.syntax.monad._ // M.map(v) => v.map
 import scala.language.higherKinds
 
 object Redis {
+  // Convert implicit JsonFormats to RedisParse (redis.serialization.Parse)
   implicit def redisParseJson[A](implicit formats: JsonFormats, mf: Manifest[A]) = RedisParse {
     b => JsonMethods.parse(new ByteArrayInputStream(b)).extract[A]
   }
@@ -25,7 +26,7 @@ object Redis {
     new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
   }
 
-  def getOrUpdate[A <: AnyRef, M[_]](key: String)(ifNotFound: => M[(A, Boolean)])(implicit M: Monad[M], rf: RedisFormat, jf: JsonFormats, mf: Manifest[A]): M[A] = {
+  def getOrUpdate[A <: AnyRef, M[_]](key: String)(ifNotFound: => M[(A, Boolean)])(implicit M: Monad[M], rf: RedisFormat, jf: JsonFormats = json4s.native.Serialization.formats(json4s.NoTypeHints), mf: Manifest[A]): M[A] = {
     val redis = mkRedis()
     redis.get[A](key) match {
       case Some(v) => M.pure(v)

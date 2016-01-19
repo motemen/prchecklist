@@ -1,0 +1,11 @@
+-@ val repo: prchecklist.models.GitHubRepo
+-@ val pullRequests: List[prchecklist.models.ReleasePullRequestReference]
+
+.row
+  .col-md-12
+    ul#prs
+      = pullRequests.map
+        - pullRequest =>
+          li
+            a(href="/#{repo.fullName}/pull/#{pullRequest.number.toString}")
+              | ##{pullRequest.number.toString} #{pullRequest.title}

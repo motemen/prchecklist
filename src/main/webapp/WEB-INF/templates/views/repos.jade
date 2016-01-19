@@ -1,0 +1,24 @@
+-@ val repos: List[prchecklist.models.GitHubRepo]
+-@ val visitor: Option[prchecklist.models.Visitor]
+
+.row
+  .col-md-12
+    ul#repos
+      = repos.map
+        - repo =>
+          li
+            a(href="/#{repo.fullName}")
+              | #{repo.fullName}
+
+.row
+  .col-md-12
+    = visitor match
+      - case Some(_) =>
+        form.form-inline(method="POST" action="/repos")
+          input.form-control(type="text" name="owner" placeholder="Owner")
+          input.form-control(type="text" name="name"  placeholder="Name")
+          button.btn.btn-primary(type="submit")
+            | Register repo
+      - case None =>
+        a.btn.btn-default(href="/auth?location=/repos")
+          | Login

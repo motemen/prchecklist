@@ -1,5 +1,7 @@
 package prchecklist.models
 
+import java.net.URI
+
 object GitHubConfig {
   private object config extends GitHubConfig
 
@@ -15,7 +17,7 @@ trait GitHubConfig {
   val githubDomain = System.getProperty("github.domain", "github.com")
   val githubDefaultToken = Option(System.getProperty("github.defaultToken"))
 
-  def githubOrigin = s"https://$githubDomain"
+  def githubOrigin = new java.net.URI(s"https://$githubDomain")
 
   def githubApiBase =
     if (githubDomain == "github.com") "https://api.github.com" else s"https://$githubDomain/api/v3"
