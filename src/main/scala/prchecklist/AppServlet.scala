@@ -62,8 +62,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   }
 
   // TODO: Check visibility
-  private def requireGitHubRepo(f: GitHubRepo => Any): Any = {
-    Await.result(GitHubRepoService.get(params('repoOwner), params('repoName)), Duration.Inf) match {
+  private def requireGitHubRepo(f: Repo => Any): Any = {
+    Await.result(RepoService.get(params('repoOwner), params('repoName)), Duration.Inf) match {
       case Some(repo) =>
         f(repo)
 
@@ -145,7 +145,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   val listRepos = get("/repos") {
     new AsyncResult {
       contentType = "text/html"
-      val is = GitHubRepoService.list().map {
+      val is = RepoService.list().map {
         repos =>
           layoutTemplate("/WEB-INF/templates/views/repos.jade", "repos" -> repos)
       }
@@ -159,7 +159,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     requireVisitor {
       visitor =>
         new AsyncResult {
-          val is = GitHubRepoService.create(repoOwner, repoName, visitor.accessToken).map {
+          val is = RepoService.create(repoOwner, repoName, visitor.accessToken).map {
             case (repo, created) =>
               redirect(url(listRepos))
           }

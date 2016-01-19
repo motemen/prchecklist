@@ -91,7 +91,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   import scala.concurrent.duration.Duration
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  Await.result(GitHubRepoService.create("motemen", "test-repository", "<no token>"), Duration.Inf)
+  Await.result(RepoService.create("motemen", "test-repository", "<no token>"), Duration.Inf)
 
   test("index") {
     get("/") {

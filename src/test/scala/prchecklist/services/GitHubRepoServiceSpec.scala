@@ -9,19 +9,19 @@ class GitHubRepoServiceSpec extends FunSuite with Matchers with concurrent.Scala
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))
 
   test("create && get") {
-    whenReady(GitHubRepoService.get("owner", "name")) {
+    whenReady(RepoService.get("owner", "name")) {
       repoOption =>
         repoOption shouldBe 'empty
     }
 
-    whenReady(GitHubRepoService.create("owner", "name", "accessToken")) {
+    whenReady(RepoService.create("owner", "name", "accessToken")) {
       case (repo, created) =>
         repo.owner shouldBe "owner"
         repo.name shouldBe "name"
         repo.defaultAccessToken shouldBe "accessToken"
     }
 
-    whenReady(GitHubRepoService.get("owner", "name")) {
+    whenReady(RepoService.get("owner", "name")) {
       repoOption =>
         repoOption shouldBe 'defined
     }

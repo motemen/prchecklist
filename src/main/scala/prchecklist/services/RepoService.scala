@@ -10,13 +10,13 @@ import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods // q.transacti
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object GitHubRepoService extends SQLInterpolation {
-  def get(owner: String, name: String): Future[Option[GitHubRepo]] = {
+object RepoService extends SQLInterpolation {
+  def get(owner: String, name: String): Future[Option[Repo]] = {
     val db = Database.get
     db.run(getQuery(owner, name))
   }
 
-  def create(owner: String, name: String, defaultAccessToken: String): Future[(GitHubRepo, Boolean)] = {
+  def create(owner: String, name: String, defaultAccessToken: String): Future[(Repo, Boolean)] = {
     val db = Database.get
 
     val q = getQuery(owner, name).flatMap {
@@ -31,7 +31,7 @@ object GitHubRepoService extends SQLInterpolation {
           |   (${owner}, ${name}, ${defaultAccessToken})
           | RETURNING id
         """.as[Int].head.map {
-          id => (GitHubRepo(id, owner, name, defaultAccessToken), true)
+          id => (Repo(id, owner, name, defaultAccessToken), true)
         }
     }
 
@@ -40,19 +40,19 @@ object GitHubRepoService extends SQLInterpolation {
 
   // TODO: visibility
   // TODO: paging
-  def list(): Future[List[GitHubRepo]] = {
+  def list(): Future[List[Repo]] = {
     val db = Database.get
 
     val q = sql"""
       | SELECT id, owner, name, default_access_token FROM github_repos
     """.as[(Int, String, String, String)].map {
-      _.map(GitHubRepo.tupled).toList
+      _.map(Repo.tupled).toList
     }
 
     db.run(q)
   }
 
-  private def getQuery(owner: String, name: String): DBIO[Option[GitHubRepo]] = {
+  private def getQuery(owner: String, name: String): DBIO[Option[Repo]] = {
     sql"""
       | SELECT id, default_access_token
       | FROM github_repos
@@ -60,7 +60,7 @@ object GitHubRepoService extends SQLInterpolation {
       |   AND name = ${name}
       | LIMIT 1
     """.as[(Int, String)].map(_.headOption.map {
-      case (id, defaultAccessToken) => GitHubRepo(id, owner, name, defaultAccessToken)
+      case (id, defaultAccessToken) => Repo(id, owner, name, defaultAccessToken)
     })
   }
 

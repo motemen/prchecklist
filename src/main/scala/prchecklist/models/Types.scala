@@ -9,7 +9,7 @@ case class ReleaseChecklist(id: Int, pullRequest: ReleasePullRequest, checks: Ma
 }
 
 case class ReleasePullRequest(
-    repo: GitHubRepo,
+    repo: Repo,
     number: Int,
     title: String,
     body: String,
@@ -21,15 +21,14 @@ case class ReleasePullRequest(
 }
 
 case class ReleasePullRequestReference(
-  repo: GitHubRepo,
+  repo: Repo,
   number: Int,
   title: String)
 
 case class PullRequestReference(number: Int, title: String)
 
-// A GitHubRepo is a GitHub repository registered to prchecklist with default access token (of the user registered it).
-// XXX: Rename to Repo?
-case class GitHubRepo(id: Int, owner: String, name: String, defaultAccessToken: String) {
+// A Repo is a GitHub repository registered to prchecklist with default access token (of the user registered it).
+case class Repo(id: Int, owner: String, name: String, defaultAccessToken: String) {
   def fullName = s"$owner/$name"
 
   def pullRequestUrl(number: Int) = s"$url/pull/$number"

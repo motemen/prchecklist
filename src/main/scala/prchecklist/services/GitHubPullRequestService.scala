@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends GitHubPullRequestUtils {
   val logger = LoggerFactory.getLogger(getClass)
 
-  def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
+  def getReleasePullRequest(repo: Repo, number: Int): Task[ReleasePullRequest] = {
     Redis.getOrUpdate(s"pull:${repo.fullName}:$number") {
       val getPullRequestTask =
         githubHttpClient.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
@@ -35,7 +35,7 @@ class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends G
     }
   }
 
-  def listReleasePullRequests(repo: GitHubRepo): Task[List[ReleasePullRequestReference]] = {
+  def listReleasePullRequests(repo: Repo): Task[List[ReleasePullRequestReference]] = {
     for {
       githubPRs <- githubHttpClient.getJson[List[GitHubTypes.PullRequest]](s"/repos/${repo.fullName}/pulls?base=master&state=all")
     } yield {

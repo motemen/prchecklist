@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object ChecklistService extends SQLInterpolation with CompoundParameter {
-  def getChecklist(repo: GitHubRepo, releasePR: ReleasePullRequest, useFresh: Boolean = false): Future[(ReleaseChecklist, Boolean)] = {
+  def getChecklist(repo: Repo, releasePR: ReleasePullRequest, useFresh: Boolean = false): Future[(ReleaseChecklist, Boolean)] = {
     val db = Database.get
 
     val q = for {
@@ -62,7 +62,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     db.run(q)
   }
 
-  private def ensureChecklist(repo: GitHubRepo, releasePR: ReleasePullRequest): DBIO[(Int, Boolean)] = {
+  private def ensureChecklist(repo: Repo, releasePR: ReleasePullRequest): DBIO[(Int, Boolean)] = {
     sql"""
       | SELECT id
       | FROM checklists
