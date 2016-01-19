@@ -7,7 +7,7 @@ import prchecklist.utils.GitHubHttpClient
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 
-import org.json4s.native.JsonMethods
+import org.json4s.jackson.JsonMethods
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

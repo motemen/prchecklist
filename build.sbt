@@ -36,7 +36,7 @@ lazy val prchecklist = (project in file(".")).
         "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container;compile",
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
         "org.scalaj" %% "scalaj-http" % "1.1.6",
-        "org.json4s" %% "json4s-native" % "3.3.0",
+        "org.json4s" %% "json4s-jackson" % "3.3.0",
         "org.scalaz" %% "scalaz-core" % "7.1.4",
         "org.scalaz" %% "scalaz-concurrent" % "7.1.4",
         "com.typesafe.slick" %% "slick" % "3.0.0",

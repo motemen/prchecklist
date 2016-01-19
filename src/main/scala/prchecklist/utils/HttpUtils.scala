@@ -3,7 +3,7 @@ package prchecklist.utils
 import prchecklist.models.GitHubConfig
 
 import org.json4s
-import org.json4s.native.JsonMethods
+import org.json4s.jackson.JsonMethods
 
 import org.slf4j.LoggerFactory
 
@@ -57,7 +57,7 @@ trait HttpUtils extends BaseHttp {
   }
 
   def postJson[P <: AnyRef, R](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, mfP: Manifest[P], mfR: Manifest[R]): Task[R] = {
-    val httpReq = apply(url).postData(org.json4s.native.Serialization.write(payload))
+    val httpReq = apply(url).postData(org.json4s.jackson.Serialization.write(payload))
     requestJson(httpReq)
   }
 
