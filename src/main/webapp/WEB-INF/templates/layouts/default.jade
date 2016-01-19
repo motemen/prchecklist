@@ -13,7 +13,6 @@ html
     script(src="https://code.jquery.com/jquery-2.1.4.min.js")
     style
       | body {
-      |   font-size: 18px;
       |   font-family: "Lato", sans-serif;
       |   line-height: 1.8;
       | }
@@ -133,17 +132,21 @@ html
         .navbar-header
           a.navbar-brand(href="/")
             | prchecklist
-        p.navbar-text
-          small
-            = BuildInfo.version
-            small Built: #{BuildInfo.builtAtString}
-        p.navbar-text.navbar-right
+            small(title="Built: #{BuildInfo.builtAtString}")
+              = BuildInfo.version
+        .collapse.navbar-collapse
+          ul.nav.navbar-nav
+            li
+              a(href="/repos") Repositories
           = visitor match
             - case Some(v) =>
-              span
-                | #{v.login}
+              ul.nav.navbar-nav.navbar-right
+                li.navbar-text
+                  img(src={v.avatarUrl} height=16)
+                  = v.login
             - case None =>
-              a.navbar-link(href="/auth")
-                | Login
+              form.navbar-form.navbar-right(action="/auth" method="GET")
+                button.btn.btn-default(type="submit")
+                  | Login
     .container
       != body
