@@ -1,20 +1,21 @@
 package prchecklist.utils
 
-import java.io.InputStream
+import prchecklist.models.GitHubConfig
 
 import org.json4s
 import org.json4s.native.JsonMethods
-import prchecklist.models.GitHubConfig
+
+import org.slf4j.LoggerFactory
 
 import scalaj.http.HttpOptions.HttpOption
 import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
 
-import scalaz.\/
 import scalaz.concurrent.Task
-import scalaz.syntax.either._
 
-import org.slf4j.LoggerFactory
+import java.io.InputStream
 
+// TODO: do not extend Http, simply use it
+// TODO: receive GitHubAccessible
 class GitHubHttpClient(accessToken: String) extends HttpUtils with GitHubConfig {
   override def defaultHttpHeaders: Map[String,String] = {
     super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")
@@ -25,6 +26,7 @@ class GitHubHttpClient(accessToken: String) extends HttpUtils with GitHubConfig 
   }
 }
 
+// TODO: rename to Http
 object HttpUtils extends HttpUtils
 
 trait HttpUtils extends BaseHttp {

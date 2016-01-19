@@ -25,10 +25,6 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     templateAttributes("visitor") = getVisitor
   }
 
-  def mkGitHubHttpClient(visitor: Visitor): GitHubHttpClient = {
-    new GitHubHttpClient(visitor.accessToken)
-  }
-
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
   override def isScalateErrorPageEnabled = false
@@ -40,6 +36,10 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     } yield {
       Visitor(login = login.asInstanceOf[String], accessToken = accessToken.asInstanceOf[String])
     }
+  }
+
+  def mkGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
+    new GitHubHttpClient(u.accessToken)
   }
 
   val getRoot = get("/") {
@@ -61,13 +61,13 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     }
   }
 
+  // TODO: Check visibility
   private def requireGitHubRepo(f: GitHubRepo => Any): Any = {
     Await.result(GitHubRepoService.get(params('repoOwner), params('repoName)), Duration.Inf) match {
       case Some(repo) =>
         f(repo)
 
       case None =>
-        // TODO: to the repo registration view
         redirect(url(listRepos))
     }
   }
@@ -75,30 +75,23 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   val viewPullRequest = get("/:repoOwner/:repoName/pull/:number") {
     val number = params('number).toInt
 
-    getVisitor match {
-      case None =>
-        redirect(url(enterAuth, Map("location" -> request.uri.getPath), Seq.empty))
-
-      case Some(visitor) =>
+    requireVisitor {
+      visitor =>
         requireGitHubRepo {
           repo =>
             val client = mkGitHubHttpClient(visitor)
-            new GitHubPullRequestService(client).getReleasePullRequest(repo, number)
-              .attemptRun.fold(
-                e => BadRequest(s"error: $e"),
-                pr =>
-                  new AsyncResult {
-                    contentType = "text/html"
-                    val is =
-                      ChecklistService.getChecklist(repo, pr).map {
-                        case (checklist, created) =>
-                          layoutTemplate(
-                            "/WEB-INF/templates/views/pullRequest.jade",
-                            "checklist" -> checklist
-                          )
-                      }
-                  }
-              )
+            val pr = new GitHubPullRequestService(client).getReleasePullRequest(repo, number).run
+            new AsyncResult {
+              contentType = "text/html"
+              val is =
+                ChecklistService.getChecklist(repo, pr).map {
+                  case (checklist, created) =>
+                    layoutTemplate(
+                      "/WEB-INF/templates/views/pullRequest.jade",
+                      "checklist" -> checklist
+                    )
+                }
+            }
         }
     }
   }
@@ -107,28 +100,21 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     val number = params('number).toInt
     val featureNumber = params('featureNumber).toInt
 
-    requireGitHubRepo {
-      repo =>
-
-        getVisitor match {
-          case None => Forbidden()
-
-          case Some(visitor) =>
+    requireVisitor {
+      visitor =>
+        requireGitHubRepo {
+          repo =>
             val client = mkGitHubHttpClient(visitor)
-            new GitHubPullRequestService(client).getReleasePullRequest(repo, number)
-              .attemptRun.fold(
-                e => BadRequest(s"error: $e"), // TODO handle error
-                pr =>
-                  new AsyncResult {
-                    val is =
-                      ChecklistService.getChecklist(repo, pr).map {
-                        case (checklist, created) =>
-                          ChecklistService.checkChecklist(checklist, visitor, featureNumber).map {
-                            _ => redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "number" -> number.toString))
-                          }
-                      }
-                  }
-              )
+            val pr = new GitHubPullRequestService(client).getReleasePullRequest(repo, number).run
+            new AsyncResult {
+              val is =
+                ChecklistService.getChecklist(repo, pr).map {
+                  case (checklist, created) =>
+                    ChecklistService.checkChecklist(checklist, visitor, featureNumber).map {
+                      _ => redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "number" -> number.toString))
+                    }
+                }
+            }
         }
     }
   }
@@ -137,27 +123,21 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     val number = params('number).toInt
     val featureNumber = params('featureNumber).toInt
 
-    requireGitHubRepo {
-      repo =>
-        getVisitor match {
-          case None => Forbidden()
-
-          case Some(visitor) =>
+    requireVisitor {
+      visitor =>
+        requireGitHubRepo {
+          repo =>
             val client = mkGitHubHttpClient(visitor)
-            new GitHubPullRequestService(client).getReleasePullRequest(repo, number)
-              .attemptRun.fold(
-                e => BadRequest(s"error: $e"),
-                pr =>
-                  new AsyncResult {
-                    val is =
-                      ChecklistService.getChecklist(repo, pr).map {
-                        case (checklist, created) =>
-                          ChecklistService.uncheckChecklist(checklist, visitor, featureNumber).map {
-                            _ => redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "number" -> number.toString))
-                          }
-                      }
-                  }
-              )
+            val pr = new GitHubPullRequestService(client).getReleasePullRequest(repo, number).run
+            new AsyncResult {
+              val is =
+                ChecklistService.getChecklist(repo, pr).map {
+                  case (checklist, created) =>
+                    ChecklistService.uncheckChecklist(checklist, visitor, featureNumber).map {
+                      _ => redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "number" -> number.toString))
+                    }
+                }
+            }
         }
     }
   }
@@ -188,15 +168,12 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   }
 
   val viewRepo = get("/:repoOwner/:repoName") {
-    requireVisitor {
-      visitor =>
-        requireGitHubRepo {
-          repo =>
-            contentType = "text/html"
-            val client = mkGitHubHttpClient(visitor)
-            val pullRequests = new GitHubPullRequestService(client).listReleasePullRequests(repo).run
-            layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
-        }
+    requireGitHubRepo {
+      repo =>
+        contentType = "text/html"
+        val client = mkGitHubHttpClient(getVisitor.getOrElse(repo.defaultUser))
+        val pullRequests = new GitHubPullRequestService(client).listReleasePullRequests(repo).run
+        layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
     }
   }
 

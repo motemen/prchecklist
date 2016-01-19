@@ -5,12 +5,17 @@ object GitHubTypes {
 
   // https://developer.github.com/v3/pulls/#get-a-single-pull-request
   case class PullRequest(
-    number: Int,
-    url: String,
-    title: String,
-    body: String,
-    head: CommitRef,
-    base: CommitRef)
+      number: Int,
+      url: String,
+      title: String,
+      body: String,
+      state: String,
+      head: CommitRef,
+      base: CommitRef) {
+
+    def isOpen = state == "open"
+    def isClosed = state == "closed"
+  }
 
   // https://developer.github.com/v3/activity/events/types/#pullrequestevent
   case class WebhookPullRequestEvent(

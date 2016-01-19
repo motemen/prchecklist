@@ -3,8 +3,6 @@ package prchecklist.services
 import prchecklist.models._
 import prchecklist.utils.GitHubHttpClient
 
-import org.json4s
-
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
 
@@ -14,8 +12,6 @@ class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends G
   val logger = LoggerFactory.getLogger(getClass)
 
   def getReleasePullRequest(repo: GitHubRepo, number: Int): Task[ReleasePullRequest] = {
-    implicit val formats = json4s.native.Serialization.formats(json4s.NoTypeHints)
-
     Redis.getOrUpdate(s"pull:${repo.fullName}:$number") {
       val getPullRequestTask =
         githubHttpClient.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
@@ -40,10 +36,11 @@ class GitHubPullRequestService(val githubHttpClient: GitHubHttpClient) extends G
   }
 
   def listReleasePullRequests(repo: GitHubRepo): Task[List[ReleasePullRequestReference]] = {
-    githubHttpClient.getJson[List[GitHubTypes.PullRequest]](s"/repos/${repo.fullName}/pulls?base=master&state=all").map {
-      _.map {
-        pr =>
-          ReleasePullRequestReference(repo, pr.number, pr.title)
+    for {
+      githubPRs <- githubHttpClient.getJson[List[GitHubTypes.PullRequest]](s"/repos/${repo.fullName}/pulls?base=master&state=all")
+    } yield {
+      githubPRs.map {
+        pr => ReleasePullRequestReference(repo, pr.number, pr.title)
       }
     }
   }

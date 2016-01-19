@@ -26,7 +26,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       session += "accessToken" -> ""
     }
 
-    override def mkGitHubHttpClient(visitor: Visitor): GitHubHttpClient = {
+    override def mkGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
       val client = mock[GitHubHttpClient]
 
       import GitHubTypes._
@@ -48,6 +48,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
           url = "url",
           title = "title",
           body = "body",
+          state = "open",
           head = CommitRef(
             repo = repo,
             sha = "",
