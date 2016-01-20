@@ -26,6 +26,7 @@ object Redis {
     new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
   }
 
+  // TODO: accept expiration
   def getOrUpdate[A <: AnyRef, M[_]](key: String)(ifNotFound: => M[(A, Boolean)])(implicit M: Monad[M], rf: RedisFormat, jf: JsonFormats = json4s.jackson.Serialization.formats(json4s.NoTypeHints), mf: Manifest[A]): M[A] = {
     val redis = mkRedis()
     redis.get[A](key) match {

@@ -36,20 +36,18 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
           .thenReturn(Task { data })
       }
 
-      val repo = Repo(fullName = "motemen/test-repository", `private` = false, url = "<url>")
+      val repo = Repo(fullName = "motemen/test-repository", `private` = false)
 
       stubJson(
         "/repos/test-owner/test-name",
         Repo(
-          "test-owner/test-name", false, ""
-        )
+          "test-owner/test-name", false)
       )
 
       stubJson(
         "/repos/motemen/test-repository/pulls/2",
         PullRequest(
           number = 1,
-          url = "url",
           title = "title",
           body = "body",
           state = "open",
@@ -95,7 +93,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   import scala.concurrent.duration.Duration
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  Await.result(RepoService.create(GitHubTypes.Repo("motemen/test-repository", false, ""), "<no token>"), Duration.Inf)
+  Await.result(RepoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>"), Duration.Inf)
 
   test("index") {
     get("/") {

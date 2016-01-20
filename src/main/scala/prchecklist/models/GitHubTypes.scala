@@ -6,7 +6,6 @@ object GitHubTypes {
   // https://developer.github.com/v3/pulls/#get-a-single-pull-request
   case class PullRequest(
       number: Int,
-      url: String,
       title: String,
       body: String,
       state: String,
@@ -30,8 +29,7 @@ object GitHubTypes {
   // Do not get confused with Types.Repo (TODO: rename GitHubTypes.Repo)
   case class Repo(
       fullName: String,
-      `private`: Boolean,
-      url: String) {
+      `private`: Boolean) {
     def isPublic = !`private`
 
     lazy val Array(owner, name) = fullName.split("/", 2)
