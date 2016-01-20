@@ -1,5 +1,7 @@
 package prchecklist.services
 
+import prchecklist.models._
+
 import org.scalatest._
 import org.scalatest.time._
 
@@ -14,7 +16,7 @@ class GitHubRepoServiceSpec extends FunSuite with Matchers with concurrent.Scala
         repoOption shouldBe 'empty
     }
 
-    whenReady(RepoService.create("owner", "name", "accessToken")) {
+    whenReady(RepoService.create(GitHubTypes.Repo("owner/name", false, ""), "accessToken")) {
       case (repo, created) =>
         repo.owner shouldBe "owner"
         repo.name shouldBe "name"

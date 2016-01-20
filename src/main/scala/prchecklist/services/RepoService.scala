@@ -16,8 +16,10 @@ object RepoService extends SQLInterpolation {
     db.run(getQuery(owner, name))
   }
 
-  def create(owner: String, name: String, defaultAccessToken: String): Future[(Repo, Boolean)] = {
+  def create(githubRepo: GitHubTypes.Repo, defaultAccessToken: String): Future[(Repo, Boolean)] = {
     val db = Database.get
+
+    val (owner, name) = (githubRepo.owner, githubRepo.name)
 
     val q = getQuery(owner, name).flatMap {
       case Some(repo) =>

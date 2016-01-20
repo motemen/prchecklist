@@ -27,11 +27,14 @@ object GitHubTypes {
     def isSynchronize = action == "synchronize"
   }
 
+  // Do not get confused with Types.Repo (TODO: rename GitHubTypes.Repo)
   case class Repo(
       fullName: String,
       `private`: Boolean,
       url: String) {
     def isPublic = !`private`
+
+    lazy val Array(owner, name) = fullName.split("/", 2)
   }
 
   case class Commit(

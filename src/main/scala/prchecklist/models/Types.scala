@@ -28,6 +28,7 @@ case class ReleasePullRequestReference(
 case class PullRequestReference(number: Int, title: String)
 
 // A Repo is a GitHub repository registered to prchecklist with default access token (of the user registered it).
+// Do not get confuesed with GitHubTypes.Repo (TODO: rename GitHubTypes.Repo)
 case class Repo(id: Int, owner: String, name: String, defaultAccessToken: String) {
   def fullName = s"$owner/$name"
 

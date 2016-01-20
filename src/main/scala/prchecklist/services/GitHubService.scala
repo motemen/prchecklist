@@ -6,6 +6,14 @@ import prchecklist.utils.GitHubHttpClient
 import scalaz.concurrent.Task
 
 class GitHubService(val gitHubHttpClient: GitHubHttpClient) {
+  def getRepo(owner: String, name: String): Task[Repo] =
+    getRepo(s"$owner/$name")
+
+  def getRepo(repoFullName: String): Task[Repo] = {
+    // TODO: check API
+    gitHubHttpClient.getJson(s"/repos/$repoFullName")
+  }
+
   // https://developer.github.com/v3/issues/comments/#create-a-comment
   def addIssueComment(repoFullName: String, issueNumber: Int, body: String): Task[Unit] = {
     gitHubHttpClient.postJson(

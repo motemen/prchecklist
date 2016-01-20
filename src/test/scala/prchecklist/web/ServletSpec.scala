@@ -25,6 +25,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       session += "accessToken" -> ""
     }
 
+    // FIXME: should mock methods of higher-levels (eg. services)
     override def mkGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
       val client = mock[GitHubHttpClient]
 
@@ -35,11 +36,15 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
           .thenReturn(Task { data })
       }
 
-      val repo = Repo(
-        fullName = "motemen/test-repository",
-        `private` = false,
-        url = "<url>"
+      val repo = Repo(fullName = "motemen/test-repository", `private` = false, url = "<url>")
+
+      stubJson(
+        "/repos/test-owner/test-name",
+        Repo(
+          "test-owner/test-name", false, ""
+        )
       )
+
       stubJson(
         "/repos/motemen/test-repository/pulls/2",
         PullRequest(
@@ -90,7 +95,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   import scala.concurrent.duration.Duration
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  Await.result(RepoService.create("motemen", "test-repository", "<no token>"), Duration.Inf)
+  Await.result(RepoService.create(GitHubTypes.Repo("motemen/test-repository", false, ""), "<no token>"), Duration.Inf)
 
   test("index") {
     get("/") {
@@ -145,6 +150,10 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       post("/repos", Map("owner" -> "test-owner", "name" -> "test-name")) {
         status should equal (302)
         header.get("Location").value should endWith ("/repos")
+      }
+
+      post("/repos", Map("owner" -> "test-owner", "name" -> "nonexistent-repo")) {
+        status shouldNot equal (302)
       }
     }
   }

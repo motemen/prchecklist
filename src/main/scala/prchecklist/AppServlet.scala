@@ -61,6 +61,10 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     }
   }
 
+  private def mkGitHubService(u: GitHubAccessible): GitHubService = {
+    new GitHubService(mkGitHubHttpClient(u))
+  }
+
   // TODO: Check visibility
   private def requireGitHubRepo(f: Repo => Any): Any = {
     Await.result(RepoService.get(params('repoOwner), params('repoName)), Duration.Inf) match {
@@ -158,8 +162,10 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
 
     requireVisitor {
       visitor =>
+        val githubService = mkGitHubService(visitor)
+        val githubRepo = githubService.getRepo(repoOwner, repoName).run
         new AsyncResult {
-          val is = RepoService.create(repoOwner, repoName, visitor.accessToken).map {
+          val is = RepoService.create(githubRepo, visitor.accessToken).map {
             case (repo, created) =>
               redirect(url(listRepos))
           }
