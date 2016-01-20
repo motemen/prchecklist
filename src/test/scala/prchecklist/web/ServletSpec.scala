@@ -160,4 +160,25 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       }
     }
   }
+
+  test("authCallback") {
+    session {
+      get("/auth/callback") {
+        status should equal (400)
+      }
+
+      // TODO: mock GitHubAuthService
+      /*
+      get("/auth/callback?code=cafebabe&location=/repos") {
+        status should equal (302)
+        header.get("Location").value should equal ("/repos")
+      }
+
+      get("/auth/callback?code=cafebabe&location=http://www.example.com/") {
+        status should equal (302)
+        header.get("Location").value should equal ("/")
+      }
+      */
+    }
+  }
 }

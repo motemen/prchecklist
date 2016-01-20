@@ -21,15 +21,18 @@ object GitHubAuthService extends GitHubConfig {
 
   def authorize(code: String): Task[Visitor] = {
     Task {
-      val accessTokenResBody = HttpUtils(
+      val accessTokenRes = HttpUtils(
         s"https://$githubDomain/login/oauth/access_token"
       ).postForm(Seq(
           "client_id" -> githubClientId,
           "client_secret" -> githubClientSecret,
           "code" -> code
-        )).asParamMap.body
-      accessTokenResBody.get("access_token").getOrElse {
-        throw new Error(s"could not get access_token $accessTokenResBody")
+        )).asParamMap
+      if (!accessTokenRes.isSuccess) {
+        throw new Error(s"could not get access_token status=${accessTokenRes.statusLine}")
+      }
+      accessTokenRes.body.get("access_token").getOrElse {
+        throw new Error(s"could not get access_token [$accessTokenRes.body]")
       }
     }.flatMap {
       accessToken =>

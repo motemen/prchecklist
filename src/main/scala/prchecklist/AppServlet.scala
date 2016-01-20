@@ -214,20 +214,12 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   }
 
   val authCallback = get("/auth/callback") {
-    val res = for {
-      code <- Task.fromDisjunction { params.get("code") \/> new Error("code required") }
-      visitor <- GitHubAuthService.authorize(code)
-    } yield {
-      // TODO
-      session += "accessToken" -> visitor.accessToken
-      session += "userLogin" -> visitor.login
-
-      ()
+    params.get("code").fold(BadRequest("code required")) {
+      code =>
+        val visitor = GitHubAuthService.authorize(code).run
+        session += "accessToken" -> visitor.accessToken
+        session += "userLogin" -> visitor.login
+        Found(request.parameters.get("location").filter(_.startsWith("/")) getOrElse "/")
     }
-
-    res.attemptRun.fold(
-      e => BadRequest(s"reason: $e"),
-      _ => Found(request.parameters.getOrElse("location", "/"))
-    )
   }
 }
