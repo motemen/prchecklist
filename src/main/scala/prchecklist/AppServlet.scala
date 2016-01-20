@@ -15,7 +15,29 @@ import scala.concurrent.duration.Duration
 import scalaz.syntax.std.option._
 import scalaz.concurrent.Task
 
-class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport with UrlGeneratorSupport {
+trait GitHubServiceFactory {
+  self: GitHubHttpClientFactory =>
+
+  def createGitHubService(client: GitHubHttpClient): GitHubService
+
+  def createGitHubService(u: GitHubAccessible): GitHubService = createGitHubService(createGitHubHttpClient(u))
+}
+
+trait GitHubHttpClientFactory {
+  def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient
+}
+
+class AppServlet extends AppServletBase with GitHubServiceFactory with GitHubHttpClientFactory {
+  override def createGitHubHttpClient(u: GitHubAccessible) =
+    new GitHubHttpClient(u.accessToken)
+
+  override def createGitHubService(client: GitHubHttpClient) =
+    new GitHubService(client)
+}
+
+class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport with UrlGeneratorSupport {
+  self: GitHubServiceFactory with GitHubHttpClientFactory =>
+
   notFound {
     contentType = null
     serveStaticResource() getOrElse resourceNotFound()
@@ -38,10 +60,6 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     }
   }
 
-  def mkGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
-    new GitHubHttpClient(u.accessToken)
-  }
-
   val getRoot = get("/") {
     contentType = "text/html"
     layoutTemplate("/WEB-INF/templates/views/index.jade")
@@ -61,11 +79,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     }
   }
 
-  private def mkGitHubService(u: GitHubAccessible): GitHubService = {
-    new GitHubService(mkGitHubHttpClient(u))
-  }
-
   // TODO: Check visibility
+  // params: repoOwner, repoName
   private def requireGitHubRepo(f: Repo => Any): Any = {
     Await.result(RepoService.get(params('repoOwner), params('repoName)), Duration.Inf) match {
       case Some(repo) =>
@@ -162,7 +177,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
 
     requireVisitor {
       visitor =>
-        val githubService = mkGitHubService(visitor)
+        val githubService = createGitHubService(visitor)
         val githubRepo = githubService.getRepo(repoOwner, repoName).run
         new AsyncResult {
           val is = RepoService.create(githubRepo, visitor.accessToken).map {
@@ -177,7 +192,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     requireGitHubRepo {
       repo =>
         contentType = "text/html"
-        val client = mkGitHubHttpClient(getVisitor.getOrElse(repo.defaultUser))
+        val client = createGitHubHttpClient(getVisitor.getOrElse(repo.defaultUser))
         val pullRequests = new GitHubPullRequestService(client).listReleasePullRequests(repo).run
         layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
     }
@@ -192,7 +207,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
         RepoService.get(payload.repository.fullName).map {
           repo =>
             val client = repo.makeOwnerClient()
-            val githubService = new GitHubService(client)
+            val githubService = createGitHubService(client)
             githubService.getChecklist(repo, payload.pullRequest, useFresh = true).map {
               case (checklist, created) =>
                 if (created) {
