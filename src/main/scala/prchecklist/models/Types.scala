@@ -2,8 +2,8 @@ package prchecklist.models
 
 import prchecklist.utils.GitHubHttpClient
 
-case class ReleaseChecklist(id: Int, pullRequest: ReleasePullRequest, checks: Map[Int, Check]) {
-  def pullRequestUrl(number: Int) = pullRequest.repo.pullRequestUrl(number)
+case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
+  def pullRequestUrl(number: Int) = repo.pullRequestUrl(number)
 
   def allGreen = checks.values.forall(_.isChecked)
 }

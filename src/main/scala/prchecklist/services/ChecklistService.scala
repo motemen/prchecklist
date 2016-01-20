@@ -12,15 +12,32 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object ChecklistService extends SQLInterpolation with CompoundParameter {
-  def getChecklist(repo: Repo, releasePR: ReleasePullRequest, useFresh: Boolean = false): Future[(ReleaseChecklist, Boolean)] = {
+  private def mergedPullRequests(commits: List[GitHubTypes.Commit]): Option[NonEmpty[PullRequestReference]] = {
+    NonEmpty.fromTraversable {
+      commits.flatMap {
+        c =>
+          """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r.findFirstMatchIn(c.commit.message) map {
+            m => PullRequestReference(m.group(1).toInt, m.group(2))
+          }
+      }
+    }
+  }
+
+  def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits): Future[(ReleaseChecklist, Boolean)] = {
     val db = Database.get
 
-    val q = for {
-      (checklistId, created) <- ensureChecklist(repo, releasePR)
-      checks <- queryChecklistChecks(checklistId, releasePR)
-    } yield (ReleaseChecklist(checklistId, releasePR, checks), created)
+    mergedPullRequests(prWithCommits.commits) match {
+      case None =>
+        Future.failed(new Error("No merged pull requests"))
 
-    db.run(q.transactionally)
+      case Some(prRefs) =>
+        val q = for {
+          (checklistId, created) <- ensureChecklist(repo, prWithCommits.pullRequest.number)
+          checks <- queryChecklistChecks(checklistId, prRefs)
+        } yield (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, prRefs.toList, checks), created)
+
+        db.run(q.transactionally)
+    }
   }
 
   def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
@@ -62,12 +79,12 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     db.run(q)
   }
 
-  private def ensureChecklist(repo: Repo, releasePR: ReleasePullRequest): DBIO[(Int, Boolean)] = {
+  private def ensureChecklist(repo: Repo, number: Int): DBIO[(Int, Boolean)] = {
     sql"""
       | SELECT id
       | FROM checklists
       | WHERE github_repo_id = ${repo.id}
-      |   AND release_pr_number = ${releasePR.number}
+      |   AND release_pr_number = ${number}
       | LIMIT 1
     """.as[Int].map(_.headOption).flatMap {
       case Some(v) => DBIO.successful((v, false))
@@ -76,16 +93,17 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
           | INSERT INTO checklists
           |   (github_repo_id, release_pr_number)
           | VALUES
-          |   (${repo.id}, ${releasePR.number})
+          |   (${repo.id}, ${number})
           | RETURNING id
         """.as[Int].head.map((_, true))
     }
   }
 
-  private def queryChecklistChecks(checklistId: Int, releasePR: ReleasePullRequest): DBIO[Map[Int, Check]] = {
-    NonEmpty.fromTraversable(releasePR.featurePRNumbers) match {
+  private def queryChecklistChecks(checklistId: Int, featurePRs: NonEmpty[PullRequestReference]): DBIO[Map[Int, Check]] = {
+    // TODO fix NonEmpty so that NonEmpty#map returns NonEmpty
+    NonEmpty.fromTraversable(featurePRs.map(_.number)) match {
       case None =>
-        DBIO.successful(Map.empty[Int, Check])
+        DBIO.successful { Map.empty }
 
       case Some(featurePRNumbers) =>
         sql"""
@@ -101,7 +119,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
                   .mapValues { _.map { case (_, name) => User(name) } }
                   .withDefault { _ => List() }
 
-              releasePR.featurePullRequests.map {
+              featurePRs.map {
                 pr =>
                   val checkedUsers = prNumberToUser(pr.number)
                   pr.number -> Check(pr, checkedUsers)
