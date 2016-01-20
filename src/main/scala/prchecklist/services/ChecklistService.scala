@@ -16,9 +16,9 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     val db = Database.get
 
     val q = for {
-      (id, created) <- ensureChecklist(repo, releasePR)
-      checks <- queryChecklistChecks(id, releasePR)
-    } yield (ReleaseChecklist(id, releasePR, checks), created)
+      (checklistId, created) <- ensureChecklist(repo, releasePR)
+      checks <- queryChecklistChecks(checklistId, releasePR)
+    } yield (ReleaseChecklist(checklistId, releasePR, checks), created)
 
     db.run(q.transactionally)
   }
@@ -82,7 +82,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     }
   }
 
-  private def queryChecklistChecks(id: Int, releasePR: ReleasePullRequest): DBIO[Map[Int, Check]] = {
+  private def queryChecklistChecks(checklistId: Int, releasePR: ReleasePullRequest): DBIO[Map[Int, Check]] = {
     NonEmpty.fromTraversable(releasePR.featurePRNumbers) match {
       case None =>
         DBIO.successful(Map.empty[Int, Check])
@@ -91,7 +91,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
         sql"""
           | SELECT feature_pr_number,user_login
           | FROM checks
-          | WHERE id = ${id}
+          | WHERE checklist_id = ${checklistId}
           |   AND feature_pr_number IN (${featurePRNumbers})
         """.as[(Int, String)]
           .map {

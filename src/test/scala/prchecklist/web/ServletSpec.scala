@@ -12,7 +12,6 @@ import prchecklist.models._
 import prchecklist.services._
 import prchecklist.utils._
 
-import scalaz.\/-
 import scalaz.concurrent.Task
 
 class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar {
