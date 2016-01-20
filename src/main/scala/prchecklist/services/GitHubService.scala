@@ -37,4 +37,8 @@ class GitHubService(val githubHttpClient: GitHubHttpClient) {
 
     (getPullRequestTask |@| getPullRequestCommitsTask) apply (GitHubTypes.PullRequestWithCommits)
   }
+
+  def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequest]] = {
+    githubHttpClient.getJson[List[GitHubTypes.PullRequest]](s"/repos/${repo.fullName}/pulls?base=master&state=all")
+  }
 }

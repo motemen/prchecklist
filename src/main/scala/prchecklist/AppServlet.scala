@@ -171,7 +171,8 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       repo =>
         contentType = "text/html"
         val client = createGitHubHttpClient(getVisitor.getOrElse(repo.defaultUser))
-        val pullRequests = new GitHubPullRequestService(client).listReleasePullRequests(repo).run
+        val githubService = createGitHubService(client)
+        val pullRequests = githubService.listReleasePullRequests(repo).run
         layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
     }
   }
