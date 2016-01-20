@@ -76,11 +76,16 @@ trait HttpUtils extends BaseHttp {
     logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
     Task {
-      val httpRes = httpReq.exec({
-          case (code, headers, is) =>
-            logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}")
-            parser(is)
-        })
+      val httpRes = httpReq.exec {
+        case (code, headers, is) =>
+          logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}")
+
+          if (code >= 400) {
+            throw new Error(s"${httpReq.method} ${httpReq.url} failed: ${code}")
+          }
+
+          parser(is)
+      }
       if (httpRes.isSuccess) {
         httpRes.body
       } else {

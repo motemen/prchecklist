@@ -1,5 +1,7 @@
 package prchecklist.web
 
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.{ Matchers, OptionValues, mock }
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
@@ -146,7 +148,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   test("viewPullRequest") {
     session {
       get("/motemen/test-repository/pull/2") {
-        status should equal (302)
+        status should equal (200)
       }
 
       put("/@user?login=test-user") {
@@ -161,7 +163,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
   test("checkFeaturePR") {
     session {
-      put("/@user?login=test-uesr") {
+      put("/@user?login=test-user") {
         status should equal (200)
       }
 

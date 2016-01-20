@@ -91,72 +91,50 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     }
   }
 
-  val viewPullRequest = get("/:repoOwner/:repoName/pull/:number") {
-    val number = params('number).toInt
-
-    requireVisitor {
-      visitor =>
-        requireGitHubRepo {
-          repo =>
-            val client = mkGitHubHttpClient(visitor)
-            val pr = new GitHubPullRequestService(client).getReleasePullRequest(repo, number).run
-            new AsyncResult {
-              contentType = "text/html"
-              val is =
-                ChecklistService.getChecklist(repo, pr).map {
-                  case (checklist, created) =>
-                    layoutTemplate(
-                      "/WEB-INF/templates/views/pullRequest.jade",
-                      "checklist" -> checklist
-                    )
-                }
-            }
-        }
+  private def requireChecklist(f: (Repo, ReleaseChecklist) => Any): Any = {
+    requireGitHubRepo {
+      repo =>
+        // TODO: check visilibity
+        val client = createGitHubHttpClient(getVisitor getOrElse repo.defaultUser)
+        val githubService = createGitHubService(client)
+        val prWithCommits = githubService.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
+        val (checklist, _) = Await.result(ChecklistService.getChecklist(repo, prWithCommits), Duration.Inf)
+        f(repo, checklist)
     }
   }
 
-  val checkFeaturePR = post("/:repoOwner/:repoName/pull/:number/-/check/:featureNumber") {
-    val number = params('number).toInt
+  val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber") {
+    requireChecklist {
+      (repo, checklist) =>
+        layoutTemplate(
+          "/WEB-INF/templates/views/pullRequest.jade",
+          "checklist" -> checklist
+        )
+    }
+  }
+
+  val checkFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber/-/check/:featureNumber") {
     val featureNumber = params('featureNumber).toInt
 
     requireVisitor {
       visitor =>
-        requireGitHubRepo {
-          repo =>
-            val client = mkGitHubHttpClient(visitor)
-            val pr = new GitHubPullRequestService(client).getReleasePullRequest(repo, number).run
-            new AsyncResult {
-              val is =
-                ChecklistService.getChecklist(repo, pr).map {
-                  case (checklist, created) =>
-                    ChecklistService.checkChecklist(checklist, visitor, featureNumber).map {
-                      _ => redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "number" -> number.toString))
-                    }
-                }
-            }
+        requireChecklist {
+          (repo, checklist) =>
+            Await.result(ChecklistService.checkChecklist(checklist, visitor, featureNumber), Duration.Inf)
+            redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "pullRequestNumber" -> params('pullRequestNumber)))
         }
     }
   }
 
-  val uncheckFeaturePR = post("/:repoOwner/:repoName/pull/:number/-/uncheck/:featureNumber") {
-    val number = params('number).toInt
+  val uncheckFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber/-/uncheck/:featureNumber") {
     val featureNumber = params('featureNumber).toInt
 
     requireVisitor {
       visitor =>
-        requireGitHubRepo {
-          repo =>
-            val client = mkGitHubHttpClient(visitor)
-            val pr = new GitHubPullRequestService(client).getReleasePullRequest(repo, number).run
-            new AsyncResult {
-              val is =
-                ChecklistService.getChecklist(repo, pr).map {
-                  case (checklist, created) =>
-                    ChecklistService.uncheckChecklist(checklist, visitor, featureNumber).map {
-                      _ => redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "number" -> number.toString))
-                    }
-                }
-            }
+        requireChecklist {
+          (repo, checklist) =>
+            Await.result(ChecklistService.uncheckChecklist(checklist, visitor, featureNumber), Duration.Inf)
+            redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "pullRequestNumber" -> params('pullRequestNumber)))
         }
     }
   }
