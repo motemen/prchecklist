@@ -106,6 +106,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber") {
     requireChecklist {
       (repo, checklist) =>
+        contentType = "text/html"
         layoutTemplate(
           "/WEB-INF/templates/views/pullRequest.jade",
           "checklist" -> checklist
