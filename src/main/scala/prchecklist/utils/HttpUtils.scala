@@ -29,9 +29,7 @@ class GitHubHttpClient(accessToken: String) extends HttpUtils with GitHubConfig 
 // TODO: rename to Http
 object HttpUtils extends HttpUtils
 
-trait HttpUtils extends BaseHttp {
-  val allowUnsafeSSL = System.getProperty("http.allowUnsafeSSL", "") == "true"
-
+trait HttpUtils extends BaseHttp with AppConfig {
   def logger = LoggerFactory.getLogger(getClass)
 
   def defaultBuild(req: HttpRequest): HttpRequest = {
@@ -45,7 +43,7 @@ trait HttpUtils extends BaseHttp {
   }
 
   def defaultHttpOptions: Seq[HttpOption] = {
-    if (allowUnsafeSSL) {
+    if (httpAllowUnsafeSSL) {
       Seq(HttpOptions.allowUnsafeSSL)
     } else {
       Seq.empty

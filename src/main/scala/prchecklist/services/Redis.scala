@@ -1,5 +1,7 @@
 package prchecklist.services
 
+import prchecklist.utils.AppConfig
+
 import java.io.ByteArrayInputStream
 import java.net.URI
 
@@ -15,15 +17,16 @@ import scalaz.syntax.monad._ // M.map(v) => v.map
 
 import scala.language.higherKinds
 
-object Redis {
+object Redis extends AppConfig {
   // Convert implicit JsonFormats to RedisParse (redis.serialization.Parse)
   implicit def redisParseJson[A](implicit formats: JsonFormats, mf: Manifest[A]) = RedisParse {
     b => JsonMethods.parse(new ByteArrayInputStream(b)).extract[A]
   }
 
+  // TODO: pool connection
   def mkRedis(): RedisClient = {
-    val redisURL = new URI(System.getProperty("redis.url", "redis://127.0.0.1:6379"))
-    new RedisClient(host = redisURL.getHost, port = redisURL.getPort)
+    val u = new URI(redisUrl)
+    new RedisClient(host = u.getHost, port = u.getPort)
   }
 
   // TODO: accept expiration

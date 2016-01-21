@@ -72,8 +72,8 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
         checklist.checks.get(4) shouldBe 'empty
         created shouldBe false
       }
-    } yield true
+    } yield ()
 
-    fut.futureValue shouldBe true
+    fut.futureValue shouldBe (())
   }
 }
