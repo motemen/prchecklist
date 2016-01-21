@@ -1,6 +1,21 @@
 = prchecklist
 
+== Requirements
+
+- Postgresql
+- Redis
+
+== Development
+
 ----
+$ createdb prchecklist_local
+$ psql prchecklist_local < db/prchecklist.sql
 $ ./sbt
 > ~re-start
 ----
+
+== TODO
+
+* Unify interfaces to scala Futures and scalaz Tasks.
+* Repo visibility
+* UI
