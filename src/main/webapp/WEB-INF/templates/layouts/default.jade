@@ -34,8 +34,11 @@ html
       | h1 small a {
       |   color: grey;
       | }
+      | .container {
+      |   font-size: 120%;
+      | }
       | .description {
-      |   font-size: 80%;
+      |   font-size: 90%;
       |   padding: 1em 2em;
       |   background-color: #EEE;
       | }
@@ -145,7 +148,8 @@ html
                   img(src={v.avatarUrl} height=16)
                   = v.login
             - case None =>
-              form.navbar-form.navbar-right(action="/auth?location=#{request.getPathInfo}" method="GET")
+              form.navbar-form.navbar-right(action="/auth" method="GET")
+                input(type="hidden" name="location" value={request.getPathInfo})
                 button.btn.btn-default(type="submit")
                   | Login
     .container

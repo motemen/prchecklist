@@ -20,5 +20,6 @@
           button.btn.btn-primary(type="submit")
             | Register repo
       - case None =>
-        a.btn.btn-default(href="/auth?location=/repos")
+        a.btn.btn-default(href="/auth?location=#{request.getPathInfo}")
           | Login
+        | to register new repos.
