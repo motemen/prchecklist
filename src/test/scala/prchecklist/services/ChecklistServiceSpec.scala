@@ -50,7 +50,6 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
         checklist.checks.get(2).value shouldNot be('checked)
         checklist.checks.get(3).value shouldNot be('checked)
         checklist.checks.get(4) shouldBe 'empty
-        created shouldBe true
       }
 
       _ <- ChecklistService.checkChecklist(checklist, checkerUser, featurePRNumber = 2)
