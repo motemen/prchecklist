@@ -66,6 +66,30 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
           )
         })
 
+      when(service.listReleasePullRequests(any()))
+        .thenReturn(
+          Task {
+            List(
+              GitHubTypes.PullRequest(
+                number = 100,
+                title = "title",
+                body = "",
+                state = "open",
+                head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
+                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+              ),
+              GitHubTypes.PullRequest(
+                number = 101,
+                title = "title",
+                body = "",
+                state = "open",
+                head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-2"),
+                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+              )
+            )
+          }
+        )
+
       service
     }
 
@@ -171,6 +195,16 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
         status should equal (302)
         header.get("Location").value should endWith ("/motemen/test-repository/pull/2")
       }
+    }
+  }
+
+  test("viewRepo") {
+    get("/nonexistent/nonexistent") {
+      status should equal (404)
+    }
+
+    get("/motemen/test-repository") {
+      status should equal (200)
     }
   }
 

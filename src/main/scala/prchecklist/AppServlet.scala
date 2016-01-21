@@ -87,7 +87,8 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         f(repo)
 
       case None =>
-        redirect(url(listRepos))
+        // TODO show repo registration form
+        NotFound("Repository not found")
     }
   }
 
