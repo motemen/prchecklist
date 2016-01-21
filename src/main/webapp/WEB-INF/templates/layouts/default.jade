@@ -145,7 +145,7 @@ html
                   img(src={v.avatarUrl} height=16)
                   = v.login
             - case None =>
-              form.navbar-form.navbar-right(action="/auth" method="GET")
+              form.navbar-form.navbar-right(action="/auth?location=#{request.getPathInfo}" method="GET")
                 button.btn.btn-default(type="submit")
                   | Login
     .container

@@ -29,15 +29,16 @@ object Redis extends AppConfig {
     new RedisClient(host = u.getHost, port = u.getPort)
   }
 
-  // TODO: accept expiration
-  def getOrUpdate[A <: AnyRef, M[_]](key: String)(ifNotFound: => M[(A, Boolean)])(implicit M: Monad[M], rf: RedisFormat, jf: JsonFormats = json4s.jackson.Serialization.formats(json4s.NoTypeHints), mf: Manifest[A]): M[A] = {
+  def getOrUpdate[A <: AnyRef, M[_]](key: String, expireIn: scala.concurrent.duration.Duration)(ifNotFound: => M[(A, Boolean)])(implicit M: Monad[M], rf: RedisFormat, jf: JsonFormats = json4s.jackson.Serialization.formats(json4s.NoTypeHints), mf: Manifest[A]): M[A] = {
     val redis = mkRedis()
     redis.get[A](key) match {
-      case Some(v) => M.pure(v)
+      case Some(v) =>
+        M.pure(v)
+
       case None =>
         ifNotFound.map {
           case (v, ok) =>
-            if (ok) redis.set(key, json4s.jackson.Serialization.write(v))
+            if (ok) redis.setex(key, expireIn.toSeconds, json4s.jackson.Serialization.write(v))
             v
         }
     }

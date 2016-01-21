@@ -44,7 +44,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   }
 
   before () {
-    templateAttributes("visitor") = getVisitor
+    templateAttributes += "visitor" -> getVisitor
   }
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
