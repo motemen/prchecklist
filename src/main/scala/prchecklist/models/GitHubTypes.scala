@@ -16,6 +16,8 @@ object GitHubTypes {
     def isClosed = state == "closed"
   }
 
+  case class PullRequestWithCommits(pullRequest: PullRequest, commits: List[Commit])
+
   // https://developer.github.com/v3/activity/events/types/#pullrequestevent
   case class WebhookPullRequestEvent(
       action: String,

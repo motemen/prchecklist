@@ -1,5 +1,7 @@
 package prchecklist.models
 
+import prchecklist.utils.AppConfig
+
 import java.net.URI
 
 object GitHubConfig {
@@ -11,12 +13,7 @@ object GitHubConfig {
   def apiBase = config.githubApiBase
 }
 
-trait GitHubConfig {
-  val githubClientId = System.getProperty("github.clientId").ensuring(_ != null, "github.clientId must be defined")
-  val githubClientSecret = System.getProperty("github.clientSecret").ensuring(_ != null, "github.clientSecret must be defined")
-  val githubDomain = System.getProperty("github.domain", "github.com")
-  val githubDefaultToken = Option(System.getProperty("github.defaultToken"))
-
+trait GitHubConfig extends AppConfig {
   def githubOrigin = new java.net.URI(s"https://$githubDomain")
 
   def githubApiBase =

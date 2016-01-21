@@ -2,7 +2,7 @@ package prchecklist.services
 
 import prchecklist.models._
 import prchecklist.utils.GitHubHttpClient
-import prchecklist.utils.HttpUtils
+import prchecklist.utils.Http
 import prchecklist.utils.UriStringContext._ // uri"..."
 
 import java.net.URLEncoder
@@ -21,7 +21,7 @@ object GitHubAuthService extends GitHubConfig {
 
   def authorize(code: String): Task[Visitor] = {
     Task {
-      val accessTokenRes = HttpUtils(
+      val accessTokenRes = Http(
         s"https://$githubDomain/login/oauth/access_token"
       ).postForm(Seq(
           "client_id" -> githubClientId,

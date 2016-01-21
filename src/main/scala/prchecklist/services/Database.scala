@@ -1,9 +1,11 @@
 package prchecklist.services
 
+import prchecklist.utils.AppConfig
+
 import slick.driver.PostgresDriver.api
 
-object Database {
+object Database extends AppConfig {
   Class.forName("org.postgresql.Driver")
 
-  def get = api.Database.forURL(System.getProperty("database.url", "jdbc:postgresql:prchecklist_local"))
+  def get = api.Database.forURL(databaseUrl)
 }

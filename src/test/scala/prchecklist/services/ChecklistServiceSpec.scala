@@ -19,17 +19,30 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
   test("getChecklist && checkChecklist succeeds") {
     val checkerUser = Visitor(login = "test", accessToken = "")
 
-    val pr =
-      ReleasePullRequest(
-        repo = repo,
+    val pr = GitHubTypes.PullRequestWithCommits(
+      pullRequest = GitHubTypes.PullRequest(
         number = 1,
-        title = "",
-        body = "",
-        featurePullRequests = List(
-          PullRequestReference(2, "blah blah"),
-          PullRequestReference(3, "foo")
-        )
+        title = "title",
+        body = "body",
+        state = "open",
+        head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
+        base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+      ),
+      commits = List(
+        GitHubTypes.Commit("", GitHubTypes.CommitDetail(
+          """Merge pull request #2 from motemen/feature-a
+            |
+            |feature-a
+          """.stripMargin
+        )),
+        GitHubTypes.Commit("", GitHubTypes.CommitDetail(
+          """Merge pull request #3 from motemen/feature-b
+            |
+            |feature-b
+          """.stripMargin
+        ))
       )
+    )
 
     val fut = for {
       (checklist, created) <- ChecklistService.getChecklist(repo, pr)
@@ -59,8 +72,8 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
         checklist.checks.get(4) shouldBe 'empty
         created shouldBe false
       }
-    } yield true
+    } yield ()
 
-    fut.futureValue shouldBe true
+    fut.futureValue shouldBe (())
   }
 }

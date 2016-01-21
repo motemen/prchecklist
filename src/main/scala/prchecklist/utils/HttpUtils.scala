@@ -14,9 +14,8 @@ import scalaz.concurrent.Task
 
 import java.io.InputStream
 
-// TODO: do not extend Http, simply use it
 // TODO: receive GitHubAccessible
-class GitHubHttpClient(accessToken: String) extends HttpUtils with GitHubConfig {
+class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig {
   override def defaultHttpHeaders: Map[String,String] = {
     super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")
   }
@@ -26,17 +25,10 @@ class GitHubHttpClient(accessToken: String) extends HttpUtils with GitHubConfig 
   }
 }
 
-// TODO: rename to Http
-object HttpUtils extends HttpUtils
+object Http extends Http
 
-trait HttpUtils extends BaseHttp {
-  val allowUnsafeSSL = System.getProperty("http.allowUnsafeSSL", "") == "true"
-
+trait Http extends BaseHttp with AppConfig {
   def logger = LoggerFactory.getLogger(getClass)
-
-  def defaultBuild(req: HttpRequest): HttpRequest = {
-    req.options(defaultHttpOptions).headers(defaultHttpHeaders)
-  }
 
   override def apply(url: String): HttpRequest = {
     super.apply(url)
@@ -45,7 +37,7 @@ trait HttpUtils extends BaseHttp {
   }
 
   def defaultHttpOptions: Seq[HttpOption] = {
-    if (allowUnsafeSSL) {
+    if (httpAllowUnsafeSSL) {
       Seq(HttpOptions.allowUnsafeSSL)
     } else {
       Seq.empty
@@ -65,22 +57,27 @@ trait HttpUtils extends BaseHttp {
     requestJson(apply(url))
   }
 
-  def requestJson[R](req: HttpRequest)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Task[R] = {
+  protected def requestJson[R](req: HttpRequest)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Task[R] = {
     doRequest(req) {
       is =>
         JsonMethods.parse(is).camelizeKeys.extract[R]
     }
   }
 
-  def doRequest[A](httpReq: HttpRequest)(parser: InputStream => A): Task[A] = {
+  protected def doRequest[A](httpReq: HttpRequest)(parser: InputStream => A): Task[A] = {
     logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
     Task {
-      val httpRes = httpReq.exec({
-          case (code, headers, is) =>
-            logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}")
-            parser(is)
-        })
+      val httpRes = httpReq.exec {
+        case (code, headers, is) =>
+          logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}")
+
+          if (code >= 400) {
+            throw new Error(s"${httpReq.method} ${httpReq.url} failed: ${code}")
+          }
+
+          parser(is)
+      }
       if (httpRes.isSuccess) {
         httpRes.body
       } else {

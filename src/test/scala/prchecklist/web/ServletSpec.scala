@@ -1,5 +1,7 @@
 package prchecklist.web
 
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.{ Matchers, OptionValues, mock }
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
@@ -25,8 +27,50 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       session += "accessToken" -> ""
     }
 
+    override def createGitHubService(client: GitHubHttpClient): GitHubService = {
+      val service = mock[GitHubService]
+
+      import GitHubTypes._
+
+      when(service.getRepo("test-owner", "test-name"))
+        .thenReturn(Task{ Repo("test-owner/test-name", false) })
+
+      when(service.getRepo("motemen", "test-repository"))
+        .thenReturn(Task{ Repo("motemen/test-repository", false) })
+
+      when(service.getPullRequestWithCommits(any(), any()))
+        .thenReturn(Task {
+          GitHubTypes.PullRequestWithCommits(
+            pullRequest = GitHubTypes.PullRequest(
+              number = 1,
+              title = "title",
+              body = "body",
+              state = "open",
+              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+            ),
+            commits = List(
+              GitHubTypes.Commit("", GitHubTypes.CommitDetail(
+                """Merge pull request #2 from motemen/feature-a
+                  |
+                  |feature-a
+                """.stripMargin
+              )),
+              GitHubTypes.Commit("", GitHubTypes.CommitDetail(
+                """Merge pull request #3 from motemen/feature-b
+                  |
+                  |feature-b
+                """.stripMargin
+              ))
+            )
+          )
+        })
+
+      service
+    }
+
     // FIXME: should mock methods of higher-levels (eg. services)
-    override def mkGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
+    override def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
       val client = mock[GitHubHttpClient]
 
       import GitHubTypes._
@@ -104,7 +148,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   test("viewPullRequest") {
     session {
       get("/motemen/test-repository/pull/2") {
-        status should equal (302)
+        status should equal (200)
       }
 
       put("/@user?login=test-user") {
@@ -119,7 +163,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
   test("checkFeaturePR") {
     session {
-      put("/@user?login=test-uesr") {
+      put("/@user?login=test-user") {
         status should equal (200)
       }
 
