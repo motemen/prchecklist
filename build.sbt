@@ -95,6 +95,16 @@ lazy val prchecklist = (project in file(".")).
       ),
       buildInfoOptions += BuildInfoOption.BuildTime,
       buildInfoPackage := "prchecklist"
+    ).
+    settings (
+      update <<= (update, streams) map {
+        (report, s) =>
+          s.log.info("Running 'npm install' ...")
+          ("npm" :: "install" :: Nil).!
+          s.log.info("Done.")
+
+          report
+      }
     )
 
 addCommandAlias("devel", """; set javaOptions += "-DbrowserSync.port=3000"; processStart project/tools/npm-run-script-wrapper watch; ~re-start""")

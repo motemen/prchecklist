@@ -5,6 +5,17 @@
 - Postgresql
 - Redis
 
+=== Register a developer application
+
+- Visit https://github.com/settings/developers and register one
+- Create a new file named `local.sbt` at the top of the project, whose content is like: +
+----
+javaOptions ++= Seq(
+  "-Dgithub.clientId=<Your GitHub Client ID>",
+  "-Dgithub.clientSecret=<Your GitHub Client Secret"
+)
+----
+
 == Development
 
 ----
@@ -12,6 +23,7 @@ $ createdb prchecklist_local
 $ psql prchecklist_local < db/prchecklist.sql
 $ ./sbt
 > devel
+# Visit http://localhost:3000
 ----
 
 == TODO
