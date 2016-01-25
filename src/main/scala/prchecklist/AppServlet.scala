@@ -39,6 +39,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   self: GitHubServiceFactory with GitHubHttpClientFactory =>
 
   notFound {
+    println("ntFound")
     contentType = null
     serveStaticResource() getOrElse resourceNotFound()
   }
@@ -224,4 +225,10 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         Found(request.parameters.get("location").filter(_.startsWith("/")) getOrElse "/")
     }
   }
+
+  get("/stylesheets/*.css") {
+    contentType = null
+    serveStaticResource() getOrElse resourceNotFound()
+  }
+
 }

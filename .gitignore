@@ -70,3 +70,4 @@ jrebel.lic
 # paulp script
 /.lib/
 
+/node_modules/

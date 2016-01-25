@@ -9,134 +9,18 @@ html
     title= title
     link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous")
     link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css")
+    link(rel="stylesheet" href="/stylesheets/main.css")
     link(href="https://fonts.googleapis.com/css?family=Lato:400,400italic,700,700italic" rel="stylesheet" type="text/css")
     script(src="https://code.jquery.com/jquery-2.1.4.min.js")
-    style
-      | body {
-      |   font-family: "Lato", sans-serif;
-      |   line-height: 1.8;
-      | }
-      | nav *, nav .navbar-brand {
-      |   line-height: 1;
-      | }
-      | nav small {
-      |   font-size: 80%;
-      | }
-      | h1, h2 { font-weight: 700; }
-      | h1 {
-      |   font-style: italic;
-      |   margin-bottom: 1em;
-      | }
-      | h1 small {
-      |   font-weight: 400;
-      |   font-style: normal;
-      | }
-      | h1 small a {
-      |   color: grey;
-      | }
-      | .container {
-      |   font-size: 120%;
-      | }
-      | .description {
-      |   font-size: 90%;
-      |   padding: 1em 2em;
-      |   background-color: #EEE;
-      | }
-      | .description h1,
-      | .description h2 {
-      |   font-style: normal;
-      | }
-      | .task-list-item {
-      |   list-style: none;
-      |   margin-left: -2em;
-      | }
-      | .task-list-item input[type=checkbox] {
-      |   margin-right: 0.5em;
-      | }
-      | .checklist-check-mark {
-      |   color: silver;
-      |   font-size: 170%;
-      |   margin-right: 0.3em;
-      |   width: 1em;
-      |   text-align: center;
-      | }
-      | .all-green .checklist-check-mark {
-      |   color: #5CB85C;
-      | }
-      | .headline {
-      |   display: flex;
-      | }
-      | .headline i {
-      |   margin-top: 5px;
-      | }
-      | .headline small {
-      |   display: block;
-      | }
-      | #checklist {
-      |   list-style: none;
-      |   padding: 0;
-      |   margin-top: 2em;
-      | }
-      | #checklist li {
-      |   line-height: 48px;
-      |   padding: 0.5em 1em;
-      |   margin-bottom: 0.6em;
-      |   font-size: 105%;
-      |   border: 1px solid #DDD;
-      |   position: relative;
-      | }
-      | #checklist li a {
-      |   margin-right: 0.5em;
-      | }
-      | #checklist li {
-      |   transition: opacity 0.5s;
-      | }
-      | #checklist li.checked {
-      |   // opacity: 0.3;
-      | }
-      | #checklist li:hover {
-      |   opacity: 1;
-      | }
-      | #checklist .checkers-container {
-      |   position: absolute;
-      |   text-align: right;
-      |   right: 1em;
-      |   top: 0.5em;
-      | }
-      | #checklist .checkers-container .checkers {
-      |   margin-left: 0.5em;
-      |   margin-right: 0.5em;
-      | }
-      | #checklist .checkers-container form {
-      |   display: inline;
-      | }
-      | #checklist .checkers-container form:hover .btn-success {
-      |   background-color: #D9534F; /* btn-danger */
-      |   border-color: #D43F3A;
-      |   transition-property: background-color, border-color;
-      |   /* transition-duration: 0.2s; */
-      | }
-      | #checklist .checkers-container form .btn {
-      |   width: 3em;
-      | }
-      | #checklist .checkers-container form .btn-success i.fa-times {
-      |   font-size: 115%;
-      |   display: none;
-      | }
-      | #checklist .checkers-container form:hover .btn-success i.fa-check {
-      |   display: none;
-      | }
-      | #checklist .checkers-container form:hover .btn-success i.fa-times {
-      |   display: inline;
-      | }
   body
     nav.navbar.navbar-default.navbar-static-top
       .container-fluid
         .navbar-header
           a.navbar-brand(href="/")
             | prchecklist
-            small(title="Built: #{BuildInfo.builtAtString}")
-              = BuildInfo.version
+            sup
+              small(title="Built: #{BuildInfo.builtAtString}")
+                = BuildInfo.version
         .collapse.navbar-collapse
           ul.nav.navbar-nav
             li

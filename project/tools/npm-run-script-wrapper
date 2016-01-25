@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+npm run-script "$@" &
+
+pid=$(jobs -p)
+pgid=$(ps -o pgid "$pid" | grep -o '[0-9]*')
+
+trap "KILL -TERM -$pgid" TERM
+wait

@@ -19,6 +19,11 @@ object JettyLauncher {
     server.setHandler(context)
 
     server.start()
+    Option(System.getProperty("browserSync.port")).foreach {
+      port =>
+        import scala.sys.process._
+        ("node_modules/.bin/browser-sync" :: "reload" :: "--port" :: port :: Nil).run
+    }
     server.join()
   }
 }

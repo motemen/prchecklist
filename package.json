@@ -1,0 +1,30 @@
+{
+  "name": "github-release-pull-requests-checklist",
+  "version": "1.0.0",
+  "description": "= prchecklist",
+  "main": "bs-config.js",
+  "dependencies": {},
+  "devDependencies": {
+    "gaze-cli": "^0.2.0",
+    "less": "^2.5.3",
+    "npm-run-all": "^1.5.0"
+  },
+  "scripts": {
+    "watch": "npm-run-all -p watch:less browser-sync:start",
+    "watch:less": "gaze 'lessc --verbose --source-map src/main/less/*.less src/main/webapp/stylesheets/main.css' 'src/main/less/*.less'",
+    "browser-sync:start": "browser-sync start --config bs-config.js",
+    "browser-sync:reload": "browser-sync reload",
+    "P": "echo $PPID && while :; do sleep 4; ps aux $PPID; done"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/motemen/prchecklist.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/motemen/prchecklist/issues"
+  },
+  "homepage": "https://github.com/motemen/prchecklist#readme"
+}

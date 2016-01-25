@@ -1,0 +1,111 @@
+body {
+  font-family: "Lato", sans-serif;
+  line-height: 1.8;
+}
+nav *, nav .navbar-brand {
+  line-height: 1;
+}
+nav small {
+  font-size: 80%;
+}
+h1, h2 { font-weight: 700; }
+h1 {
+  font-style: italic;
+  margin-bottom: 1em;
+  small {
+    font-weight: 400;
+    font-style: normal;
+    a {
+      color: grey;
+    }
+  }
+}
+.container {
+  font-size: 120%;
+}
+.description {
+  font-size: 90%;
+  padding: 1em 2em;
+  background-color: #EEE;
+  h1, h2 {
+    font-style: normal;
+  }
+}
+.task-list-item {
+  list-style: none;
+  margin-left: -2em;
+  input[type=checkbox] {
+    margin-right: 0.5em;
+  }
+}
+.checklist-check-mark {
+  color: silver;
+  font-size: 170%;
+  margin-right: 0.3em;
+  width: 1em;
+  text-align: center;
+  .all-gren & {
+    color: #5CB85C;
+  }
+}
+.headline {
+  display: flex;
+  i {
+    margin-top: 5px;
+  }
+  small {
+    display: block;
+  }
+}
+#checklist {
+  list-style: none;
+  padding: 0;
+  margin-top: 2em;
+  li {
+    line-height: 48px;
+    padding: 0.5em 1em;
+    margin-bottom: 0.6em;
+    font-size: 105%;
+    border: 1px solid #DDD;
+    position: relative;
+    transition: opacity 0.5s;
+    a {
+      margin-right: 0.5em;
+    }
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+#checklist .checkers-container {
+  position: absolute;
+  text-align: right;
+  right: 1em;
+  top: 0.5em;
+  .checkers {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+  }
+}
+#checklist .checkers-container form {
+  display: inline;
+}
+#checklist .checkers-container form:hover .btn-success {
+  background-color: #D9534F; /* btn-danger */
+  border-color: #D43F3A;
+  transition-property: background-color, border-color;
+  /* transition-duration: 0.2s; */
+}
+#checklist .checkers-container form .btn {
+  width: 3em;
+}
+#checklist .checkers-container form .btn-success i.fa-times {
+  font-size: 115%;
+  display: none;
+}
+#checklist .checkers-container form:hover .btn-success i.fa-check {
+  display: none;
+}
+#checklist .checkers-container form:hover .btn-success i.fa-times {
+  display: inline;
+}

@@ -93,3 +93,13 @@ lazy val prchecklist = (project in file(".")).
       buildInfoOptions += BuildInfoOption.BuildTime,
       buildInfoPackage := "prchecklist"
     )
+
+addCommandAlias("dev", "; processStart project/tools/npm-run-script-wrapper watch ; ~re-start")
+
+watchSources ~= {
+  _.filterNot {
+    f =>
+      """\.(less|css(\.map)?)$""".r.findFirstIn(f.getName).isDefined
+  }
+}
+
