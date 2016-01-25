@@ -1,5 +1,7 @@
 /local.sbt
 
+/src/main/webapp/stylesheets/
+
 ## generic files to ignore
 *~
 *.lock
