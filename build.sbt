@@ -97,7 +97,7 @@ lazy val prchecklist = (project in file(".")).
       buildInfoPackage := "prchecklist"
     )
 
-addCommandAlias("dev", "; processStart project/tools/npm-run-script-wrapper watch ; ~re-start")
+addCommandAlias("devel", """; set javaOptions += "-DbrowserSync.port=3000"; processStart project/tools/npm-run-script-wrapper watch; ~re-start""")
 
 watchSources ~= {
   _.filterNot {
