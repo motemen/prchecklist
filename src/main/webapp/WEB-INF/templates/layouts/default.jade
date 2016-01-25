@@ -29,7 +29,7 @@ html
             - case Some(v) =>
               ul.nav.navbar-nav.navbar-right
                 li.navbar-text
-                  img(src={v.avatarUrl} height=16)
+                  img(src={v.avatarUrl} height=24)
                   = v.login
             - case None =>
               form.navbar-form.navbar-right(action="/auth" method="GET")

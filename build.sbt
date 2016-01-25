@@ -65,6 +65,9 @@ lazy val prchecklist = (project in file(".")).
       }
     ).
     settings(
+      unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "src/main/webapp")
+    ).
+    settings(
       fork in Test := true,
       javaOptions in Test ++= Seq(
         "-Ddatabase.url=jdbc:postgresql:prchecklist_test",

@@ -39,7 +39,6 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   self: GitHubServiceFactory with GitHubHttpClientFactory =>
 
   notFound {
-    println("ntFound")
     contentType = null
     serveStaticResource() getOrElse resourceNotFound()
   }
