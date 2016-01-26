@@ -65,7 +65,17 @@ lazy val prchecklist = (project in file(".")).
       }
     ).
     settings(
-      unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "src/main/webapp")
+      unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "src/main/webapp"),
+      resourceGenerators in Compile <+= (baseDirectory, streams) map {
+        (baseDirectory, s) =>
+          s.log.info("Running 'npm run build' ...")
+          ("npm" :: "run" :: "build" :: Nil).!
+          s.log.info("Done.")
+
+          Seq(
+            baseDirectory / "src/main/webapp/stylesheets/main.css"
+          )
+      }
     ).
     settings(
       fork in Test := true,
@@ -97,11 +107,18 @@ lazy val prchecklist = (project in file(".")).
       buildInfoPackage := "prchecklist"
     ).
     settings (
-      update <<= (update, streams) map {
-        (report, s) =>
-          s.log.info("Running 'npm install' ...")
-          ("npm" :: "install" :: Nil).!
-          s.log.info("Done.")
+      update <<= (update, baseDirectory, cacheDirectory, streams) map {
+        (report, base, cache, s) =>
+          val npmInstall = FileFunction.cached(cache / "npm-install") (FilesInfo.hash, FilesInfo.exists) {
+            (changeReport, in) =>
+              s.log.info("Running 'npm install' ...")
+              ("npm" :: "install" :: Nil).!
+              s.log.info("Done.")
+
+              Set[File]()
+          }
+
+          npmInstall(Set(base / "package.json"))
 
           report
       }

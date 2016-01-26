@@ -20,6 +20,7 @@ object ProcessManager {
         case (command, process) =>
           println(s"Stopping ${command.mkString(" ")} ...")
           process.destroy()
+          process.exitValue()
       }
       all.clear()
     }
