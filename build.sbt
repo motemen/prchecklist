@@ -1,16 +1,19 @@
 import org.scalatra.sbt.ScalatraPlugin
 import com.mojolly.scalate.ScalatePlugin
-import com.typesafe.sbt.{SbtScalariform, SbtStartScript}
+import com.typesafe.sbt.SbtScalariform
+import NativePackagerHelper._
+
+val stylesheetsDirectory = settingKey[File]("Directory where generated stylesheets are placed")
 
 lazy val prchecklist = (project in file(".")).
   enablePlugins(
-    BuildInfoPlugin
+    BuildInfoPlugin,
+    JavaAppPackaging
   ).
   settings(Defaults.defaultSettings).
   settings(ScalatraPlugin.scalatraWithJRebel).
   settings(ScalatePlugin.scalateSettings).
   settings(SbtScalariform.scalariformSettings).
-  settings(SbtStartScript.startScriptForClassesSettings).
   settings(
       organization := "net.tokyoenvious",
       name := "prchecklist",
@@ -65,19 +68,6 @@ lazy val prchecklist = (project in file(".")).
       }
     ).
     settings(
-      unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "src/main/webapp"),
-      resourceGenerators in Compile <+= (baseDirectory, streams) map {
-        (baseDirectory, s) =>
-          s.log.info("Running 'npm run build' ...")
-          ("npm" :: "run" :: "build" :: Nil).!
-          s.log.info("Done.")
-
-          Seq(
-            baseDirectory / "src/main/webapp/stylesheets/main.css"
-          )
-      }
-    ).
-    settings(
       fork in Test := true,
       javaOptions in Test ++= Seq(
         "-Ddatabase.url=jdbc:postgresql:prchecklist_test",
@@ -122,9 +112,33 @@ lazy val prchecklist = (project in file(".")).
 
           report
       }
-    )
+    ).
+   settings(
+     // We could have used webappSrc key provided by xsbt-web-plugin,
+     // but it is a TaskKey which a SettingKey cannot depend on.
+     stylesheetsDirectory := (sourceDirectory in Compile).value / "webapp" / "stylesheets", /* src/main/webapp/stylesheets */
+     resourceGenerators in Compile <+= (stylesheetsDirectory, streams) map {
+       (stylesheetsDirectory, s) =>
+         s.log.info("Running 'npm run build' ...")
+         ("npm" :: "run" :: "build" :: Nil).!
+         s.log.info("Done.")
 
-addCommandAlias("devel", """; set javaOptions += "-DbrowserSync.port=3000"; processStart project/tools/npm-run-script-wrapper watch; ~re-start""")
+         Seq(
+           stylesheetsDirectory / "main.css"
+         )
+     },
+     cleanFiles += stylesheetsDirectory.value,
+     mappings in Universal ++= {
+       (stylesheetsDirectory.value).*** x relativeTo(baseDirectory.value)
+     }
+   )
+
+addCommandAlias("devel", Seq(
+  "set javaOptions += \"-DbrowserSync.port=3000\"",
+  "processStart project/tools/npm-run-script-wrapper watch",
+  "~re-start",
+  "processStopAll"
+).mkString(";",";",""))
 
 watchSources ~= {
   _.filterNot {
