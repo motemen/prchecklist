@@ -4,6 +4,7 @@ import com.typesafe.sbt.SbtScalariform
 import NativePackagerHelper._
 
 val stylesheetsDirectory = settingKey[File]("Directory where generated stylesheets are placed")
+val npmInstall = taskKey[Unit]("Run `npm install`")
 
 lazy val prchecklist = (project in file(".")).
   enablePlugins(
@@ -97,19 +98,22 @@ lazy val prchecklist = (project in file(".")).
       buildInfoPackage := "prchecklist"
     ).
     settings (
-      update <<= (update, baseDirectory, cacheDirectory, streams) map {
-        (report, base, cache, s) =>
-          val npmInstall = FileFunction.cached(cache / "npm-install") (FilesInfo.hash, FilesInfo.exists) {
+      npmInstall := {
+        val s = streams.value
+          val npmInstall = FileFunction.cached(cacheDirectory.value / "npm-install") (FilesInfo.hash, FilesInfo.exists) {
             (changeReport, in) =>
               s.log.info("Running 'npm install' ...")
               ("npm" :: "install" :: Nil).!
-              s.log.info("Done.")
+              s.log.info("Done 'npm install'.")
 
-              Set[File]()
+              Set.empty[File]
           }
 
-          npmInstall(Set(base / "package.json"))
+        npmInstall(Set(baseDirectory.value / "package.json"))
+      },
 
+      update <<= (update, npmInstall) map {
+        (report, _) =>
           report
       }
     ).
