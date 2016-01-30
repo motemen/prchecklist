@@ -11,7 +11,7 @@ import prchecklist.test._
 
 import scalaz.concurrent.Task
 
-class GitHubServiceSpec extends FunSuite with MockitoSugar {
+class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar {
   test("getPullRequestWithCommits") {
     val client = mock[GitHubHttpClient]
 
@@ -22,7 +22,7 @@ class GitHubServiceSpec extends FunSuite with MockitoSugar {
       }
 
     when(
-      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=100")
+      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=250&page=1")
     ) thenReturn Task {
         List()
       }
@@ -31,5 +31,25 @@ class GitHubServiceSpec extends FunSuite with MockitoSugar {
     val prWithCommits = githubService.getPullRequestWithCommits(Repo(0, "test-owner", "test-name", ""), 47).run
 
     // TODO: redis
+  }
+
+  test("getPullRequestCommitsPaged") {
+    val client = mock[GitHubHttpClient]
+
+    when(
+      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=250&page=1")
+    ) thenReturn Task {
+        (1 to 250).map { _ => Factory.createGitHubCommit }.toList
+      }
+
+    when(
+      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=250&page=2")
+    ) thenReturn Task {
+        List(Factory.createGitHubCommit)
+      }
+
+    val githubService = new GitHubService(client)
+    val prCommits = githubService.getPullRequestCommitsPaged(Repo(0, "test-owner", "test-name", ""), 47).run
+    prCommits should have length 250 + 1
   }
 }

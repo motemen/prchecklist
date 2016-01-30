@@ -70,7 +70,13 @@ trait Http extends BaseHttp with AppConfig {
     Task {
       val httpRes = httpReq.exec {
         case (code, headers, is) =>
-          logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}")
+          // https://developer.github.com/v3/#rate-limiting
+          val limitRateInfo = for {
+            remaining <- headers.get("X-RateLimit-Remaining")
+            limit <- headers.get("X-RateLimit-Limit")
+          } yield s" [$remaining/$limit]"
+
+          logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}${limitRateInfo.mkString}")
 
           if (code >= 400) {
             throw new Error(s"${httpReq.method} ${httpReq.url} failed: ${code}")

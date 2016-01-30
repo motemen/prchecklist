@@ -36,14 +36,31 @@ class GitHubService(val githubHttpClient: GitHubHttpClient) {
       val getPullRequestTask =
         githubHttpClient.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
 
-      // TODO: paging
-      val getPullRequestCommitsTask =
-        githubHttpClient.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/pulls/$number/commits?per_page=100")
+      val getPullRequestCommitsTask = getPullRequestCommitsPaged(repo, number)
 
       (getPullRequestTask |@| getPullRequestCommitsTask) apply {
         (pullRequest, commits) =>
           (GitHubTypes.PullRequestWithCommits(pullRequest, commits), true)
       }
+    }
+  }
+
+  // https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
+  def getPullRequestCommitsPaged(repo: Repo, number: Int, commits: List[GitHubTypes.Commit] = List(), page: Int = 1): Task[List[GitHubTypes.Commit]] = {
+    // "Note: The response includes a maximum of 250 commits"
+    val commitsPerPage = 250
+
+    githubHttpClient.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/pulls/$number/commits?per_page=${commitsPerPage}&page=${page}").flatMap {
+      pageCommits =>
+        if (page > 10) {
+          throw new Error(s"page too far: $page")
+        }
+        if (pageCommits.size == commitsPerPage) {
+          // go to next page
+          getPullRequestCommitsPaged(repo, number, commits ++ pageCommits, page + 1)
+        } else {
+          Task { commits ++ pageCommits }
+        }
     }
   }
 
