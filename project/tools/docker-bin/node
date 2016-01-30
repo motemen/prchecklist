@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+bin="$(basename "$0")"
+base="$(cd "$(dirname "$0")" && cd ../../.. && pwd)"
+
+exec docker run --rm -v "$base":/usr/src/app -w /usr/src/app node:5 "$bin" "$@"
