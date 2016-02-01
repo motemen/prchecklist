@@ -5,6 +5,7 @@ import NativePackagerHelper._
 
 val stylesheetsDirectory = settingKey[File]("Directory where generated stylesheets are placed")
 val npmInstall = taskKey[Unit]("Run `npm install`")
+val npmRunBuild = taskKey[Seq[File]]("Run `npm run build`")
 
 lazy val prchecklist = (project in file(".")).
   enablePlugins(
@@ -100,17 +101,32 @@ lazy val prchecklist = (project in file(".")).
   settings (
     npmInstall := {
       val s = streams.value
-        val npmInstall = FileFunction.cached(cacheDirectory.value / "npm-install") (FilesInfo.hash, FilesInfo.exists) {
-          (changeReport, in) =>
-            s.log.info("Running 'npm install' ...")
-            ("npm" :: "install" :: Nil).!
-            s.log.info("Done 'npm install'.")
+      val npmInstall = FileFunction.cached(cacheDirectory.value / "npm-install") (FilesInfo.hash, FilesInfo.exists) {
+        (changeReport, in) =>
+          s.log.info("Running 'npm install' ...")
+          ("npm" :: "install" :: Nil).!.ensuring(_ == 0, "npm install failed")
+          s.log.info("Done 'npm install'.")
 
-            Set.empty[File]
-        }
+          Set.empty[File]
+      }
 
       npmInstall(Set(baseDirectory.value / "package.json"))
     },
+
+    npmRunBuild := {
+      val s = streams.value
+
+      s.log.info("Running 'npm run build' ...")
+      ("npm" :: "run" :: "build" :: Nil).!.ensuring(_ == 0, "npm run build failed")
+      s.log.info("Done 'npm run build'.")
+
+      Seq(
+        stylesheetsDirectory.value / "main.css",
+        stylesheetsDirectory.value / "main.css.map"
+      )
+    },
+
+    npmRunBuild <<= npmRunBuild.dependsOn(npmInstall),
 
     update <<= (update, npmInstall) map {
       (report, _) =>
@@ -121,16 +137,7 @@ lazy val prchecklist = (project in file(".")).
     // We could have used webappSrc key provided by xsbt-web-plugin,
     // but it is a TaskKey which a SettingKey cannot depend on.
     stylesheetsDirectory := (sourceDirectory in Compile).value / "webapp" / "stylesheets", /* src/main/webapp/stylesheets */
-    resourceGenerators in Compile <+= (stylesheetsDirectory, streams) map {
-      (stylesheetsDirectory, s) =>
-        s.log.info("Running 'npm run build' ...")
-        ("npm" :: "run" :: "build" :: Nil).!
-        s.log.info("Done.")
-
-        Seq(
-          stylesheetsDirectory / "main.css"
-        )
-    },
+    resourceGenerators in Compile <+= npmRunBuild,
     cleanFiles += stylesheetsDirectory.value,
     mappings in Universal <++= (stylesheetsDirectory, baseDirectory, resources in Compile) map {
       (stylesheetsDirectory, baseDirectory, _) =>
