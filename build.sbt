@@ -104,7 +104,7 @@ lazy val prchecklist = (project in file(".")).
       val npmInstall = FileFunction.cached(cacheDirectory.value / "npm-install") (FilesInfo.hash, FilesInfo.exists) {
         (changeReport, in) =>
           s.log.info("Running 'npm install' ...")
-          ("npm" :: "install" :: Nil).!.ensuring(_ == 0, "npm install failed")
+          ("npm" :: "install" :: Nil) ! s.log ensuring (_ != 0)
           s.log.info("Done 'npm install'.")
 
           Set.empty[File]
@@ -117,7 +117,7 @@ lazy val prchecklist = (project in file(".")).
       val s = streams.value
 
       s.log.info("Running 'npm run build' ...")
-      ("npm" :: "run" :: "build" :: Nil).!.ensuring(_ == 0, "npm run build failed")
+      ("npm" :: "run" :: "build" :: Nil) ! s.log ensuring (_ != 0)
       s.log.info("Done 'npm run build'.")
 
       Seq(
