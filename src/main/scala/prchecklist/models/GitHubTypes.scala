@@ -10,7 +10,8 @@ object GitHubTypes {
       body: String,
       state: String,
       head: CommitRef,
-      base: CommitRef) {
+      base: CommitRef,
+      commits: Int) {
 
     def isOpen = state == "open"
     def isClosed = state == "closed"

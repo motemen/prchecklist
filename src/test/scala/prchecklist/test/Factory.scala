@@ -9,8 +9,9 @@ object Factory {
       title = "cool feature",
       body = "cool cool cool",
       state = "open",
-      head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-      base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+      head = createGitHubCommitRef.copy(ref = "feature-1"),
+      base = createGitHubCommitRef.copy(ref = "master"),
+      commits = 1
     )
 
   def createGitHubCommit: GitHubTypes.Commit =
@@ -20,4 +21,7 @@ object Factory {
         message = "commit message"
       )
     )
+
+  def createGitHubCommitRef: GitHubTypes.CommitRef =
+    GitHubTypes.CommitRef(GitHubTypes.Repo("owner/name", false), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "branch")
 }

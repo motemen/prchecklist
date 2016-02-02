@@ -47,7 +47,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               body = "body",
               state = "open",
               head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
+              commits = 1
             ),
             commits = List(
               GitHubTypes.Commit("", GitHubTypes.CommitDetail(
@@ -76,7 +77,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
                 body = "",
                 state = "open",
                 head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
+                commits = 1
               ),
               GitHubTypes.PullRequest(
                 number = 101,
@@ -84,7 +86,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
                 body = "",
                 state = "open",
                 head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-2"),
-                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
+                commits = 1
               )
             )
           }
@@ -128,7 +131,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
             repo = repo,
             sha = "",
             ref = "master"
-          )
+          ),
+          commits = 1
         )
       )
 

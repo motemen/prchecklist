@@ -1,6 +1,7 @@
 package prchecklist.services
 
 import prchecklist.models._
+import prchecklist.test._
 
 import com.github.tarao.nonempty.NonEmpty
 
@@ -20,14 +21,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     val checkerUser = Visitor(login = "test", accessToken = "")
 
     val pr = GitHubTypes.PullRequestWithCommits(
-      pullRequest = GitHubTypes.PullRequest(
-        number = 1,
-        title = "title",
-        body = "body",
-        state = "open",
-        head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-        base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
-      ),
+      pullRequest = Factory.createGitHubPullRequest,
       commits = List(
         GitHubTypes.Commit("", GitHubTypes.CommitDetail(
           """Merge pull request #2 from motemen/feature-a
