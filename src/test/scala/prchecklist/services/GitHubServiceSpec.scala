@@ -22,7 +22,7 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar {
       }
 
     when(
-      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=250&page=1")
+      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=100&page=1")
     ) thenReturn Task {
         List()
       }
@@ -37,19 +37,19 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar {
     val client = mock[GitHubHttpClient]
 
     when(
-      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=250&page=1")
+      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=100&page=1")
     ) thenReturn Task {
-        (1 to 250).map { _ => Factory.createGitHubCommit }.toList
+        (1 to 100).map { _ => Factory.createGitHubCommit }.toList
       }
 
     when(
-      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=250&page=2")
+      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/pulls/47/commits?per_page=100&page=2")
     ) thenReturn Task {
         List(Factory.createGitHubCommit)
       }
 
     val githubService = new GitHubService(client)
     val prCommits = githubService.getPullRequestCommitsPaged(Repo(0, "test-owner", "test-name", ""), 47).run
-    prCommits should have length 250 + 1
+    prCommits should have length 100 + 1
   }
 }

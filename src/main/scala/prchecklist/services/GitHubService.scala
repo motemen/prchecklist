@@ -47,8 +47,9 @@ class GitHubService(val githubHttpClient: GitHubHttpClient) {
 
   // https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
   def getPullRequestCommitsPaged(repo: Repo, number: Int, commits: List[GitHubTypes.Commit] = List(), page: Int = 1): Task[List[GitHubTypes.Commit]] = {
-    // "Note: The response includes a maximum of 250 commits"
-    val commitsPerPage = 250
+    // The document says "Note: The response includes a maximum of 250 commits"
+    // but apparently it returns only 100 commits at maximum
+    val commitsPerPage = 100
 
     githubHttpClient.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/pulls/$number/commits?per_page=${commitsPerPage}&page=${page}").flatMap {
       pageCommits =>
