@@ -147,6 +147,7 @@ lazy val prchecklist = (project in file(".")).
 
 addCommandAlias("devel", Seq(
   "set javaOptions += \"-DbrowserSync.port=3000\"",
+  "npmInstall",
   "processStart project/tools/npm-run-script-wrapper watch",
   "~re-start"
 ).mkString(";", ";", ""))
