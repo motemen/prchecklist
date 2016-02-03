@@ -71,23 +71,19 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
         .thenReturn(
           Task {
             List(
-              GitHubTypes.PullRequest(
+              GitHubTypes.PullRequestRef(
                 number = 100,
                 title = "title",
-                body = "",
                 state = "open",
                 head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
-                commits = 1
+                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
               ),
-              GitHubTypes.PullRequest(
+              GitHubTypes.PullRequestRef(
                 number = 101,
                 title = "title",
-                body = "",
                 state = "open",
                 head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-2"),
-                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
-                commits = 1
+                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
               )
             )
           }
