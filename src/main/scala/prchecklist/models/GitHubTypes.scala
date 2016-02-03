@@ -19,6 +19,18 @@ object GitHubTypes {
 
   case class PullRequestWithCommits(pullRequest: PullRequest, commits: List[Commit])
 
+  // https://developer.github.com/v3/pulls/#list-pull-requests
+  case class PullRequestRef(
+      number: Int,
+      title: String,
+      state: String,
+      head: CommitRef,
+      base: CommitRef) {
+
+    def isOpen = state == "open"
+    def isClosed = state == "closed"
+  }
+
   // https://developer.github.com/v3/activity/events/types/#pullrequestevent
   case class WebhookPullRequestEvent(
       action: String,

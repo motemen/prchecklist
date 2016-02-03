@@ -61,7 +61,7 @@ class GitHubService(val githubHttpClient: GitHubHttpClient) {
     }
   }
 
-  def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequest]] = {
-    githubHttpClient.getJson[List[GitHubTypes.PullRequest]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
+  def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequestRef]] = {
+    githubHttpClient.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
   }
 }
