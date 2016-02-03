@@ -6,6 +6,7 @@ import NativePackagerHelper._
 val stylesheetsDirectory = settingKey[File]("Directory where generated stylesheets are placed")
 val npmInstall = taskKey[Unit]("Run `npm install`")
 val npmRunBuild = taskKey[Seq[File]]("Run `npm run build`")
+val npmRunWatch = inputKey[Unit]("Run `npm run watch`")
 
 lazy val prchecklist = (project in file(".")).
   enablePlugins(
@@ -104,7 +105,7 @@ lazy val prchecklist = (project in file(".")).
       val npmInstall = FileFunction.cached(cacheDirectory.value / "npm-install") (FilesInfo.hash, FilesInfo.exists) {
         (changeReport, in) =>
           s.log.info("Running 'npm install' ...")
-          ("npm" :: "install" :: Nil) ! s.log ensuring (_ == 0)
+          (("npm" :: "install" :: Nil) ! s.log) ensuring (_ == 0)
           s.log.info("Done 'npm install'.")
 
           Set.empty[File]
@@ -117,7 +118,7 @@ lazy val prchecklist = (project in file(".")).
       val s = streams.value
 
       s.log.info("Running 'npm run build' ...")
-      ("npm" :: "run" :: "build" :: Nil) ! s.log ensuring (_ == 0)
+      (("npm" :: "run" :: "build" :: Nil) ! s.log) ensuring (_ == 0)
       s.log.info("Done 'npm run build'.")
 
       Seq(
@@ -127,6 +128,12 @@ lazy val prchecklist = (project in file(".")).
     },
 
     npmRunBuild <<= npmRunBuild.dependsOn(npmInstall),
+
+    npmRunWatch := {
+      val x = processStart.fullInput(" project/tools/npm-run-script-wrapper watch").evaluated
+    },
+
+    npmRunWatch <<= npmRunWatch.dependsOn(npmInstall),
 
     update <<= (update, npmInstall) map {
       (report, _) =>
@@ -147,8 +154,7 @@ lazy val prchecklist = (project in file(".")).
 
 addCommandAlias("devel", Seq(
   "set javaOptions += \"-DbrowserSync.port=3000\"",
-  "npmInstall",
-  "processStart project/tools/npm-run-script-wrapper watch",
+  "npmRunWatch",
   "~re-start"
 ).mkString(";", ";", ""))
 
