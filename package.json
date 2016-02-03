@@ -5,6 +5,7 @@
   "main": "bs-config.js",
   "dependencies": {},
   "devDependencies": {
+    "browser-sync": "^2.11.1",
     "gaze-cli": "^0.2.0",
     "less": "^2.5.3",
     "npm-run-all": "^1.5.0"
