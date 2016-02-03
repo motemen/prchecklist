@@ -6,7 +6,7 @@ import org.pegdown.{ Extensions, Parser, PegDownProcessor }
 object Helper {
   val githubFlavouredMarkdownExtensions = {
     import Extensions._
-    HARDWRAPS | AUTOLINKS | FENCED_CODE_BLOCKS | ATXHEADERSPACE | TASKLISTITEMS
+    HARDWRAPS | AUTOLINKS | FENCED_CODE_BLOCKS | ATXHEADERSPACE /* | TASKLISTITEMS */ // no TASKLISTITEMS as its confusing
   }
 
   lazy val pegdown = new PegDownProcessor(githubFlavouredMarkdownExtensions)
