@@ -99,7 +99,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         val client = createGitHubHttpClient(getVisitor getOrElse repo.defaultUser)
         val githubService = createGitHubService(client)
         val prWithCommits = githubService.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
-        val (checklist, _) = Await.result(ChecklistService.getChecklist(repo, prWithCommits), Duration.Inf)
+        val (checklist, _) = Await.result(ChecklistService.getChecklist(repo, prWithCommits, "" /* TODO */ ), Duration.Inf)
         f(repo, checklist)
     }
   }
