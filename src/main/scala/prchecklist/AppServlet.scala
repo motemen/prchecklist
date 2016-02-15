@@ -38,6 +38,9 @@ class AppServlet extends AppServletBase with GitHubServiceFactory with GitHubHtt
 class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport with UrlGeneratorSupport {
   self: GitHubServiceFactory with GitHubHttpClientFactory =>
 
+  import scala.language.implicitConversions
+  implicit override def string2RouteMatcher(path: String): RouteMatcher = RailsPathPatternParser(path)
+
   notFound {
     contentType = null
     serveStaticResource() getOrElse resourceNotFound()
@@ -96,15 +99,16 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     requireGitHubRepo {
       repo =>
         // TODO: check visilibity
+        val stage = params.getOrElse('stage, "")
         val client = createGitHubHttpClient(getVisitor getOrElse repo.defaultUser)
         val githubService = createGitHubService(client)
         val prWithCommits = githubService.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
-        val (checklist, _) = Await.result(ChecklistService.getChecklist(repo, prWithCommits, "" /* TODO */ ), Duration.Inf)
+        val (checklist, _) = Await.result(ChecklistService.getChecklist(repo, prWithCommits, stage), Duration.Inf)
         f(repo, checklist)
     }
   }
 
-  val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber") {
+  val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)") {
     requireChecklist {
       (repo, checklist) =>
         contentType = "text/html"

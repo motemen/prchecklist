@@ -34,7 +34,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
         val q = for {
           (checklistId, created) <- ensureChecklist(repo, prWithCommits.pullRequest.number, stage)
           checks <- queryChecklistChecks(checklistId, prRefs)
-        } yield (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, prRefs.toList, checks), created)
+        } yield (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, stage, prRefs.toList, checks), created)
 
         db.run(q.transactionally)
     }

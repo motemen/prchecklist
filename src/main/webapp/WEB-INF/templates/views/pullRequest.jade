@@ -12,6 +12,10 @@
         a(href={checklist.pullRequestUrl(checklist.pullRequest.number)})
           | ##{checklist.pullRequest.number.toString}
         | #{checklist.pullRequest.title}
+        = if (checklist.stage.nonEmpty)
+          span.stage
+            | ::
+            = checklist.stage
 
     .description
       != formatMarkdown(checklist.pullRequest.body)
