@@ -39,7 +39,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     )
 
     val fut = for {
-      (checklist, created) <- ChecklistService.getChecklist(repo, pr)
+      (checklist, created) <- ChecklistService.getChecklist(repo, pr, stage = "")
       _ <- Future.successful {
         checklist.checks.get(2).value shouldNot be('checked)
         checklist.checks.get(3).value shouldNot be('checked)
@@ -48,7 +48,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
 
       _ <- ChecklistService.checkChecklist(checklist, checkerUser, featurePRNumber = 2)
 
-      (checklist, created) <- ChecklistService.getChecklist(repo, pr)
+      (checklist, created) <- ChecklistService.getChecklist(repo, pr, stage = "")
       _ <- Future.successful {
         checklist.checks.get(2).value shouldBe 'checked
         checklist.checks.get(3).value shouldNot be('checked)
@@ -58,7 +58,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
 
       _ <- ChecklistService.checkChecklist(checklist, checkerUser, featurePRNumber = 3)
 
-      (checklist, created) <- ChecklistService.getChecklist(repo, pr)
+      (checklist, created) <- ChecklistService.getChecklist(repo, pr, stage = "")
       _ <- Future.successful {
         checklist.checks.get(2).value shouldBe 'checked
         checklist.checks.get(3).value shouldBe 'checked
