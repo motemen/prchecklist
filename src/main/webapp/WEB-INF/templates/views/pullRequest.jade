@@ -35,12 +35,12 @@
               = visitor match
                 - case Some(visitor) =>
                   - if (check.isCheckedBy(visitor))
-                    form(method="POST" action="/#{checklist.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/-/uncheck/#{check.pullRequest.number.toString}")
+                    form(method="POST" action="#{checklistPath(checklist)}/-/uncheck/#{check.pullRequest.number.toString}")
                       button.btn.btn-sm.btn-success(type="submit")
                         i.fa.fa-check
                         i.fa.fa-times
                   - else
-                    form(method="POST" action="/#{checklist.repo.fullName}/pull/#{checklist.pullRequest.number.toString}/-/check/#{check.pullRequest.number.toString}")
+                    form(method="POST" action="#{checklistPath(checklist)}/-/check/#{check.pullRequest.number.toString}")
                       button.btn.btn-sm.btn-default(type="submit")
                         i.fa.fa-check
                 - case None =>
