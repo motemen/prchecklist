@@ -3,6 +3,8 @@ package prchecklist
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.utils.GitHubHttpClient
+import prchecklist.utils.UriStringContext._ // uri""
+import prchecklist.views.Helper
 
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
@@ -35,8 +37,11 @@ class AppServlet extends AppServletBase with GitHubServiceFactory with GitHubHtt
     new GitHubService(client)
 }
 
-class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport with UrlGeneratorSupport {
+class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport {
   self: GitHubServiceFactory with GitHubHttpClientFactory =>
+
+  import scala.language.implicitConversions
+  implicit override def string2RouteMatcher(path: String): RouteMatcher = RailsPathPatternParser(path)
 
   notFound {
     contentType = null
@@ -72,9 +77,9 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
 
       case None =>
         if (request.requestMethod == Get) {
-          redirect(url(enterAuth, Map("location" -> request.uri.getPath), Seq.empty))
+          redirect(uri"/auth?location=${request.uri.getPath}".toString)
         } else {
-          redirect(url(getRoot))
+          redirect("/")
         }
     }
   }
@@ -96,15 +101,16 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     requireGitHubRepo {
       repo =>
         // TODO: check visilibity
+        val stage = params.getOrElse('stage, "")
         val client = createGitHubHttpClient(getVisitor getOrElse repo.defaultUser)
         val githubService = createGitHubService(client)
         val prWithCommits = githubService.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
-        val (checklist, _) = Await.result(ChecklistService.getChecklist(repo, prWithCommits), Duration.Inf)
+        val (checklist, _) = Await.result(ChecklistService.getChecklist(repo, prWithCommits, stage), Duration.Inf)
         f(repo, checklist)
     }
   }
 
-  val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber") {
+  val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)") {
     requireChecklist {
       (repo, checklist) =>
         contentType = "text/html"
@@ -115,7 +121,11 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     }
   }
 
-  val checkFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber/-/check/:featureNumber") {
+  private def checklistPath(checklist: ReleaseChecklist): java.net.URI = {
+    new java.net.URI(Helper.checklistPath(checklist))
+  }
+
+  val checkFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)/-/check/:featureNumber") {
     val featureNumber = params('featureNumber).toInt
 
     requireVisitor {
@@ -123,12 +133,12 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         requireChecklist {
           (repo, checklist) =>
             Await.result(ChecklistService.checkChecklist(checklist, visitor, featureNumber), Duration.Inf)
-            redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "pullRequestNumber" -> params('pullRequestNumber)))
+            redirect(checklistPath(checklist).toString)
         }
     }
   }
 
-  val uncheckFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber/-/uncheck/:featureNumber") {
+  val uncheckFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)/-/uncheck/:featureNumber") {
     val featureNumber = params('featureNumber).toInt
 
     requireVisitor {
@@ -136,7 +146,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         requireChecklist {
           (repo, checklist) =>
             Await.result(ChecklistService.uncheckChecklist(checklist, visitor, featureNumber), Duration.Inf)
-            redirect(url(viewPullRequest, "repoOwner" -> params('repoOwner), "repoName" -> params('repoName), "pullRequestNumber" -> params('pullRequestNumber)))
+            redirect(checklistPath(checklist).toString)
         }
     }
   }
@@ -162,7 +172,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         new AsyncResult {
           val is = RepoService.create(githubRepo, visitor.accessToken).map {
             case (repo, created) =>
-              redirect(url(listRepos))
+              redirect("/repos")
           }
         }
     }
@@ -211,7 +221,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     val origin = new java.net.URI(scheme, request.uri.getAuthority, null, null, null)
     val location = request.parameters.getOrElse("location", "/")
 
-    val redirectUri = origin + url(authCallback, Map("location" -> location), Seq.empty)
+    val redirectUri = origin + uri"/auth/callback?location=${location}".toString
     Found(GitHubAuthService.authorizationURL(redirectUri))
   }
 

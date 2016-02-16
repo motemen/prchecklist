@@ -42,7 +42,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
         .thenReturn(Task {
           GitHubTypes.PullRequestWithCommits(
             pullRequest = GitHubTypes.PullRequest(
-              number = 1,
+              number = 2,
               title = "title",
               body = "body",
               state = "open",
@@ -52,7 +52,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
             ),
             commits = List(
               GitHubTypes.Commit("", GitHubTypes.CommitDetail(
-                """Merge pull request #2 from motemen/feature-a
+                """Merge pull request #1 from motemen/feature-a
                   |
                   |feature-a
                 """.stripMargin
@@ -114,7 +114,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       stubJson(
         "/repos/motemen/test-repository/pulls/2",
         PullRequest(
-          number = 1,
+          number = 2,
           title = "title",
           body = "body",
           state = "open",

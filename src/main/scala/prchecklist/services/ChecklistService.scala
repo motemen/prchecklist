@@ -23,7 +23,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     }
   }
 
-  def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits): Future[(ReleaseChecklist, Boolean)] = {
+  def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Future[(ReleaseChecklist, Boolean)] = {
     val db = Database.get
 
     mergedPullRequests(prWithCommits.commits) match {
@@ -32,9 +32,9 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
 
       case Some(prRefs) =>
         val q = for {
-          (checklistId, created) <- ensureChecklist(repo, prWithCommits.pullRequest.number)
+          (checklistId, created) <- ensureChecklist(repo, prWithCommits.pullRequest.number, stage)
           checks <- queryChecklistChecks(checklistId, prRefs)
-        } yield (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, prRefs.toList, checks), created)
+        } yield (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, stage, prRefs.toList, checks), created)
 
         db.run(q.transactionally)
     }
@@ -79,21 +79,22 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     db.run(q)
   }
 
-  private def ensureChecklist(repo: Repo, number: Int): DBIO[(Int, Boolean)] = {
+  private def ensureChecklist(repo: Repo, number: Int, stage: String): DBIO[(Int, Boolean)] = {
     sql"""
       | SELECT id
       | FROM checklists
       | WHERE github_repo_id = ${repo.id}
       |   AND release_pr_number = ${number}
+      |   AND stage = ${stage}
       | LIMIT 1
     """.as[Int].map(_.headOption).flatMap {
       case Some(v) => DBIO.successful((v, false))
       case None =>
         sql"""
           | INSERT INTO checklists
-          |   (github_repo_id, release_pr_number)
+          |   (github_repo_id, release_pr_number, stage)
           | VALUES
-          |   (${repo.id}, ${number})
+          |   (${repo.id}, ${number}, ${stage})
           | RETURNING id
         """.as[Int].head.map((_, true))
     }

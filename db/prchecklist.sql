@@ -10,7 +10,8 @@ CREATE TABLE checklists (
     id                SERIAL NOT NULL PRIMARY KEY,
     github_repo_id    INTEGER NOT NULL REFERENCES github_repos (id),
     release_pr_number INTEGER NOT NULL,
-    UNIQUE            (github_repo_id, release_pr_number)
+    stage             VARCHAR(64) NOT NULL DEFAULT '',
+    UNIQUE            (github_repo_id, release_pr_number, stage)
 );
 
 CREATE TABLE checks (

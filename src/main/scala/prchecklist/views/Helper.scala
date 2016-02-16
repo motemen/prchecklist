@@ -3,6 +3,8 @@ package prchecklist.views
 import org.pegdown.plugins.PegDownPlugins
 import org.pegdown.{ Extensions, Parser, PegDownProcessor }
 
+import prchecklist.models._
+
 object Helper {
   val githubFlavouredMarkdownExtensions = {
     import Extensions._
@@ -14,4 +16,12 @@ object Helper {
   def formatMarkdown(source: String): String = {
     pegdown.markdownToHtml(source)
   }
+
+  def checklistPath(checklist: ReleaseChecklist): String = {
+    s"/${checklist.repo.fullName}/pull/${checklist.pullRequest.number}" + (checklist.stage match {
+      case "" => ""
+      case stage => s"/$stage"
+    })
+  }
+
 }
