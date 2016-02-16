@@ -22,7 +22,7 @@ lazy val prchecklist = (project in file(".")).
     name := "prchecklist",
     scalaVersion := "2.11.7",
     version := {
-      ("git describe --tags --match v* --dirty=-SNAPSHOT" !!) trim
+      ("git describe --tags --match v* --dirty=-SNAPSHOT --always" !!) trim
     },
 
     scalacOptions ++= Seq(
