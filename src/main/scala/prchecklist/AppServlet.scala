@@ -11,9 +11,6 @@ import org.scalatra.scalate.ScalateSupport
 
 import org.json4s.jackson.JsonMethods
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
 import scalaz.syntax.std.option._
 import scalaz.concurrent.Task
 
@@ -87,7 +84,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   // TODO: Check visibility
   // params: repoOwner, repoName
   private def requireGitHubRepo(f: Repo => Any): Any = {
-    Await.result(RepoService.get(params('repoOwner), params('repoName)), Duration.Inf) match {
+    RepoService.get(params('repoOwner), params('repoName)).run match {
       case Some(repo) =>
         f(repo)
 
@@ -105,7 +102,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         val client = createGitHubHttpClient(getVisitor getOrElse repo.defaultUser)
         val githubService = createGitHubService(client)
         val prWithCommits = githubService.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
-        val (checklist, _) = Await.result(ChecklistService.getChecklist(repo, prWithCommits, stage), Duration.Inf)
+        val (checklist, _) = ChecklistService.getChecklist(repo, prWithCommits, stage).run
         f(repo, checklist)
     }
   }
@@ -132,7 +129,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       visitor =>
         requireChecklist {
           (repo, checklist) =>
-            Await.result(ChecklistService.checkChecklist(checklist, visitor, featureNumber), Duration.Inf)
+            ChecklistService.checkChecklist(checklist, visitor, featureNumber).run
             redirect(checklistPath(checklist).toString)
         }
     }
@@ -145,20 +142,16 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       visitor =>
         requireChecklist {
           (repo, checklist) =>
-            Await.result(ChecklistService.uncheckChecklist(checklist, visitor, featureNumber), Duration.Inf)
+            ChecklistService.uncheckChecklist(checklist, visitor, featureNumber).run
             redirect(checklistPath(checklist).toString)
         }
     }
   }
 
   val listRepos = get("/repos") {
-    new AsyncResult {
-      contentType = "text/html"
-      val is = RepoService.list().map {
-        repos =>
-          layoutTemplate("/WEB-INF/templates/views/repos.jade", "repos" -> repos)
-      }
-    }
+    contentType = "text/html"
+    val repos = RepoService.list().run
+    layoutTemplate("/WEB-INF/templates/views/repos.jade", "repos" -> repos)
   }
 
   val registerRepo = post("/repos") {
@@ -169,12 +162,8 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       visitor =>
         val githubService = createGitHubService(visitor)
         val githubRepo = githubService.getRepo(repoOwner, repoName).run
-        new AsyncResult {
-          val is = RepoService.create(githubRepo, visitor.accessToken).map {
-            case (repo, created) =>
-              redirect("/repos")
-          }
-        }
+        val (repo, created) = RepoService.create(githubRepo, visitor.accessToken).run
+        redirect("/repos")
     }
   }
 

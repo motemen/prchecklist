@@ -10,8 +10,18 @@ import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
-object ChecklistService extends SQLInterpolation with CompoundParameter {
+import scalaz.concurrent.Task
+
+trait TaskFromFuture {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  protected def taskFromFuture[A](fut: Future[A]): Task[A] = Task { Await.result(fut, Duration.Inf) }
+}
+
+object ChecklistService extends SQLInterpolation with CompoundParameter with TaskFromFuture {
   private def mergedPullRequests(commits: List[GitHubTypes.Commit]): Option[NonEmpty[PullRequestReference]] = {
     NonEmpty.fromTraversable {
       commits.flatMap {
@@ -23,7 +33,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     }
   }
 
-  def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Future[(ReleaseChecklist, Boolean)] = {
+  def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Task[(ReleaseChecklist, Boolean)] = taskFromFuture {
     val db = Database.get
 
     mergedPullRequests(prWithCommits.commits) match {
@@ -40,7 +50,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     }
   }
 
-  def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
+  def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
     val db = Database.get
 
     val q = sqlu"""
@@ -66,7 +76,7 @@ object ChecklistService extends SQLInterpolation with CompoundParameter {
     db.run(q.transactionally)
   }
 
-  def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
+  def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
     val db = Database.get
 
     val q = sqlu"""

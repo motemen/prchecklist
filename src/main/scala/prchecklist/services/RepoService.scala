@@ -10,13 +10,15 @@ import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods // q.transacti
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object RepoService extends SQLInterpolation {
-  def get(owner: String, name: String): Future[Option[Repo]] = {
+import scalaz.concurrent.Task
+
+object RepoService extends SQLInterpolation with TaskFromFuture {
+  def get(owner: String, name: String): Task[Option[Repo]] = taskFromFuture {
     val db = Database.get
     db.run(getQuery(owner, name))
   }
 
-  def create(githubRepo: GitHubTypes.Repo, defaultAccessToken: String): Future[(Repo, Boolean)] = {
+  def create(githubRepo: GitHubTypes.Repo, defaultAccessToken: String): Task[(Repo, Boolean)] = taskFromFuture {
     val db = Database.get
 
     val (owner, name) = (githubRepo.owner, githubRepo.name)
@@ -42,7 +44,7 @@ object RepoService extends SQLInterpolation {
 
   // TODO: visibility
   // TODO: paging
-  def list(): Future[List[Repo]] = {
+  def list(): Task[List[Repo]] = taskFromFuture {
     val db = Database.get
 
     val q = sql"""
