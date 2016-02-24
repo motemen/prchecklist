@@ -11,11 +11,12 @@ import org.scalatest.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
+import scalaz.concurrent.Task
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures {
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))
 
-  val (repo, _) = Await.result(RepoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>"), Duration.Inf)
+  val (repo, _) = RepoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
 
   test("getChecklist && checkChecklist succeeds") {
     val checkerUser = Visitor(login = "test", accessToken = "")
@@ -38,35 +39,32 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
       )
     )
 
-    val fut = for {
-      (checklist, created) <- ChecklistService.getChecklist(repo, pr, stage = "")
-      _ <- Future.successful {
-        checklist.checks.get(2).value shouldNot be('checked)
-        checklist.checks.get(3).value shouldNot be('checked)
-        checklist.checks.get(4) shouldBe 'empty
-      }
+    {
+      val (checklist, created) = ChecklistService.getChecklist(repo, pr, stage = "").run
+      checklist.checks.get(2).value shouldNot be('checked)
+      checklist.checks.get(3).value shouldNot be('checked)
+      checklist.checks.get(4) shouldBe 'empty
 
-      _ <- ChecklistService.checkChecklist(checklist, checkerUser, featurePRNumber = 2)
+      ChecklistService.checkChecklist(checklist, checkerUser, featurePRNumber = 2).run
+    }
 
-      (checklist, created) <- ChecklistService.getChecklist(repo, pr, stage = "")
-      _ <- Future.successful {
-        checklist.checks.get(2).value shouldBe 'checked
-        checklist.checks.get(3).value shouldNot be('checked)
-        checklist.checks.get(4) shouldBe 'empty
-        created shouldBe false
-      }
+    {
+      val (checklist, created) = ChecklistService.getChecklist(repo, pr, stage = "").run
+      checklist.checks.get(2).value shouldBe 'checked
+      checklist.checks.get(3).value shouldNot be('checked)
+      checklist.checks.get(4) shouldBe 'empty
+      created shouldBe false
 
-      _ <- ChecklistService.checkChecklist(checklist, checkerUser, featurePRNumber = 3)
+      ChecklistService.checkChecklist(checklist, checkerUser, featurePRNumber = 3).run
 
-      (checklist, created) <- ChecklistService.getChecklist(repo, pr, stage = "")
-      _ <- Future.successful {
-        checklist.checks.get(2).value shouldBe 'checked
-        checklist.checks.get(3).value shouldBe 'checked
-        checklist.checks.get(4) shouldBe 'empty
-        created shouldBe false
-      }
-    } yield ()
+    }
 
-    fut.futureValue shouldBe (())
+    {
+      val (checklist, created) = ChecklistService.getChecklist(repo, pr, stage = "").run
+      checklist.checks.get(2).value shouldBe 'checked
+      checklist.checks.get(3).value shouldBe 'checked
+      checklist.checks.get(4) shouldBe 'empty
+      created shouldBe false
+    }
   }
 }
