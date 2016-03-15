@@ -130,7 +130,7 @@ lazy val prchecklist = (project in file(".")).
     npmRunBuild <<= npmRunBuild.dependsOn(npmInstall),
 
     npmRunWatch := {
-      val x = processStart.fullInput(" project/tools/npm-run-script-wrapper watch").evaluated
+      val x = processStart.fullInput(" ./node_modules/.bin/exor npm run watch").evaluated
     },
 
     npmRunWatch <<= npmRunWatch.dependsOn(npmInstall),
