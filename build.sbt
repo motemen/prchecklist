@@ -101,12 +101,12 @@ lazy val prchecklist = (project in file(".")).
   ).
   settings (
     npmInstall := {
-      val s = streams.value
+      val log = streams.value.log
       val npmInstall = FileFunction.cached(cacheDirectory.value / "npm-install") (FilesInfo.hash, FilesInfo.exists) {
         (changeReport, in) =>
-          s.log.info("Running 'npm install' ...")
-          (("npm" :: "install" :: Nil) ! s.log) ensuring (_ == 0)
-          s.log.info("Done 'npm install'.")
+          log.info("Running 'npm install' ...")
+          (("npm" :: "install" :: Nil) ! log) ensuring (_ == 0)
+          log.info("Done 'npm install'.")
 
           Set.empty[File]
       }

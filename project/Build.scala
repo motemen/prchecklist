@@ -6,19 +6,22 @@ import scala.sys.process.Process
 import java.lang.Runtime
 
 object ProcessManager {
-  val all = scala.collection.mutable.Map.empty[Seq[String], Process]
+  val all = scala.collection.mutable.Map.empty[Seq[String], (Logger, Process)]
 
-  def startProcess[P](command: Seq[String]): Unit = {
+  def startProcess[P](log: Logger, command: Seq[String]): Unit = {
     all.synchronized {
-      all.getOrElseUpdate(command, Process(command).run())
+      all.getOrElseUpdate(command, {
+        log.info(s"Starting ${command.mkString(" ")} ...")
+        (log, Process(command).run())
+      })
     }
   }
 
   def stopAllProcesses(): Unit = {
     all.synchronized {
       all.foreach {
-        case (command, process) =>
-          println(s"Stopping ${command.mkString(" ")} ...")
+        case (command, (log, process)) =>
+          log.info(s"Stopping ${command.mkString(" ")} ...")
           process.destroy()
           process.exitValue()
       }
@@ -43,7 +46,7 @@ object Build extends Build {
 
     processStart := {
       val command = spaceDelimited("<command>").parsed
-      ProcessManager.startProcess(command)
+      ProcessManager.startProcess(streams.value.log, command)
     },
 
     processStopAll := {
