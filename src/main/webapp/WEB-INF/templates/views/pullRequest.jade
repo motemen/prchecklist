@@ -23,7 +23,7 @@
     ul#checklist
       = checklist.checks.map
         - case (nr, check) =>
-          li(class={if (check.isChecked) "checked" else ""})
+          li(id="feature-#{nr.toString}" class={if (check.isChecked) "checked" else ""})
             a.number(href={checklist.pullRequestUrl(nr)}) ##{nr.toString}
             span.title
               | #{check.pullRequest.title}
