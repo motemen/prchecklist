@@ -193,7 +193,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
       post("/motemen/test-repository/pull/2/-/check/1") {
         status should equal (302)
-        header.get("Location").value should endWith ("/motemen/test-repository/pull/2")
+        header.get("Location").value should endWith ("/motemen/test-repository/pull/2#feature-1")
       }
     }
   }
