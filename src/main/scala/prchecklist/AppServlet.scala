@@ -118,8 +118,8 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     }
   }
 
-  private def checklistPath(checklist: ReleaseChecklist): java.net.URI = {
-    new java.net.URI(Helper.checklistPath(checklist))
+  private def checklistPath(checklist: ReleaseChecklist, featureNumber: Int): java.net.URI = {
+    new java.net.URI(f"${Helper.checklistPath(checklist)}%s#feature-$featureNumber%d")
   }
 
   val checkFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)/-/check/:featureNumber") {
@@ -130,7 +130,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         requireChecklist {
           (repo, checklist) =>
             ChecklistService.checkChecklist(checklist, visitor, featureNumber).run
-            redirect(checklistPath(checklist).toString)
+            redirect(checklistPath(checklist, featureNumber).toString)
         }
     }
   }
@@ -143,7 +143,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         requireChecklist {
           (repo, checklist) =>
             ChecklistService.uncheckChecklist(checklist, visitor, featureNumber).run
-            redirect(checklistPath(checklist).toString)
+            redirect(checklistPath(checklist, featureNumber).toString)
         }
     }
   }
