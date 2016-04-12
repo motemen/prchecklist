@@ -4,18 +4,14 @@ import prchecklist.utils.AppConfig
 
 import java.net.URI
 
-object GitHubConfig {
-  private object config extends GitHubConfig
+trait GitHubConfig {
+  self: AppConfig =>
 
-  def clientId = config.githubClientId
-  def clientSecret = config.githubClientSecret
-  def domain = config.githubDomain
-  def apiBase = config.githubApiBase
-}
-
-trait GitHubConfig extends AppConfig {
   def githubOrigin = new java.net.URI(s"https://$githubDomain")
 
   def githubApiBase =
     if (githubDomain == "github.com") "https://api.github.com" else s"https://$githubDomain/api/v3"
+
+  def avatarUrl(u: prchecklist.models.UserLike) =
+    s"${githubOrigin}/${u.login}.png"
 }

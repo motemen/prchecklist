@@ -1,7 +1,9 @@
 package prchecklist.models
 
+import prchecklist.utils.AppConfig
+
 case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
-  def pullRequestUrl(number: Int) = repo.pullRequestUrl(number)
+  // def pullRequestUrl(number: Int) = repo.pullRequestUrl(number)
 
   def allGreen = checks.values.forall(_.isChecked)
 
@@ -15,9 +17,9 @@ case class PullRequestReference(number: Int, title: String)
 case class Repo(id: Int, owner: String, name: String, defaultAccessToken: String) {
   def fullName = s"$owner/$name"
 
-  def pullRequestUrl(number: Int) = s"$url/pull/$number"
+  // def pullRequestUrl(number: Int) = s"$url/pull/$number"
 
-  def url = s"https://${GitHubConfig.domain}/$fullName"
+  // def url = s"https://${appConfig.githubDomain}/$fullName"
 
   def defaultUser = RepoDefaultUser(defaultAccessToken)
 }
@@ -41,8 +43,6 @@ trait GitHubAccessible {
   val accessToken: String
 }
 
-trait UserLike extends GitHubConfig {
+trait UserLike {
   val login: String
-
-  def avatarUrl: String = s"$githubOrigin/$login.png"
 }

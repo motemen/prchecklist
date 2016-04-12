@@ -13,10 +13,15 @@ import prchecklist.AppServlet
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.utils._
+import prchecklist.test._
 
 import scalaz.concurrent.Task
 
-class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar {
+class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar
+    with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig {
+
+  override val repoService = new RepoService
+
   override protected def withResponse[A](res: ClientResponse)(f: => A): A = super.withResponse(res) {
     withClue(s"$body\n") { f }
   }
@@ -161,7 +166,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   import scala.concurrent.duration.Duration
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  RepoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+  repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
 
   test("index") {
     get("/") {

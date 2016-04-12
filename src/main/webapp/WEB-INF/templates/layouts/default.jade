@@ -2,6 +2,7 @@
 -@ val headline: String = title
 -@ val body: String
 -@ val visitor: Option[prchecklist.models.Visitor]
+-@ val githubConfig: prchecklist.models.GitHubConfig
 
 !!! 5
 html
@@ -29,7 +30,7 @@ html
             - case Some(v) =>
               ul.nav.navbar-nav.navbar-right
                 li.navbar-text
-                  img(src={v.avatarUrl} height=24)
+                  img(src={githubConfig.avatarUrl(v)} height=24)
                   = v.login
             - case None =>
               form.navbar-form.navbar-right(action="/auth" method="GET")

@@ -15,7 +15,7 @@ import scalaz.concurrent.Task
 import java.io.InputStream
 
 // TODO: receive GitHubAccessible
-class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig {
+class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig with AppConfigFromEnv {
   override def defaultHttpHeaders: Map[String,String] = {
     super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")
   }
@@ -25,9 +25,11 @@ class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig {
   }
 }
 
-object Http extends Http
+object Http extends Http with AppConfigFromEnv
 
-trait Http extends BaseHttp with AppConfig {
+trait Http extends BaseHttp {
+  self: AppConfig =>
+
   def logger = LoggerFactory.getLogger(getClass)
 
   override def apply(url: String): HttpRequest = {
