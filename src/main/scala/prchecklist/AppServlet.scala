@@ -2,7 +2,7 @@ package prchecklist
 
 import prchecklist.models._
 import prchecklist.services._
-import prchecklist.utils.{ AppConfig, AppConfigFromEnv, GitHubHttpClient }
+import prchecklist.utils.{ AppConfig, AppConfigFromEnv }
 import prchecklist.utils.UriStringContext._ // uri""
 import prchecklist.views.Helper
 
@@ -27,7 +27,7 @@ class AppServlet
     with AppConfigFromEnv
     with TypesComponent {
 
-  override def createGitHubHttpClient(u: GitHubAccessible) = new GitHubHttpClient(u.accessToken)
+  override def createGitHubHttpClient(accessToken: String) = new GitHubHttpClient(accessToken)
 
   override def createGitHubService(client: GitHubHttpClient): GitHubService = new GitHubService(client)
 

@@ -1,17 +1,33 @@
 package prchecklist.services
 
 import prchecklist.models._
-import prchecklist.utils.GitHubHttpClient
+import prchecklist.utils._
 
 import scalaz.concurrent.Task
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
+import scalaj.http.HttpOptions.HttpOption
+import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
+
 trait GitHubHttpClientComponent {
   self: TypesComponent =>
 
-  def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient
+  def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = createGitHubHttpClient(u.accessToken)
+
+  def createGitHubHttpClient(accessToken: String): GitHubHttpClient
+
+  // TODO: receive GitHubAccessible
+  class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig with AppConfigFromEnv {
+    override def defaultHttpHeaders: Map[String, String] = {
+      super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")
+    }
+
+    override def apply(url: String): HttpRequest = {
+      super.apply(s"$githubApiBase$url")
+    }
+  }
 }
 
 trait GitHubServiceComponent {
