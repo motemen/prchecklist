@@ -2,7 +2,7 @@ package prchecklist
 
 import prchecklist.models._
 import prchecklist.services._
-import prchecklist.utils.{ AppConfig, AppConfigFromEnv }
+import prchecklist.utils.{ HttpComponent, AppConfig, AppConfigFromEnv }
 import prchecklist.utils.UriStringContext._ // uri""
 import prchecklist.views.Helper
 
@@ -25,11 +25,12 @@ class AppServlet
     with PostgresDatabaseComponent
     with RedisComponent
     with AppConfigFromEnv
-    with TypesComponent {
+    with TypesComponent
+    with HttpComponent {
 
-  override def createGitHubHttpClient(accessToken: String) = new GitHubHttpClient(accessToken)
+  override def createGitHubHttpClient(u: GitHubAccessible) = new GitHubHttpClient(u.accessToken)
 
-  override def createGitHubService(client: GitHubHttpClient): GitHubService = new GitHubService(client)
+  override def createGitHubService(client: GitHubHttpClient) = new GitHubService(client)
 
   override val repoService = new RepoService
 
@@ -38,10 +39,12 @@ class AppServlet
   override val githubAuthService = new GitHubAuthService
 
   override val redis = new Redis
+
+  override val http = new Http {}
 }
 
 class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport {
-  self: GitHubServiceComponent with GitHubHttpClientComponent with RepoServiceComponent with ChecklisetServiceComponent with GitHubAuthServiceComponent with AppConfig with GitHubConfig with TypesComponent =>
+  self: GitHubServiceComponent with GitHubHttpClientComponent with RepoServiceComponent with ChecklisetServiceComponent with GitHubAuthServiceComponent with AppConfig with GitHubConfig with TypesComponent with HttpComponent =>
 
   import scala.language.implicitConversions
   implicit override def string2RouteMatcher(path: String): RouteMatcher = RailsPathPatternParser(path)
@@ -105,8 +108,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       repo =>
         // TODO: check visilibity
         val stage = params.getOrElse('stage, "")
-        val client = createGitHubHttpClient(getVisitor getOrElse repo.defaultUser)
-        val githubService = createGitHubService(client)
+        val githubService = createGitHubService(getVisitor getOrElse repo.defaultUser)
         val prWithCommits = githubService.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
         val (checklist, _) = checklistService.getChecklist(repo, prWithCommits, stage).run
         f(repo, checklist)
@@ -177,8 +179,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     requireGitHubRepo {
       repo =>
         contentType = "text/html"
-        val client = createGitHubHttpClient(getVisitor.getOrElse(repo.defaultUser))
-        val githubService = createGitHubService(client)
+        val githubService = createGitHubService(getVisitor.getOrElse(repo.defaultUser))
         val pullRequests = githubService.listReleasePullRequests(repo).run
         layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
     }

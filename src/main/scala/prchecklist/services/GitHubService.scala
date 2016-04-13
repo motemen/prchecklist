@@ -12,13 +12,10 @@ import scalaj.http.HttpOptions.HttpOption
 import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
 
 trait GitHubHttpClientComponent {
-  self: TypesComponent =>
+  self: TypesComponent with HttpComponent =>
 
-  def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = createGitHubHttpClient(u.accessToken)
+  def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient
 
-  def createGitHubHttpClient(accessToken: String): GitHubHttpClient
-
-  // TODO: receive GitHubAccessible
   class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig with AppConfigFromEnv {
     override def defaultHttpHeaders: Map[String, String] = {
       super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")

@@ -12,11 +12,13 @@ import prchecklist.utils._
 import scalaz.concurrent.Task
 
 class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
-    with GitHubServiceComponent with GitHubHttpClientComponent with RedisComponent with TestAppConfig with TypesComponent with GitHubConfig {
+    with GitHubServiceComponent with GitHubHttpClientComponent with RedisComponent with TestAppConfig with TypesComponent with GitHubConfig with HttpComponent {
 
   override def redis = new Redis
 
-  override def createGitHubHttpClient(accessToken: String) = mock[GitHubHttpClient]
+  override def http = new Http {}
+
+  override def createGitHubHttpClient(u: GitHubAccessible) = mock[GitHubHttpClient]
 
   override def createGitHubService(client: GitHubHttpClient): GitHubService =
     new GitHubService(client)

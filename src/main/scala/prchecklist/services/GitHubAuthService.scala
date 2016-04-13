@@ -1,7 +1,7 @@
 package prchecklist.services
 
 import prchecklist.models._
-import prchecklist.utils.Http
+import prchecklist.utils.HttpComponent
 import prchecklist.utils.AppConfig
 import prchecklist.utils.UriStringContext._ // uri"..."
 
@@ -12,7 +12,7 @@ import scalaz.concurrent.Task
 import org.slf4j.LoggerFactory
 
 trait GitHubAuthServiceComponent {
-  self: GitHubConfig with AppConfig with TypesComponent with GitHubHttpClientComponent =>
+  self: GitHubConfig with AppConfig with TypesComponent with GitHubHttpClientComponent with HttpComponent =>
 
   def githubAuthService: GitHubAuthService
 
@@ -26,7 +26,7 @@ trait GitHubAuthServiceComponent {
 
     def authorize(code: String): Task[Visitor] = {
       Task {
-        val accessTokenRes = Http(
+        val accessTokenRes = http(
           s"https://$githubDomain/login/oauth/access_token"
         ).postForm(Seq(
             "client_id" -> githubClientId,
@@ -40,10 +40,10 @@ trait GitHubAuthServiceComponent {
           throw new Error(s"could not get access_token [$accessTokenRes.body]")
         }
       }.flatMap {
-        accessToken =>
+        token =>
           for {
-            user <- createGitHubHttpClient(accessToken).getJson[GitHubTypes.User]("/user") // FIXME
-          } yield Visitor(user.login, accessToken)
+            user <- createGitHubHttpClient(new GitHubAccessible { val accessToken = token }).getJson[GitHubTypes.User]("/user") // FIXME
+          } yield Visitor(user.login, token)
       }
     }
   }
