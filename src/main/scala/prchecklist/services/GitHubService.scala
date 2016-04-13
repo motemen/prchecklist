@@ -9,11 +9,13 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 trait GitHubHttpClientComponent {
+  self: TypesComponent =>
+
   def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient
 }
 
 trait GitHubServiceComponent {
-  self: GitHubHttpClientComponent with RedisComponent =>
+  self: GitHubHttpClientComponent with RedisComponent with TypesComponent =>
 
   def createGitHubService(client: GitHubHttpClient): GitHubService
 

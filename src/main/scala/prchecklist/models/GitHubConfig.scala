@@ -11,7 +11,4 @@ trait GitHubConfig {
 
   def githubApiBase =
     if (githubDomain == "github.com") "https://api.github.com" else s"https://$githubDomain/api/v3"
-
-  def avatarUrl(u: prchecklist.models.UserLike) =
-    s"${githubOrigin}/${u.login}.png"
 }

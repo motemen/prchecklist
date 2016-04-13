@@ -14,17 +14,6 @@ trait AppConfig {
   val redisUrl: String
 
   val httpAllowUnsafeSSL: Boolean = false
-
-  implicit class FullUrlRepo(val repo: prchecklist.models.Repo)
-      extends prchecklist.models.Repo(repo.id, repo.owner, repo.name, repo.defaultAccessToken) {
-    def pullRequestUrl(number: Int) = s"$url/pull/$number"
-    def url = s"https://${githubDomain}/${repo.fullName}"
-  }
-
-  implicit class FullUrlReleaseChecklist(val checklist: prchecklist.models.ReleaseChecklist)
-      extends prchecklist.models.ReleaseChecklist(checklist.id, checklist.repo, checklist.pullRequest, checklist.stage, checklist.featurePullRequests, checklist.checks) {
-    def pullRequestUrl(number: Int) = checklist.repo.pullRequestUrl(number)
-  }
 }
 
 trait AppConfigFromEnv extends AppConfig {

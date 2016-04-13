@@ -15,7 +15,7 @@ import scala.concurrent.duration.Duration
 import scalaz.concurrent.Task
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures
-    with RepoServiceComponent with ChecklisetServiceComponent with PostgresDatabaseComponent with TestAppConfig {
+    with RepoServiceComponent with ChecklisetServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
 
   def repoService = new RepoService
 

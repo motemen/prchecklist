@@ -24,7 +24,8 @@ class AppServlet
     with ChecklisetServiceComponent
     with PostgresDatabaseComponent
     with RedisComponent
-    with AppConfigFromEnv {
+    with AppConfigFromEnv
+    with TypesComponent {
 
   override def createGitHubHttpClient(u: GitHubAccessible) = new GitHubHttpClient(u.accessToken)
 
@@ -40,7 +41,7 @@ class AppServlet
 }
 
 class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport {
-  self: GitHubServiceComponent with GitHubHttpClientComponent with RepoServiceComponent with ChecklisetServiceComponent with GitHubAuthServiceComponent with AppConfig with GitHubConfig =>
+  self: GitHubServiceComponent with GitHubHttpClientComponent with RepoServiceComponent with ChecklisetServiceComponent with GitHubAuthServiceComponent with AppConfig with GitHubConfig with TypesComponent =>
 
   import scala.language.implicitConversions
   implicit override def string2RouteMatcher(path: String): RouteMatcher = RailsPathPatternParser(path)
@@ -52,7 +53,6 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
 
   before () {
     templateAttributes += "visitor" -> getVisitor
-    templateAttributes += "githubConfig" -> (this: GitHubConfig)
   }
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
@@ -119,7 +119,7 @@ class AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         contentType = "text/html"
         layoutTemplate(
           "/WEB-INF/templates/views/pullRequest.jade",
-          "checklist" -> new FullUrlReleaseChecklist(checklist)
+          "checklist" -> checklist
         )
     }
   }

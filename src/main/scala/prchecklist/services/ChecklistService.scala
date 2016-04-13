@@ -22,7 +22,7 @@ trait TaskFromFuture {
 }
 
 trait ChecklisetServiceComponent {
-  self: DatabaseComponent =>
+  self: DatabaseComponent with TypesComponent =>
 
   def checklistService: ChecklistService
 

@@ -7,7 +7,9 @@ import prchecklist.utils._
 import org.scalatest._
 import org.scalatest.time._
 
-class RepoServiceSpec extends FunSuite with Matchers with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig {
+class RepoServiceSpec extends FunSuite with Matchers
+    with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
+
   override val repoService = new RepoService
 
   test("create && get") {

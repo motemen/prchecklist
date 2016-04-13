@@ -13,7 +13,7 @@ import scala.concurrent.Future
 import scalaz.concurrent.Task
 
 trait RepoServiceComponent {
-  self: DatabaseComponent =>
+  self: DatabaseComponent with TypesComponent =>
 
   def repoService: RepoService
 

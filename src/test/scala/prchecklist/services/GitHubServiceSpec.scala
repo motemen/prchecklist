@@ -12,7 +12,7 @@ import prchecklist.utils.{ GitHubHttpClient }
 import scalaz.concurrent.Task
 
 class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
-    with GitHubServiceComponent with GitHubHttpClientComponent with RedisComponent with TestAppConfig {
+    with GitHubServiceComponent with GitHubHttpClientComponent with RedisComponent with TestAppConfig with TypesComponent with GitHubConfig {
 
   override def redis = new Redis
 

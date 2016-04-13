@@ -13,7 +13,7 @@ import scalaz.concurrent.Task
 import org.slf4j.LoggerFactory
 
 trait GitHubAuthServiceComponent {
-  self: GitHubConfig with AppConfig =>
+  self: GitHubConfig with AppConfig with TypesComponent =>
 
   def githubAuthService: GitHubAuthService
 
