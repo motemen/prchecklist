@@ -7,12 +7,24 @@ import org.mockito.Mockito._
 
 import prchecklist.models._
 import prchecklist.test._
-import prchecklist.utils.GitHubHttpClient
+import prchecklist.utils._
 
 import scalaz.concurrent.Task
 
-class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar {
+class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
+    with GitHubServiceComponent with GitHubHttpClientComponent with RedisComponent with TestAppConfig with TypesComponent with GitHubConfig with HttpComponent {
+
+  override def redis = new Redis
+
+  override def http = new Http {}
+
+  override def createGitHubHttpClient(u: GitHubAccessible) = mock[GitHubHttpClient]
+
+  override def createGitHubService(client: GitHubHttpClient): GitHubService =
+    new GitHubService(client)
+
   test("getPullRequestWithCommits") {
+
     val client = mock[GitHubHttpClient]
 
     when(

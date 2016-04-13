@@ -4,8 +4,14 @@ import prchecklist.utils.AppConfig
 
 import slick.driver.PostgresDriver.api
 
-object Database extends AppConfig {
+trait DatabaseComponent {
+  def getDatabase: slick.driver.PostgresDriver.backend.DatabaseDef
+}
+
+trait PostgresDatabaseComponent extends DatabaseComponent {
+  self: AppConfig =>
+
   Class.forName("org.postgresql.Driver")
 
-  def get = api.Database.forURL(databaseUrl)
+  def getDatabase = api.Database.forURL(databaseUrl)
 }

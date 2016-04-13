@@ -13,10 +13,15 @@ import prchecklist.AppServlet
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.utils._
+import prchecklist.test._
 
 import scalaz.concurrent.Task
 
-class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar {
+class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar
+    with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
+
+  override val repoService = new RepoService
+
   override protected def withResponse[A](res: ClientResponse)(f: => A): A = super.withResponse(res) {
     withClue(s"$body\n") { f }
   }
@@ -30,13 +35,11 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     override def createGitHubService(client: GitHubHttpClient): GitHubService = {
       val service = mock[GitHubService]
 
-      import GitHubTypes._
-
       when(service.getRepo("test-owner", "test-name"))
-        .thenReturn(Task{ Repo("test-owner/test-name", false) })
+        .thenReturn(Task{ GitHubTypes.Repo("test-owner/test-name", false) })
 
       when(service.getRepo("motemen", "test-repository"))
-        .thenReturn(Task{ Repo("motemen/test-repository", false) })
+        .thenReturn(Task{ GitHubTypes.Repo("motemen/test-repository", false) })
 
       when(service.getPullRequestWithCommits(any(), any()))
         .thenReturn(Task {
@@ -96,34 +99,32 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     override def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
       val client = mock[GitHubHttpClient]
 
-      import GitHubTypes._
-
       def stubJson[A](url: String, data: A) {
         when(client.getJson[A](matchEq(url))(any(), any()))
           .thenReturn(Task { data })
       }
 
-      val repo = Repo(fullName = "motemen/test-repository", `private` = false)
+      val repo = GitHubTypes.Repo(fullName = "motemen/test-repository", `private` = false)
 
       stubJson(
         "/repos/test-owner/test-name",
-        Repo(
+        GitHubTypes.Repo(
           "test-owner/test-name", false)
       )
 
       stubJson(
         "/repos/motemen/test-repository/pulls/2",
-        PullRequest(
+        GitHubTypes.PullRequest(
           number = 2,
           title = "title",
           body = "body",
           state = "open",
-          head = CommitRef(
+          head = GitHubTypes.CommitRef(
             repo = repo,
             sha = "",
             ref = "feature-1"
           ),
-          base = CommitRef(
+          base = GitHubTypes.CommitRef(
             repo = repo,
             sha = "",
             ref = "master"
@@ -135,18 +136,18 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       stubJson(
         "/repos/motemen/test-repository/pulls/2/commits?per_page=100",
         List(
-          Commit(
+          GitHubTypes.Commit(
             sha = "",
-            commit = CommitDetail(
+            commit = GitHubTypes.CommitDetail(
               """Merge pull request #1 from motemen/feature-1
                 |
                 |feature-1
               """.stripMargin
             )
           ),
-          Commit(
+          GitHubTypes.Commit(
             sha = "",
-            commit = CommitDetail("Implement feature-1")
+            commit = GitHubTypes.CommitDetail("Implement feature-1")
           )
         )
       )
@@ -161,7 +162,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   import scala.concurrent.duration.Duration
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  RepoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+  repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
 
   test("index") {
     get("/") {

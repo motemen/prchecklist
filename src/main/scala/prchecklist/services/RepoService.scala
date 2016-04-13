@@ -12,60 +12,67 @@ import scala.concurrent.Future
 
 import scalaz.concurrent.Task
 
-object RepoService extends SQLInterpolation with TaskFromFuture {
-  def get(owner: String, name: String): Task[Option[Repo]] = taskFromFuture {
-    val db = Database.get
-    db.run(getQuery(owner, name))
-  }
+trait RepoServiceComponent {
+  self: DatabaseComponent with TypesComponent =>
 
-  def create(githubRepo: GitHubTypes.Repo, defaultAccessToken: String): Task[(Repo, Boolean)] = taskFromFuture {
-    val db = Database.get
+  def repoService: RepoService
 
-    val (owner, name) = (githubRepo.owner, githubRepo.name)
+  class RepoService extends SQLInterpolation with TaskFromFuture {
 
-    val q = getQuery(owner, name).flatMap {
-      case Some(repo) =>
-        DBIO.successful((repo, false))
+    def get(owner: String, name: String): Task[Option[Repo]] = taskFromFuture {
+      val db = getDatabase
+      db.run(getQuery(owner, name))
+    }
 
-      case None =>
-        sql"""
+    def create(githubRepo: GitHubTypes.Repo, defaultAccessToken: String): Task[(Repo, Boolean)] = taskFromFuture {
+      val db = getDatabase
+
+      val (owner, name) = (githubRepo.owner, githubRepo.name)
+
+      val q = getQuery(owner, name).flatMap {
+        case Some(repo) =>
+          DBIO.successful((repo, false))
+
+        case None =>
+          sql"""
           | INSERT INTO github_repos
           |   (owner, name, default_access_token)
           | VALUES
           |   (${owner}, ${name}, ${defaultAccessToken})
           | RETURNING id
         """.as[Int].head.map {
-          id => (Repo(id, owner, name, defaultAccessToken), true)
-        }
+            id => (Repo(id, owner, name, defaultAccessToken), true)
+          }
+      }
+
+      db.run(q.transactionally)
     }
 
-    db.run(q.transactionally)
-  }
+    // TODO: visibility
+    // TODO: paging
+    def list(): Task[List[Repo]] = taskFromFuture {
+      val db = getDatabase
 
-  // TODO: visibility
-  // TODO: paging
-  def list(): Task[List[Repo]] = taskFromFuture {
-    val db = Database.get
-
-    val q = sql"""
+      val q = sql"""
       | SELECT id, owner, name, default_access_token FROM github_repos
     """.as[(Int, String, String, String)].map {
-      _.map(Repo.tupled).toList
+        _.map(Repo.tupled).toList
+      }
+
+      db.run(q)
     }
 
-    db.run(q)
-  }
-
-  private def getQuery(owner: String, name: String): DBIO[Option[Repo]] = {
-    sql"""
+    private def getQuery(owner: String, name: String): DBIO[Option[Repo]] = {
+      sql"""
       | SELECT id, default_access_token
       | FROM github_repos
       | WHERE owner = ${owner}
       |   AND name = ${name}
       | LIMIT 1
     """.as[(Int, String)].map(_.headOption.map {
-      case (id, defaultAccessToken) => Repo(id, owner, name, defaultAccessToken)
-    })
-  }
+        case (id, defaultAccessToken) => Repo(id, owner, name, defaultAccessToken)
+      })
+    }
 
+  }
 }

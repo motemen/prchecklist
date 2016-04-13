@@ -1,48 +1,54 @@
 package prchecklist.models
 
-case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
-  def pullRequestUrl(number: Int) = repo.pullRequestUrl(number)
+import prchecklist.utils.AppConfig
 
-  def allGreen = checks.values.forall(_.isChecked)
+trait TypesComponent {
+  self: GitHubConfig =>
 
-  def featurePRNumbers = featurePullRequests.map(_.number)
-}
+  case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
+    def pullRequestUrl(number: Int) = repo.pullRequestUrl(number)
 
-case class PullRequestReference(number: Int, title: String)
+    def allGreen = checks.values.forall(_.isChecked)
 
-// A Repo is a GitHub repository registered to prchecklist with default access token (of the user registered it).
-// Do not get confused with GitHubTypes.Repo (TODO: rename GitHubTypes.Repo)
-case class Repo(id: Int, owner: String, name: String, defaultAccessToken: String) {
-  def fullName = s"$owner/$name"
+    def featurePRNumbers = featurePullRequests.map(_.number)
+  }
 
-  def pullRequestUrl(number: Int) = s"$url/pull/$number"
+  case class PullRequestReference(number: Int, title: String)
 
-  def url = s"https://${GitHubConfig.domain}/$fullName"
+  // A Repo is a GitHub repository registered to prchecklist with default access token (of the user registered it).
+  // Do not get confused with GitHubTypes.Repo (TODO: rename GitHubTypes.Repo)
+  case class Repo(id: Int, owner: String, name: String, defaultAccessToken: String) {
+    def fullName = s"$owner/$name"
 
-  def defaultUser = RepoDefaultUser(defaultAccessToken)
-}
+    def pullRequestUrl(number: Int) = s"$url/pull/$number"
 
-case class Check(pullRequest: PullRequestReference, checkedUsers: List[User]) {
-  def isChecked: Boolean = checkedUsers.nonEmpty
+    def url = s"${githubOrigin}/$fullName"
 
-  def isCheckedBy(user: UserLike) = checkedUsers.exists(_.login == user.login)
-}
+    def defaultUser = RepoDefaultUser(defaultAccessToken)
+  }
 
-// A Visitor is a GitHub user equipped with access token.
-case class Visitor(login: String, accessToken: String) extends UserLike with GitHubAccessible
+  case class Check(pullRequest: PullRequestReference, checkedUsers: List[User]) {
+    def isChecked: Boolean = checkedUsers.nonEmpty
 
-case class User(login: String) extends UserLike
+    def isCheckedBy(user: TypesComponent#UserLike) = checkedUsers.exists(_.login == user.login)
+  }
 
-case class RepoDefaultUser(accessToken: String) extends GitHubAccessible
+  // A Visitor is a GitHub user equipped with access token.
+  case class Visitor(login: String, accessToken: String) extends UserLike with GitHubAccessible
 
-// GitHubAccessible is a trait representing entities who grants access to GitHub
-// on their behalves.
-trait GitHubAccessible {
-  val accessToken: String
-}
+  case class User(login: String) extends UserLike
 
-trait UserLike extends GitHubConfig {
-  val login: String
+  case class RepoDefaultUser(accessToken: String) extends GitHubAccessible
 
-  def avatarUrl: String = s"$githubOrigin/$login.png"
+  // GitHubAccessible is a trait representing entities who grants access to GitHub
+  // on their behalves.
+  trait GitHubAccessible {
+    val accessToken: String
+  }
+
+  trait UserLike {
+    val login: String
+
+    def avatarUrl = s"${githubOrigin}/${login}.png"
+  }
 }
