@@ -36,12 +36,14 @@ lazy val core = (project in file("core")).
       "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
       "net.debasishg" %% "redisclient" % "3.1",
       "org.pegdown" % "pegdown" % "1.6.0",
-      "org.mockito" % "mockito-core" % "2.0.36-beta" % "test"
+      "org.mockito" % "mockito-core" % "2.0.36-beta" % "test",
+      "org.scalatest" %% "scalatest" % "2.2.6" % "test"
     )
   )
 
 lazy val root = (project in file(".")).
-  dependsOn(core).
+  aggregate(core).
+  dependsOn(core % "test->test;compile->compile").
   enablePlugins(
     BuildInfoPlugin,
     JavaAppPackaging
