@@ -2,14 +2,14 @@ package prchecklist.services
 
 import prchecklist.utils.AppConfig
 
-import slick.driver.PostgresDriver.api
-
 trait DatabaseComponent {
-  def getDatabase: slick.driver.PostgresDriver.backend.DatabaseDef
+  def getDatabase: slick.driver.JdbcDriver#Backend#Database
 }
 
 trait PostgresDatabaseComponent extends DatabaseComponent {
   self: AppConfig =>
+
+  import slick.driver.PostgresDriver.api
 
   Class.forName("org.postgresql.Driver")
 
