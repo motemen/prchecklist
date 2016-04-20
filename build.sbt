@@ -121,7 +121,7 @@ lazy val root = (project in file(".")).
     )
   ).
   settings(
-    sourceGenerators in Compile <+= buildInfo in Compile,
+    // sourceGenerators in Compile <+= buildInfo in Compile,
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion
     ),
