@@ -18,6 +18,7 @@ import prchecklist.test._
 import scalaz.concurrent.Task
 
 class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar
+    with WithTestDatabase
     with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
 
   override val repoService = new RepoService
@@ -162,7 +163,10 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   import scala.concurrent.duration.Duration
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+  }
 
   test("index") {
     get("/") {

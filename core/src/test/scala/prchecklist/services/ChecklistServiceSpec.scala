@@ -15,6 +15,7 @@ import scala.concurrent.duration.Duration
 import scalaz.concurrent.Task
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures
+    with WithTestDatabase
     with RepoServiceComponent with ChecklisetServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
 
   def repoService = new RepoService
@@ -23,7 +24,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))
 
-  val (repo, _) = repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+  lazy val (repo, _) = repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
 
   test("getChecklist && checkChecklist succeeds") {
     val checkerUser = Visitor(login = "test", accessToken = "")
