@@ -42,7 +42,6 @@ lazy val core = (project in file("core")).
   )
 
 lazy val root = (project in file(".")).
-  aggregate(core).
   dependsOn(core % "test->test;compile->compile").
   enablePlugins(
     BuildInfoPlugin,
@@ -100,25 +99,7 @@ lazy val root = (project in file(".")).
     }
   ).
   settings(
-    fork in Test := true,
-    javaOptions in Test ++= Seq(
-      "-Ddatabase.url=jdbc:postgresql:prchecklist_test",
-      "-Dgithub.domain=github.com",
-      "-Dgithub.clientId=",
-      "-Dgithub.clientSecret="
-    ),
-    testOptions in Test += Tests.Setup(
-      () => {
-        import scala.sys.process._
-        import scala.language.postfixOps
-
-        "dropdb prchecklist_test" ###
-        "createdb prchecklist_test" #&&
-        "psql prchecklist_test -f db/prchecklist.sql" !!
-
-        "redis-cli FLUSHDB" !!
-      }
-    )
+    fork in Test := true
   ).
   settings(
     // sourceGenerators in Compile <+= buildInfo in Compile,
