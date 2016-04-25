@@ -9,7 +9,7 @@ import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.mockito.Matchers.{ eq => matchEq }
 
-import prchecklist.AppServlet
+import prchecklist.AppServletBase
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.utils._
@@ -17,16 +17,23 @@ import prchecklist.test._
 
 import scalaz.concurrent.Task
 
-class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar
-    with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
-
-  override val repoService = new RepoService
-
+class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar with WithTestDatabase {
   override protected def withResponse[A](res: ClientResponse)(f: => A): A = super.withResponse(res) {
     withClue(s"$body\n") { f }
   }
 
-  val testServlet = new AppServlet {
+  val testServlet = new AppServletBase with HttpComponent with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig with GitHubServiceComponent with GitHubHttpClientComponent with RedisComponent with ChecklisetServiceComponent with GitHubAuthServiceComponent {
+
+    override val repoService = new RepoService
+
+    override val checklistService = new ChecklistService
+
+    override val githubAuthService = new GitHubAuthService
+
+    override val redis = new Redis
+
+    override val http = new Http {}
+
     put("/@user") {
       session += "userLogin" -> params("login")
       session += "accessToken" -> ""
@@ -162,7 +169,10 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   import scala.concurrent.duration.Duration
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    testServlet.repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+  }
 
   test("index") {
     get("/") {

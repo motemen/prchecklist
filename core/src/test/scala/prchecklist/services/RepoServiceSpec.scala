@@ -8,6 +8,7 @@ import org.scalatest._
 import org.scalatest.time._
 
 class RepoServiceSpec extends FunSuite with Matchers
+    with WithTestDatabase
     with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
 
   override val repoService = new RepoService

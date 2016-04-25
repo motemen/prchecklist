@@ -8,12 +8,45 @@ val npmInstall = taskKey[Unit]("Run `npm install`")
 val npmRunBuild = taskKey[Seq[File]]("Run `npm run build`")
 val npmRunWatch = inputKey[Unit]("Run `npm run watch`")
 
-lazy val prchecklist = (project in file(".")).
+lazy val core = (project in file("core")).
+  settings(
+    organization := "net.tokyoenvious",
+    name := "prchecklist-core",
+    scalaVersion := "2.11.7",
+    version := {
+      ("git describe --tags --match v* --dirty=-SNAPSHOT --always" !!) trim
+    },
+
+    scalacOptions ++= Seq(
+      "-unchecked",
+      "-deprecation",
+      "-feature"
+    ),
+
+    resolvers += Classpaths.typesafeReleases,
+    resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
+
+    libraryDependencies ++= Seq(
+      "org.scalaj" %% "scalaj-http" % "1.1.6",
+      "org.json4s" %% "json4s-jackson" % "3.3.0",
+      "org.scalaz" %% "scalaz-core" % "7.1.4",
+      "org.scalaz" %% "scalaz-concurrent" % "7.1.4",
+      "com.typesafe.slick" %% "slick" % "3.0.0",
+      "org.postgresql" % "postgresql" % "9.4.1207",
+      "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
+      "net.debasishg" %% "redisclient" % "3.1",
+      "org.pegdown" % "pegdown" % "1.6.0",
+      "org.mockito" % "mockito-core" % "2.0.36-beta" % "test",
+      "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+    )
+  )
+
+lazy val root = (project in file(".")).
+  dependsOn(core % "test->test;compile->compile").
   enablePlugins(
     BuildInfoPlugin,
     JavaAppPackaging
   ).
-  settings(Defaults.defaultSettings).
   settings(ScalatraPlugin.scalatraWithJRebel).
   settings(ScalatePlugin.scalateSettings).
   settings(SbtScalariform.scalariformSettings).
@@ -41,14 +74,9 @@ lazy val prchecklist = (project in file(".")).
       "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime",
       "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container;compile",
       "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-      "org.scalaj" %% "scalaj-http" % "1.1.6",
       "org.json4s" %% "json4s-jackson" % "3.3.0",
       "org.scalaz" %% "scalaz-core" % "7.1.4",
       "org.scalaz" %% "scalaz-concurrent" % "7.1.4",
-      "com.typesafe.slick" %% "slick" % "3.0.0",
-      "org.postgresql" % "postgresql" % "9.4.1207",
-      "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
-      "net.debasishg" %% "redisclient" % "3.1",
       "org.pegdown" % "pegdown" % "1.6.0",
       "org.mockito" % "mockito-core" % "2.0.36-beta" % "test"
     )
@@ -71,28 +99,10 @@ lazy val prchecklist = (project in file(".")).
     }
   ).
   settings(
-    fork in Test := true,
-    javaOptions in Test ++= Seq(
-      "-Ddatabase.url=jdbc:postgresql:prchecklist_test",
-      "-Dgithub.domain=github.com",
-      "-Dgithub.clientId=",
-      "-Dgithub.clientSecret="
-    ),
-    testOptions in Test += Tests.Setup(
-      () => {
-        import scala.sys.process._
-        import scala.language.postfixOps
-
-        "dropdb prchecklist_test" ###
-        "createdb prchecklist_test" #&&
-        "psql prchecklist_test -f db/prchecklist.sql" !!
-
-        "redis-cli FLUSHDB" !!
-      }
-    )
+    fork in Test := true
   ).
   settings(
-    sourceGenerators in Compile <+= buildInfo in Compile,
+    // sourceGenerators in Compile <+= buildInfo in Compile,
     buildInfoKeys := Seq[BuildInfoKey](
       name, version, scalaVersion, sbtVersion
     ),
