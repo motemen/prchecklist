@@ -5,7 +5,7 @@
   "main": "bs-config.js",
   "dependencies": {},
   "devDependencies": {
-    "@motemen/exor": "0.0.1",
+    "@motemen/exor": "0.0.2",
     "browser-sync": "^2.11.1",
     "gaze-cli": "^0.2.0",
     "less": "^2.5.3",
