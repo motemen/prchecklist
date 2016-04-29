@@ -42,7 +42,7 @@ trait GitHubAuthServiceComponent {
       }.flatMap {
         token =>
           for {
-            user <- createGitHubHttpClient(new GitHubAccessible { val accessToken = token }).getJson[GitHubTypes.User]("/user") // FIXME
+            user <- new GitHubHttpClient(token).getJson[GitHubTypes.User]("/user") // FIXME
           } yield Visitor(user.login, token)
       }
     }

@@ -5,7 +5,7 @@ import prchecklist.utils.AppConfig
 trait TypesComponent {
   self: GitHubConfig =>
 
-  case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
+  case class ReleaseChecklist(id: Int, repo: TypesComponent#Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
     def pullRequestUrl(number: Int) = repo.pullRequestUrl(number)
 
     def allGreen = checks.values.forall(_.isChecked)
@@ -40,15 +40,16 @@ trait TypesComponent {
 
   case class RepoDefaultUser(accessToken: String) extends GitHubAccessible
 
-  // GitHubAccessible is a trait representing entities who grants access to GitHub
-  // on their behalves.
-  trait GitHubAccessible {
-    val accessToken: String
-  }
-
   trait UserLike {
     val login: String
 
     def avatarUrl = s"${githubOrigin}/${login}.png"
   }
 }
+
+  // GitHubAccessible is a trait representing entities who grants access to GitHub
+  // on their behalves.
+  trait GitHubAccessible {
+    val accessToken: String
+  }
+

@@ -14,7 +14,9 @@ import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
 trait GitHubHttpClientComponent {
   self: TypesComponent with HttpComponent =>
 
-  def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient
+  val githubAccessor: GitHubAccessible
+
+  val githubHttpClient: GitHubHttpClient = new GitHubHttpClient(githubAccessor.accessToken)
 
   class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig with AppConfigFromEnv {
     override def defaultHttpHeaders: Map[String, String] = {
@@ -30,11 +32,9 @@ trait GitHubHttpClientComponent {
 trait GitHubServiceComponent {
   self: GitHubHttpClientComponent with RedisComponent with TypesComponent =>
 
-  def createGitHubService(client: GitHubHttpClient): GitHubService
+  val githubService: GitHubService
 
-  def createGitHubService(u: GitHubAccessible): GitHubService = createGitHubService(createGitHubHttpClient(u))
-
-  class GitHubService(val githubHttpClient: GitHubHttpClient) {
+  class GitHubService {
     // https://developer.github.com/v3/repos/#get
     def getRepo(owner: String, name: String): Task[GitHubTypes.Repo] = {
       githubHttpClient.getJson[GitHubTypes.Repo](s"/repos/$owner/$name")
@@ -56,7 +56,7 @@ trait GitHubServiceComponent {
       )
     }
 
-    def getPullRequestWithCommits(repo: Repo, number: Int): Task[GitHubTypes.PullRequestWithCommits] = {
+    def getPullRequestWithCommits(repo: TypesComponent#Repo, number: Int): Task[GitHubTypes.PullRequestWithCommits] = {
       redis.getOrUpdate(s"pull:${repo.fullName}:$number", 30 seconds) {
         for {
           pr <- githubHttpClient.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
@@ -67,7 +67,7 @@ trait GitHubServiceComponent {
 
     // https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
     // https://developer.github.com/v3/repos/commits/#list-commits-on-a-repository
-    def getPullRequestCommitsPaged(repo: Repo, pullRequest: GitHubTypes.PullRequest, allCommits: List[GitHubTypes.Commit] = List(), page: Int = 1): Task[List[GitHubTypes.Commit]] = {
+    def getPullRequestCommitsPaged(repo: TypesComponent#Repo, pullRequest: GitHubTypes.PullRequest, allCommits: List[GitHubTypes.Commit] = List(), page: Int = 1): Task[List[GitHubTypes.Commit]] = {
       // The document says "Note: The response includes a maximum of 250 commits"
       // but apparently it returns only 100 commits at maximum
       val commitsPerPage = 100
@@ -87,7 +87,7 @@ trait GitHubServiceComponent {
       }
     }
 
-    def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequestRef]] = {
+    def listReleasePullRequests(repo: TypesComponent#Repo): Task[List[GitHubTypes.PullRequestRef]] = {
       githubHttpClient.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
     }
   }

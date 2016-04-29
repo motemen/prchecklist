@@ -38,7 +38,7 @@ trait ChecklisetServiceComponent {
       }
     }
 
-    def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Task[(ReleaseChecklist, Boolean)] = taskFromFuture {
+    def getChecklist(repo: TypesComponent#Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Task[(ReleaseChecklist, Boolean)] = taskFromFuture {
       val db = getDatabase
 
       mergedPullRequests(prWithCommits.commits) match {
@@ -55,7 +55,7 @@ trait ChecklisetServiceComponent {
       }
     }
 
-    def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
+    def checkChecklist(checklist: TypesComponent#ReleaseChecklist, checkerUser: TypesComponent#Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
       val db = getDatabase
 
       val q = sqlu"""
@@ -81,7 +81,7 @@ trait ChecklisetServiceComponent {
       db.run(q.transactionally)
     }
 
-    def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
+    def uncheckChecklist(checklist: TypesComponent#ReleaseChecklist, checkerUser: TypesComponent#Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
       val db = getDatabase
 
       val q = sqlu"""
@@ -94,7 +94,7 @@ trait ChecklisetServiceComponent {
       db.run(q)
     }
 
-    private def ensureChecklist(repo: Repo, number: Int, stage: String): DBIO[(Int, Boolean)] = {
+    private def ensureChecklist(repo: TypesComponent#Repo, number: Int, stage: String): DBIO[(Int, Boolean)] = {
       sql"""
       | SELECT id
       | FROM checklists
