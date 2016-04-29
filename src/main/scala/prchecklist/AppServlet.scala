@@ -11,23 +11,25 @@ import org.scalatra.scalate.ScalateSupport
 
 import org.json4s.jackson.JsonMethods
 
-import scalaz.syntax.std.option._
 import scalaz.concurrent.Task
 
 trait domain
-  extends GitHubServiceComponent
+  extends GitHubConfig
+  // infra
   with GitHubHttpClientComponent
-  with GitHubAuthServiceComponent
-  with RepoServiceComponent
-  with ChecklisetServiceComponent
-  with PostgresDatabaseComponent
+  with DatabaseComponent
   with RedisComponent
+  // repos
+  with GitHubRepositoryComponent
+  with RepoRepositoryComponent
+  // model
   with TypesComponent
-  with HttpComponent
-  with GitHubConfig
+  // service
+  with GitHubAuthServiceComponent
+  with ChecklisetServiceComponent
 
-object domain extends domain with AppConfigFromEnv {
-  override val repoService = new RepoService
+object domain extends domain with AppConfigFromEnv with PostgresDatabaseComponent {
+  override val repoRepository = new RepoRepository
 
   override val checklistService = new ChecklistService
 
@@ -86,7 +88,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   // TODO: Check visibility
   // params: repoOwner, repoName
   private def requireGitHubRepo(f: domain.Repo => Any): Any = {
-    domain.repoService.get(params('repoOwner), params('repoName)).run match {
+    domain.repoRepository.get(params('repoOwner), params('repoName)).run match {
       case Some(repo) =>
         f(repo)
 
@@ -101,7 +103,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
       repo =>
         // TODO: check visilibity
         val stage = params.getOrElse('stage, "")
-        val prWithCommits = new domain.GitHubService {
+        val prWithCommits = new domain.GitHubRepository {
           override def githubAccessor = getVisitor getOrElse repo.defaultUser
         }.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
         val (checklist, _) = domain.checklistService.getChecklist(repo, prWithCommits, stage).run
@@ -152,7 +154,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
 
   val listRepos = get("/repos") {
     contentType = "text/html"
-    val repos = domain.repoService.list().run
+    val repos = domain.repoRepository.list().run
     layoutTemplate("/WEB-INF/templates/views/repos.jade", "repos" -> repos)
   }
 
@@ -162,10 +164,10 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
 
     requireVisitor {
       visitor =>
-        val githubRepo = new domain.GitHubService {
+        val githubRepo = new domain.GitHubRepository {
           override def githubAccessor = visitor
         }.getRepo(repoOwner, repoName).run
-        val (repo, created) = domain.repoService.create(githubRepo, visitor.accessToken).run
+        val (repo, created) = domain.repoRepository.create(githubRepo, visitor.accessToken).run
         redirect("/repos")
     }
   }
@@ -174,7 +176,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     requireGitHubRepo {
       repo =>
         contentType = "text/html"
-        val pullRequests = new domain.GitHubService {
+        val pullRequests = new domain.GitHubRepository {
           override def githubAccessor = getVisitor getOrElse repo.defaultUser
         }.listReleasePullRequests(repo).run
         layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
@@ -187,10 +189,10 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     // TODO: Set status (pending, success)
     JsonMethods.parse(req.body).camelizeKeys.extractOpt[GitHubWebhookPullRequestEvent].map {
       payload =>
-        repoService.get(payload.repository.fullName).map {
+        repoRepository.get(payload.repository.fullName).map {
           repo =>
             val client = repo.makeOwnerClient()
-            val githubService = createGitHubService(client)
+            val githubService = createGitHubRepository(client)
             githubService.getChecklist(repo, payload.pullRequest, useFresh = true).map {
               case (checklist, created) =>
                 if (created) {

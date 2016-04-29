@@ -8,8 +8,7 @@ import scalaz.concurrent.Task
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-import scalaj.http.HttpOptions.HttpOption
-import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
+import scalaj.http.HttpRequest
 
 trait GitHubHttpClientComponent extends HttpComponent {
   self: GitHubConfig =>
@@ -25,10 +24,10 @@ trait GitHubHttpClientComponent extends HttpComponent {
   }
 }
 
-trait GitHubServiceComponent {
+trait GitHubRepositoryComponent {
   self: GitHubHttpClientComponent with RedisComponent with TypesComponent =>
 
-  trait GitHubService {
+  trait GitHubRepository {
     def githubAccessor: GitHubAccessible
 
     def githubHttpClient = new GitHubHttpClient(githubAccessor.accessToken)

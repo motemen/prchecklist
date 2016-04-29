@@ -12,12 +12,12 @@ import scala.concurrent.Future
 
 import scalaz.concurrent.Task
 
-trait RepoServiceComponent {
+trait RepoRepositoryComponent {
   self: DatabaseComponent with TypesComponent =>
 
-  def repoService: RepoService
+  def repoRepository: RepoRepository
 
-  class RepoService extends SQLInterpolation with TaskFromFuture {
+  class RepoRepository extends SQLInterpolation with TaskFromFuture {
 
     def get(owner: String, name: String): Task[Option[Repo]] = taskFromFuture {
       val db = getDatabase
