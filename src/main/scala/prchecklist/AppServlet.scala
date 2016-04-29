@@ -33,8 +33,6 @@ class App(val githubAccessor: GitHubAccessible)
 
   override val githubAuthService = new GitHubAuthService
 
-  override val githubService = new GitHubService
-
   override val redis = new Redis
 
   override val http = new Http {}
@@ -111,7 +109,9 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
         // TODO: check visilibity
         val app = new App(getVisitor getOrElse repo.defaultUser)
         val stage = params.getOrElse('stage, "")
-        val prWithCommits = app.githubService.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
+        val prWithCommits = new app.GitHubService {
+          override def githubAccessor = getVisitor getOrElse repo.defaultUser
+        }.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
         val (checklist, _) = app.checklistService.getChecklist(repo, prWithCommits, stage).run
         f(repo, checklist)
     }
@@ -174,7 +174,9 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
     requireVisitor {
       visitor =>
         val app = new App(visitor)
-        val githubRepo = app.githubService.getRepo(repoOwner, repoName).run
+        val githubRepo = new app.GitHubService {
+          override def githubAccessor = visitor
+        }.getRepo(repoOwner, repoName).run
         val (repo, created) = app.repoService.create(githubRepo, visitor.accessToken).run
         redirect("/repos")
     }
@@ -185,7 +187,9 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
       repo =>
         contentType = "text/html"
         val app = new App(getVisitor getOrElse repo.defaultUser)
-        val pullRequests = app.githubService.listReleasePullRequests(repo).run
+        val pullRequests = new app.GitHubService {
+          override def githubAccessor = getVisitor getOrElse repo.defaultUser
+        }.listReleasePullRequests(repo).run
         layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
     }
   }

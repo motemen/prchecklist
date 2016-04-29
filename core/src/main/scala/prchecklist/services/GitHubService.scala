@@ -32,9 +32,11 @@ trait GitHubHttpClientComponent {
 trait GitHubServiceComponent {
   self: GitHubHttpClientComponent with RedisComponent with TypesComponent =>
 
-  val githubService: GitHubService
+  trait GitHubService {
+    def githubAccessor: GitHubAccessible
 
-  class GitHubService {
+    def githubHttpClient = new GitHubHttpClient(githubAccessor.accessToken)
+
     // https://developer.github.com/v3/repos/#get
     def getRepo(owner: String, name: String): Task[GitHubTypes.Repo] = {
       githubHttpClient.getJson[GitHubTypes.Repo](s"/repos/$owner/$name")
