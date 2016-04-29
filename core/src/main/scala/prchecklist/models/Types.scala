@@ -45,11 +45,10 @@ trait TypesComponent {
 
     def avatarUrl = s"${githubOrigin}/${login}.png"
   }
-}
 
   // GitHubAccessible is a trait representing entities who grants access to GitHub
   // on their behalves.
   trait GitHubAccessible {
     val accessToken: String
   }
-
+}
