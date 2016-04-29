@@ -54,7 +54,7 @@ trait GitHubServiceComponent {
       )
     }
 
-    def getPullRequestWithCommits(repo: TypesComponent#Repo, number: Int): Task[GitHubTypes.PullRequestWithCommits] = {
+    def getPullRequestWithCommits(repo: Repo, number: Int): Task[GitHubTypes.PullRequestWithCommits] = {
       redis.getOrUpdate(s"pull:${repo.fullName}:$number", 30 seconds) {
         for {
           pr <- githubHttpClient.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
@@ -65,7 +65,7 @@ trait GitHubServiceComponent {
 
     // https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
     // https://developer.github.com/v3/repos/commits/#list-commits-on-a-repository
-    def getPullRequestCommitsPaged(repo: TypesComponent#Repo, pullRequest: GitHubTypes.PullRequest, allCommits: List[GitHubTypes.Commit] = List(), page: Int = 1): Task[List[GitHubTypes.Commit]] = {
+    def getPullRequestCommitsPaged(repo: Repo, pullRequest: GitHubTypes.PullRequest, allCommits: List[GitHubTypes.Commit] = List(), page: Int = 1): Task[List[GitHubTypes.Commit]] = {
       // The document says "Note: The response includes a maximum of 250 commits"
       // but apparently it returns only 100 commits at maximum
       val commitsPerPage = 100
@@ -85,7 +85,7 @@ trait GitHubServiceComponent {
       }
     }
 
-    def listReleasePullRequests(repo: TypesComponent#Repo): Task[List[GitHubTypes.PullRequestRef]] = {
+    def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequestRef]] = {
       githubHttpClient.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
     }
   }
