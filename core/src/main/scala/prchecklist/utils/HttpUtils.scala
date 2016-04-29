@@ -19,7 +19,7 @@ trait HttpComponent {
 
   def http: Http
 
-  trait Http extends BaseHttp {
+  class Http extends BaseHttp {
     def logger = LoggerFactory.getLogger(getClass)
 
     override def apply(url: String): HttpRequest = {

@@ -11,10 +11,10 @@ import scala.language.postfixOps
 import scalaj.http.HttpOptions.HttpOption
 import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
 
-trait GitHubHttpClientComponent {
-  self: TypesComponent with HttpComponent =>
+trait GitHubHttpClientComponent extends HttpComponent {
+  self: GitHubConfig =>
 
-  class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig with AppConfigFromEnv {
+  class GitHubHttpClient(accessToken: String) extends Http {
     override def defaultHttpHeaders: Map[String, String] = {
       super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")
     }

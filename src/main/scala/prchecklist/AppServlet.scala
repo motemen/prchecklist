@@ -14,19 +14,19 @@ import org.json4s.jackson.JsonMethods
 import scalaz.syntax.std.option._
 import scalaz.concurrent.Task
 
-object domain
-    extends GitHubServiceComponent
-    with GitHubHttpClientComponent
-    with GitHubAuthServiceComponent
-    with GitHubConfig
-    with RepoServiceComponent
-    with ChecklisetServiceComponent
-    with PostgresDatabaseComponent
-    with RedisComponent
-    with AppConfigFromEnv
-    with TypesComponent
-    with HttpComponent {
+trait domain
+  extends GitHubServiceComponent
+  with GitHubHttpClientComponent
+  with GitHubAuthServiceComponent
+  with RepoServiceComponent
+  with ChecklisetServiceComponent
+  with PostgresDatabaseComponent
+  with RedisComponent
+  with TypesComponent
+  with HttpComponent
+  with GitHubConfig
 
+object domain extends domain with AppConfigFromEnv {
   override val repoService = new RepoService
 
   override val checklistService = new ChecklistService
@@ -35,7 +35,7 @@ object domain
 
   override val redis = new Redis
 
-  override val http = new Http {}
+  override val http = new Http
 }
 
 class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport {
