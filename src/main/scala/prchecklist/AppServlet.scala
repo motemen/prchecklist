@@ -14,7 +14,7 @@ import org.json4s.jackson.JsonMethods
 import scalaz.syntax.std.option._
 import scalaz.concurrent.Task
 
-class App
+class RealDomain
     extends GitHubServiceComponent
     with GitHubHttpClientComponent
     with GitHubAuthServiceComponent
@@ -87,8 +87,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
   // TODO: Check visibility
   // params: repoOwner, repoName
   private def requireGitHubRepo(f: TypesComponent#Repo => Any): Any = {
-    val app = new App
-    app.repoService.get(params('repoOwner), params('repoName)).run match {
+    val domain = new RealDomain
+    domain.repoService.get(params('repoOwner), params('repoName)).run match {
       case Some(repo) =>
         f(repo)
 
@@ -102,12 +102,12 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
     requireGitHubRepo {
       repo =>
         // TODO: check visilibity
-        val app = new App
+        val domain = new RealDomain
         val stage = params.getOrElse('stage, "")
-        val prWithCommits = new app.GitHubService {
+        val prWithCommits = new domain.GitHubService {
           override def githubAccessor = getVisitor getOrElse repo.defaultUser
         }.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
-        val (checklist, _) = app.checklistService.getChecklist(repo, prWithCommits, stage).run
+        val (checklist, _) = domain.checklistService.getChecklist(repo, prWithCommits, stage).run
         f(repo, checklist)
     }
   }
@@ -134,8 +134,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
       visitor =>
         requireChecklist {
           (repo, checklist) =>
-            val app = new App
-            app.checklistService.checkChecklist(checklist, visitor, featureNumber).run
+            val domain = new RealDomain
+            domain.checklistService.checkChecklist(checklist, visitor, featureNumber).run
             redirect(checklistPath(checklist, featureNumber).toString)
         }
     }
@@ -148,8 +148,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
       visitor =>
         requireChecklist {
           (repo, checklist) =>
-            val app = new App
-            app.checklistService.uncheckChecklist(checklist, visitor, featureNumber).run
+            val domain = new RealDomain
+            domain.checklistService.uncheckChecklist(checklist, visitor, featureNumber).run
             redirect(checklistPath(checklist, featureNumber).toString)
         }
     }
@@ -157,8 +157,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
 
   val listRepos = get("/repos") {
     contentType = "text/html"
-    val app = new App
-    val repos = app.repoService.list().run
+    val domain = new RealDomain
+    val repos = domain.repoService.list().run
     layoutTemplate("/WEB-INF/templates/views/repos.jade", "repos" -> repos)
   }
 
@@ -168,11 +168,11 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
 
     requireVisitor {
       visitor =>
-        val app = new App
-        val githubRepo = new app.GitHubService {
+        val domain = new RealDomain
+        val githubRepo = new domain.GitHubService {
           override def githubAccessor = visitor
         }.getRepo(repoOwner, repoName).run
-        val (repo, created) = app.repoService.create(githubRepo, visitor.accessToken).run
+        val (repo, created) = domain.repoService.create(githubRepo, visitor.accessToken).run
         redirect("/repos")
     }
   }
@@ -181,8 +181,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
     requireGitHubRepo {
       repo =>
         contentType = "text/html"
-        val app = new App
-        val pullRequests = new app.GitHubService {
+        val domain = new RealDomain
+        val pullRequests = new domain.GitHubService {
           override def githubAccessor = getVisitor getOrElse repo.defaultUser
         }.listReleasePullRequests(repo).run
         layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
@@ -222,15 +222,15 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport
     val location = request.parameters.getOrElse("location", "/")
 
     val redirectUri = origin + uri"/auth/callback?location=${location}".toString
-    val app = new App
-    Found(app.githubAuthService.authorizationURL(redirectUri))
+    val domain = new RealDomain
+    Found(domain.githubAuthService.authorizationURL(redirectUri))
   }
 
   val authCallback = get("/auth/callback") {
     params.get("code").fold(BadRequest("code required")) {
       code =>
-        val app = new App
-        val visitor = app.githubAuthService.authorize(code).run
+        val domain = new RealDomain
+        val visitor = domain.githubAuthService.authorize(code).run
         session += "accessToken" -> visitor.accessToken
         session += "userLogin" -> visitor.login
         Found(request.parameters.get("location").filter(_.startsWith("/")) getOrElse "/")
