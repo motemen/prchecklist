@@ -12,16 +12,17 @@ import prchecklist.utils._
 import scalaz.concurrent.Task
 
 class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
-    with GitHubServiceComponent with GitHubHttpClientComponent with RedisComponent with TestAppConfig with TypesComponent with GitHubConfig with HttpComponent {
+    with GitHubRepositoryComponent
+    with GitHubHttpClientComponent
+    with RedisComponent
+    with TestAppConfig
+    with TypesComponent
+    with GitHubConfig
+    with HttpComponent {
 
   override def redis = new Redis
 
-  override def http = new Http {}
-
-  override def createGitHubHttpClient(u: GitHubAccessible) = mock[GitHubHttpClient]
-
-  override def createGitHubService(client: GitHubHttpClient): GitHubService =
-    new GitHubService(client)
+  override def http = new Http
 
   test("getPullRequestWithCommits") {
 
@@ -39,8 +40,11 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
         List()
       }
 
-    val githubService = new GitHubService(client)
-    val prWithCommits = githubService.getPullRequestWithCommits(Repo(0, "test-owner", "test-name", ""), 47).run
+    val githubRepository = new GitHubRepository {
+      override def githubAccessor = ???
+      override def githubHttpClient = client
+    }
+    val prWithCommits = githubRepository.getPullRequestWithCommits(Repo(0, "test-owner", "test-name", ""), 47).run
 
     // TODO: redis
   }
@@ -60,8 +64,11 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
         (1 to 10).map { _ => Factory.createGitHubCommit }.toList
       }
 
-    val githubService = new GitHubService(client)
-    val prCommits = githubService.getPullRequestCommitsPaged(
+    val githubRepository = new GitHubRepository {
+      override def githubAccessor = ???
+      override def githubHttpClient = client
+    }
+    val prCommits = githubRepository.getPullRequestCommitsPaged(
       Repo(0, "test-owner", "test-name", ""),
       Factory.createGitHubPullRequest.copy(number = 47, head = Factory.createGitHubCommitRef, commits = 101)
     ).run

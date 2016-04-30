@@ -22,7 +22,10 @@ trait TaskFromFuture {
 }
 
 trait ChecklistServiceComponent {
-  self: DatabaseComponent with TypesComponent =>
+  self: DatabaseComponent with TypesComponent
+  with RepoRepositoryComponent
+  with GitHubRepositoryComponent
+  =>
 
   def checklistService: ChecklistService
 
@@ -40,6 +43,9 @@ trait ChecklistServiceComponent {
 
     def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Task[(ReleaseChecklist, Boolean)] = taskFromFuture {
       val db = getDatabase
+
+      // repo = repoRepository.get(repoOwner, repoName)
+      // prWithCommits = githubRepository.getPullRequestWithCommits(repo, prNumber)
 
       mergedPullRequests(prWithCommits.commits) match {
         case None =>

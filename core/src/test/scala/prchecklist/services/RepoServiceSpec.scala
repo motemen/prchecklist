@@ -9,21 +9,25 @@ import org.scalatest.time._
 
 class RepoServiceSpec extends FunSuite with Matchers
     with WithTestDatabase
-    with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
+    with RepoRepositoryComponent
+    with PostgresDatabaseComponent
+    with TestAppConfig
+    with TypesComponent
+    with GitHubConfig {
 
-  override val repoService = new RepoService
+  override val repoRepository = new RepoRepository
 
   test("create && get") {
 
-    repoService.get("owner", "name").run shouldBe 'empty
+    repoRepository.get("owner", "name").run shouldBe 'empty
 
-    repoService.create(GitHubTypes.Repo("owner/name", false), "accessToken").run match {
+    repoRepository.create(GitHubTypes.Repo("owner/name", false), "accessToken").run match {
       case (repo, created) =>
         repo.owner shouldBe "owner"
         repo.name shouldBe "name"
         repo.defaultAccessToken shouldBe "accessToken"
     }
 
-    repoService.get("owner", "name").run shouldBe 'defined
+    repoRepository.get("owner", "name").run shouldBe 'defined
   }
 }
