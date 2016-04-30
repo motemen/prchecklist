@@ -9,7 +9,7 @@ import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.mockito.Matchers.{ eq => matchEq }
 
-import prchecklist.AppServletBase
+import prchecklist.{ Domain, AppServlet }
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.utils._
@@ -22,9 +22,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     withClue(s"$body\n") { f }
   }
 
-  val testServlet = new AppServletBase with HttpComponent with RepoServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig with GitHubServiceComponent with GitHubHttpClientComponent with RedisComponent with ChecklisetServiceComponent with GitHubAuthServiceComponent {
-
-    override val repoService = new RepoService
+  object TestDomain extends Domain with TestAppConfig with PostgresDatabaseComponent {
+    override val repoRepository = new RepoRepository
 
     override val checklistService = new ChecklistService
 
@@ -32,15 +31,10 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
     override val redis = new Redis
 
-    override val http = new Http {}
+    override val http = new Http
 
-    put("/@user") {
-      session += "userLogin" -> params("login")
-      session += "accessToken" -> ""
-    }
-
-    override def createGitHubService(client: GitHubHttpClient): GitHubService = {
-      val service = mock[GitHubService]
+    override def githubRepository(accessible: GitHubAccessible): GitHubRepository = {
+      val service = mock[GitHubRepository]
 
       when(service.getRepo("test-owner", "test-name"))
         .thenReturn(Task{ GitHubTypes.Repo("test-owner/test-name", false) })
@@ -102,8 +96,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       service
     }
 
-    // FIXME: should mock methods of higher-levels (eg. services)
-    override def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient = {
+    override def githubHttpClient(accessToken: String): GitHubHttpClient = {
       val client = mock[GitHubHttpClient]
 
       def stubJson[A](url: String, data: A) {
@@ -163,6 +156,16 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     }
   }
 
+  val testServlet = new AppServlet {
+    put("/@user") {
+      session += "userLogin" -> params("login")
+      session += "accessToken" -> ""
+    }
+
+    override val domain = TestDomain
+
+  }
+
   addServlet(testServlet, "/*")
 
   import scala.concurrent.Await
@@ -171,7 +174,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    testServlet.repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+    TestDomain.repoRepository.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
   }
 
   test("index") {

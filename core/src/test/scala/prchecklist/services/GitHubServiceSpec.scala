@@ -27,6 +27,7 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
   test("getPullRequestWithCommits") {
 
     val client = mock[GitHubHttpClient]
+    val c = client
 
     when(
       client.getJson[GitHubTypes.PullRequest]("/repos/test-owner/test-name/pulls/47")
@@ -42,7 +43,7 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
 
     val githubRepository = new GitHubRepository {
       override def githubAccessor = ???
-      override def githubHttpClient = client
+      override val client = c
     }
     val prWithCommits = githubRepository.getPullRequestWithCommits(Repo(0, "test-owner", "test-name", ""), 47).run
 
@@ -50,23 +51,23 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
   }
 
   test("getPullRequestCommitsPaged") {
-    val client = mock[GitHubHttpClient]
+    val mockedClient = mock[GitHubHttpClient]
 
     when(
-      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=1")
+      mockedClient.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=1")
     ) thenReturn Task {
         (1 to 100).map { _ => Factory.createGitHubCommit }.toList
       }
 
     when(
-      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=2")
+      mockedClient.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=2")
     ) thenReturn Task {
         (1 to 10).map { _ => Factory.createGitHubCommit }.toList
       }
 
     val githubRepository = new GitHubRepository {
       override def githubAccessor = ???
-      override def githubHttpClient = client
+      override val client = mockedClient
     }
     val prCommits = githubRepository.getPullRequestCommitsPaged(
       Repo(0, "test-owner", "test-name", ""),

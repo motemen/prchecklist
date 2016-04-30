@@ -13,6 +13,8 @@ import scalaj.http.HttpRequest
 trait GitHubHttpClientComponent extends HttpComponent {
   self: GitHubConfig =>
 
+  def githubHttpClient(accessToken: String): GitHubHttpClient = new GitHubHttpClient(accessToken)
+
   class GitHubHttpClient(accessToken: String) extends Http {
     override def defaultHttpHeaders: Map[String, String] = {
       super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")
@@ -27,19 +29,23 @@ trait GitHubHttpClientComponent extends HttpComponent {
 trait GitHubRepositoryComponent {
   self: GitHubHttpClientComponent with RedisComponent with TypesComponent =>
 
+  def githubRepository(accessible: GitHubAccessible): GitHubRepository = new GitHubRepository {
+    override def githubAccessor: GitHubAccessible = accessible
+  }
+
   trait GitHubRepository {
     def githubAccessor: GitHubAccessible
 
-    def githubHttpClient = new GitHubHttpClient(githubAccessor.accessToken)
+    val client = githubHttpClient(githubAccessor.accessToken)
 
     // https://developer.github.com/v3/repos/#get
     def getRepo(owner: String, name: String): Task[GitHubTypes.Repo] = {
-      githubHttpClient.getJson[GitHubTypes.Repo](s"/repos/$owner/$name")
+      client.getJson[GitHubTypes.Repo](s"/repos/$owner/$name")
     }
 
     // https://developer.github.com/v3/issues/comments/#create-a-comment
     def addIssueComment(repoFullName: String, issueNumber: Int, body: String): Task[Unit] = {
-      githubHttpClient.postJson(
+      client.postJson(
         s"/repos/$repoFullName/issues/$issueNumber/comments",
         GitHubTypes.IssueComment(body)
       )
@@ -47,7 +53,7 @@ trait GitHubRepositoryComponent {
 
     // https://developer.github.com/v3/repos/statuses/#create-a-status
     def setCommitStatus(repoFullName: String, sha: String, status: GitHubTypes.CommitStatus): Task[Unit] = {
-      githubHttpClient.postJson(
+      client.postJson(
         s"/repos/$repoFullName/statuses/$sha",
         status
       )
@@ -56,7 +62,7 @@ trait GitHubRepositoryComponent {
     def getPullRequestWithCommits(repo: Repo, number: Int): Task[GitHubTypes.PullRequestWithCommits] = {
       redis.getOrUpdate(s"pull:${repo.fullName}:$number", 30 seconds) {
         for {
-          pr <- githubHttpClient.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
+          pr <- client.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
           commits <- getPullRequestCommitsPaged(repo, pr)
         } yield (GitHubTypes.PullRequestWithCommits(pr, commits), true)
       }
@@ -73,7 +79,7 @@ trait GitHubRepositoryComponent {
         throw new Error(s"page too far: $page")
       }
 
-      githubHttpClient.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/commits?sha=${pullRequest.head.sha}&per_page=${commitsPerPage}&page=${page}").flatMap {
+      client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/commits?sha=${pullRequest.head.sha}&per_page=${commitsPerPage}&page=${page}").flatMap {
         pageCommits =>
           val commits = (allCommits ++ pageCommits).take(pullRequest.commits)
           if (commits.length < pullRequest.commits) {
@@ -85,7 +91,7 @@ trait GitHubRepositoryComponent {
     }
 
     def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequestRef]] = {
-      githubHttpClient.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
+      client.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
     }
   }
 

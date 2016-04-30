@@ -13,7 +13,7 @@ import org.json4s.jackson.JsonMethods
 
 import scalaz.concurrent.Task
 
-trait domain
+trait Domain
   extends GitHubConfig
   // infra
   with GitHubHttpClientComponent
@@ -28,7 +28,7 @@ trait domain
   with GitHubAuthServiceComponent
   with ChecklistServiceComponent
 
-object domain extends domain with AppConfigFromEnv with PostgresDatabaseComponent {
+object RealDomain extends Domain with AppConfigFromEnv with PostgresDatabaseComponent {
   override val repoRepository = new RepoRepository
 
   override val checklistService = new ChecklistService
@@ -40,7 +40,11 @@ object domain extends domain with AppConfigFromEnv with PostgresDatabaseComponen
   override val http = new Http
 }
 
-class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport {
+class AppServlet extends AppServletBase {
+  override val domain: Domain = RealDomain
+}
+
+trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport {
   import scala.language.implicitConversions
   implicit override def string2RouteMatcher(path: String): RouteMatcher = RailsPathPatternParser(path)
 
@@ -54,6 +58,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
   }
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
+
+  val domain: Domain
 
   override def isScalateErrorPageEnabled = false
 
@@ -103,9 +109,8 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
       repo =>
         // TODO: check visilibity
         val stage = params.getOrElse('stage, "")
-        val prWithCommits = new domain.GitHubRepository {
-          override def githubAccessor = getVisitor getOrElse repo.defaultUser
-        }.getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
+        val prWithCommits = domain.githubRepository(getVisitor getOrElse repo.defaultUser)
+          .getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
         val (checklist, _) = domain.checklistService.getChecklist(repo, prWithCommits, stage).run
         f(repo, checklist)
     }
@@ -164,9 +169,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
 
     requireVisitor {
       visitor =>
-        val githubRepo = new domain.GitHubRepository {
-          override def githubAccessor = visitor
-        }.getRepo(repoOwner, repoName).run
+        val githubRepo = domain.githubRepository(visitor).getRepo(repoOwner, repoName).run
         val (repo, created) = domain.repoRepository.create(githubRepo, visitor.accessToken).run
         redirect("/repos")
     }
@@ -176,9 +179,7 @@ class AppServlet extends ScalatraServlet with FutureSupport with ScalateSupport 
     requireGitHubRepo {
       repo =>
         contentType = "text/html"
-        val pullRequests = new domain.GitHubRepository {
-          override def githubAccessor = getVisitor getOrElse repo.defaultUser
-        }.listReleasePullRequests(repo).run
+        val pullRequests = domain.githubRepository(getVisitor getOrElse repo.defaultUser).listReleasePullRequests(repo).run
         layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
     }
   }
