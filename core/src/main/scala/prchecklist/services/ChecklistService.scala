@@ -21,7 +21,7 @@ trait TaskFromFuture {
   protected def taskFromFuture[A](fut: Future[A]): Task[A] = Task { Await.result(fut, Duration.Inf) }
 }
 
-trait ChecklisetServiceComponent {
+trait ChecklistServiceComponent {
   self: DatabaseComponent with TypesComponent =>
 
   def checklistService: ChecklistService

@@ -26,7 +26,7 @@ trait domain
   with TypesComponent
   // service
   with GitHubAuthServiceComponent
-  with ChecklisetServiceComponent
+  with ChecklistServiceComponent
 
 object domain extends domain with AppConfigFromEnv with PostgresDatabaseComponent {
   override val repoRepository = new RepoRepository
