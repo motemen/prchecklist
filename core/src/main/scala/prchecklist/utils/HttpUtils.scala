@@ -1,7 +1,5 @@
 package prchecklist.utils
 
-import prchecklist.models.GitHubConfig
-
 import org.json4s
 import org.json4s.jackson.JsonMethods
 
