@@ -8,7 +8,7 @@ import org.scalatra.test.scalatest._
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.test._
-import prchecklist.{ AppServlet, Domain }
+import prchecklist.{ AppServletBase, Domain }
 
 import scalaz.concurrent.Task
 
@@ -151,14 +151,13 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     }
   }
 
-  val testServlet = new AppServlet {
+  val testServlet = new AppServletBase {
     put("/@user") {
       session += "userLogin" -> params("login")
       session += "accessToken" -> ""
     }
 
     override val domain = TestDomain
-
   }
 
   addServlet(testServlet, "/*")
