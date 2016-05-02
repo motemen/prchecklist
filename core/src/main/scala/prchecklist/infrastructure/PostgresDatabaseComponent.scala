@@ -1,10 +1,6 @@
-package prchecklist.services
+package prchecklist.infrastructure
 
 import prchecklist.utils.AppConfig
-
-trait DatabaseComponent {
-  def getDatabase: slick.driver.JdbcDriver#Backend#Database
-}
 
 trait PostgresDatabaseComponent extends DatabaseComponent {
   self: AppConfig =>

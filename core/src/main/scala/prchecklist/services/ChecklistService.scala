@@ -1,9 +1,11 @@
 package prchecklist.services
 
+import prchecklist.infrastructure.DatabaseComponent
 import prchecklist.models._
 
 import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
 import com.github.tarao.nonempty.NonEmpty
+import prchecklist.repositories.{RepoRepositoryComponent, GitHubRepositoryComponent}
 
 import slick.driver.PostgresDriver.api.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
@@ -21,8 +23,11 @@ trait TaskFromFuture {
   protected def taskFromFuture[A](fut: Future[A]): Task[A] = Task { Await.result(fut, Duration.Inf) }
 }
 
-trait ChecklisetServiceComponent {
-  self: DatabaseComponent with TypesComponent =>
+trait ChecklistServiceComponent {
+  self: DatabaseComponent with ModelsComponent
+  with RepoRepositoryComponent
+  with GitHubRepositoryComponent
+  =>
 
   def checklistService: ChecklistService
 
@@ -40,6 +45,9 @@ trait ChecklisetServiceComponent {
 
     def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Task[(ReleaseChecklist, Boolean)] = taskFromFuture {
       val db = getDatabase
+
+      // repo = repoRepository.get(repoOwner, repoName)
+      // prWithCommits = githubRepository.getPullRequestWithCommits(repo, prNumber)
 
       mergedPullRequests(prWithCommits.commits) match {
         case None =>

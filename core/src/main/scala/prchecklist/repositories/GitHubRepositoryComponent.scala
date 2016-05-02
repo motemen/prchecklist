@@ -1,48 +1,31 @@
-package prchecklist.services
+package prchecklist.repositories
 
-import prchecklist.models._
-import prchecklist.utils._
+import prchecklist.infrastructure.{RedisComponent, GitHubHttpClientComponent}
+import prchecklist.models.{GitHubTypes, ModelsComponent}
 
 import scalaz.concurrent.Task
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-import scalaj.http.HttpOptions.HttpOption
-import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
+trait GitHubRepositoryComponent {
+  self: GitHubHttpClientComponent with RedisComponent with ModelsComponent =>
 
-trait GitHubHttpClientComponent {
-  self: TypesComponent with HttpComponent =>
-
-  def createGitHubHttpClient(u: GitHubAccessible): GitHubHttpClient
-
-  class GitHubHttpClient(accessToken: String) extends Http with GitHubConfig with AppConfigFromEnv {
-    override def defaultHttpHeaders: Map[String, String] = {
-      super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")
-    }
-
-    override def apply(url: String): HttpRequest = {
-      super.apply(s"$githubApiBase$url")
-    }
+  def githubRepository(accessible: GitHubAccessible): GitHubRepository = new GitHubRepository {
+    override val client = githubHttpClient(accessible.accessToken)
   }
-}
 
-trait GitHubServiceComponent {
-  self: GitHubHttpClientComponent with RedisComponent with TypesComponent =>
+  trait GitHubRepository {
+    def client: GitHubHttpClient
 
-  def createGitHubService(client: GitHubHttpClient): GitHubService
-
-  def createGitHubService(u: GitHubAccessible): GitHubService = createGitHubService(createGitHubHttpClient(u))
-
-  class GitHubService(val githubHttpClient: GitHubHttpClient) {
     // https://developer.github.com/v3/repos/#get
     def getRepo(owner: String, name: String): Task[GitHubTypes.Repo] = {
-      githubHttpClient.getJson[GitHubTypes.Repo](s"/repos/$owner/$name")
+      client.getJson[GitHubTypes.Repo](s"/repos/$owner/$name")
     }
 
     // https://developer.github.com/v3/issues/comments/#create-a-comment
     def addIssueComment(repoFullName: String, issueNumber: Int, body: String): Task[Unit] = {
-      githubHttpClient.postJson(
+      client.postJson(
         s"/repos/$repoFullName/issues/$issueNumber/comments",
         GitHubTypes.IssueComment(body)
       )
@@ -50,7 +33,7 @@ trait GitHubServiceComponent {
 
     // https://developer.github.com/v3/repos/statuses/#create-a-status
     def setCommitStatus(repoFullName: String, sha: String, status: GitHubTypes.CommitStatus): Task[Unit] = {
-      githubHttpClient.postJson(
+      client.postJson(
         s"/repos/$repoFullName/statuses/$sha",
         status
       )
@@ -59,7 +42,7 @@ trait GitHubServiceComponent {
     def getPullRequestWithCommits(repo: Repo, number: Int): Task[GitHubTypes.PullRequestWithCommits] = {
       redis.getOrUpdate(s"pull:${repo.fullName}:$number", 30 seconds) {
         for {
-          pr <- githubHttpClient.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
+          pr <- client.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
           commits <- getPullRequestCommitsPaged(repo, pr)
         } yield (GitHubTypes.PullRequestWithCommits(pr, commits), true)
       }
@@ -76,7 +59,7 @@ trait GitHubServiceComponent {
         throw new Error(s"page too far: $page")
       }
 
-      githubHttpClient.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/commits?sha=${pullRequest.head.sha}&per_page=${commitsPerPage}&page=${page}").flatMap {
+      client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/commits?sha=${pullRequest.head.sha}&per_page=${commitsPerPage}&page=${page}").flatMap {
         pageCommits =>
           val commits = (allCommits ++ pageCommits).take(pullRequest.commits)
           if (commits.length < pullRequest.commits) {
@@ -88,7 +71,7 @@ trait GitHubServiceComponent {
     }
 
     def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequestRef]] = {
-      githubHttpClient.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
+      client.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
     }
   }
 

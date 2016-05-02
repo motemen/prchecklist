@@ -1,8 +1,6 @@
 package prchecklist.views
 
-import org.pegdown.plugins.PegDownPlugins
-import org.pegdown.{ Extensions, Parser, PegDownProcessor }
-
+import org.pegdown.{Extensions, PegDownProcessor}
 import prchecklist.models._
 
 object Helper {
@@ -17,7 +15,7 @@ object Helper {
     pegdown.markdownToHtml(source)
   }
 
-  def checklistPath(checklist: TypesComponent#ReleaseChecklist): String = {
+  def checklistPath(checklist: ModelsComponent#ReleaseChecklist): String = {
     s"/${checklist.repo.fullName}/pull/${checklist.pullRequest.number}" + (checklist.stage match {
       case "" => ""
       case stage => s"/$stage"

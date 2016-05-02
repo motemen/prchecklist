@@ -20,7 +20,9 @@ lazy val core = (project in file("core")).
     scalacOptions ++= Seq(
       "-unchecked",
       "-deprecation",
-      "-feature"
+      "-feature",
+      "-Ywarn-dead-code",
+      "-Ywarn-unused-import"
     ),
 
     resolvers += Classpaths.typesafeReleases,

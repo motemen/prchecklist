@@ -1,18 +1,14 @@
 package prchecklist.services
 
+import org.slf4j.LoggerFactory
+import prchecklist.infrastructure.GitHubHttpClientComponent
 import prchecklist.models._
-import prchecklist.utils.HttpComponent
-import prchecklist.utils.AppConfig
-import prchecklist.utils.UriStringContext._ // uri"..."
-
-import java.net.URLEncoder
+import prchecklist.utils.UriStringContext._
 
 import scalaz.concurrent.Task
 
-import org.slf4j.LoggerFactory
-
 trait GitHubAuthServiceComponent {
-  self: GitHubConfig with AppConfig with TypesComponent with GitHubHttpClientComponent with HttpComponent =>
+  self: GitHubConfig with ModelsComponent with GitHubHttpClientComponent =>
 
   def githubAuthService: GitHubAuthService
 
@@ -42,7 +38,7 @@ trait GitHubAuthServiceComponent {
       }.flatMap {
         token =>
           for {
-            user <- createGitHubHttpClient(new GitHubAccessible { val accessToken = token }).getJson[GitHubTypes.User]("/user") // FIXME
+            user <- new GitHubHttpClient(token).getJson[GitHubTypes.User]("/user") // FIXME
           } yield Visitor(user.login, token)
       }
     }

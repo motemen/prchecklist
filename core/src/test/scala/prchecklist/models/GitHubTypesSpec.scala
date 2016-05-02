@@ -1,6 +1,5 @@
 package prchecklist.models
 
-import GitHubTypes._
 import prchecklist.test.Factory
 
 import org.scalatest._

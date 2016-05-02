@@ -1,7 +1,8 @@
 package prchecklist.services
 
+import prchecklist.infrastructure.{PostgresDatabaseComponent, RedisComponent, GitHubHttpClientComponent}
 import prchecklist.models._
-import prchecklist.utils._
+import prchecklist.repositories.{RepoRepositoryComponent, GitHubRepositoryComponent}
 import prchecklist.test._
 
 import com.github.tarao.nonempty.NonEmpty
@@ -16,15 +17,27 @@ import scalaz.concurrent.Task
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures
     with WithTestDatabase
-    with RepoServiceComponent with ChecklisetServiceComponent with PostgresDatabaseComponent with TestAppConfig with TypesComponent with GitHubConfig {
+    with RepoRepositoryComponent
+    with ChecklistServiceComponent
+    with PostgresDatabaseComponent
+    with TestAppConfig
+    with ModelsComponent
+    with GitHubRepositoryComponent
+    with GitHubHttpClientComponent
+    with RedisComponent
+    with GitHubConfig {
 
-  def repoService = new RepoService
+  def repoRepository = new RepoRepository
 
   def checklistService = new ChecklistService
 
+  def http = new Http
+
+  def redis = new Redis
+
   implicit override val patienceConfig = PatienceConfig(timeout = Span(3, Seconds), interval = Span(5, Millis))
 
-  lazy val (repo, _) = repoService.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+  lazy val (repo, _) = repoRepository.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
 
   test("getChecklist && checkChecklist succeeds") {
     val checkerUser = Visitor(login = "test", accessToken = "")

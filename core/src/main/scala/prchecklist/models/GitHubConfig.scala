@@ -2,11 +2,7 @@ package prchecklist.models
 
 import prchecklist.utils.AppConfig
 
-import java.net.URI
-
-trait GitHubConfig {
-  self: AppConfig =>
-
+trait GitHubConfig extends AppConfig {
   def githubOrigin = new java.net.URI(s"https://$githubDomain")
 
   def githubApiBase =

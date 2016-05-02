@@ -1,23 +1,23 @@
-package prchecklist.services
-
-import prchecklist.models._
+package prchecklist.repositories
 
 import com.github.tarao.slickjdbc.interpolation.SQLInterpolation
+import prchecklist.infrastructure.DatabaseComponent
+import prchecklist.models.{GitHubTypes, ModelsComponent}
+import prchecklist.services.TaskFromFuture
 
-import slick.driver.PostgresDriver.api.DBIO
+import slick.dbio.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods // q.transactionally
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 import scalaz.concurrent.Task
 
-trait RepoServiceComponent {
-  self: DatabaseComponent with TypesComponent =>
+trait RepoRepositoryComponent {
+  self: DatabaseComponent with ModelsComponent =>
 
-  def repoService: RepoService
+  def repoRepository: RepoRepository
 
-  class RepoService extends SQLInterpolation with TaskFromFuture {
+  class RepoRepository extends SQLInterpolation with TaskFromFuture {
 
     def get(owner: String, name: String): Task[Option[Repo]] = taskFromFuture {
       val db = getDatabase

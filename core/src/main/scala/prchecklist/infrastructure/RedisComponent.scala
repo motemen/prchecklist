@@ -1,15 +1,15 @@
-package prchecklist.services
-
-import prchecklist.utils.AppConfig
+package prchecklist.infrastructure
 
 import java.io.ByteArrayInputStream
 import java.net.URI
+
+import prchecklist.utils.AppConfig
 
 import org.json4s
 import org.json4s.{Formats => JsonFormats}
 import org.json4s.jackson.JsonMethods
 
-import com.redis._
+import com.redis.RedisClient
 import com.redis.serialization.{ Format => RedisFormat, Parse => RedisParse }
 
 import scalaz.Monad
