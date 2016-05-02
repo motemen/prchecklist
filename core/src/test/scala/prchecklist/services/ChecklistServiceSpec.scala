@@ -1,6 +1,8 @@
 package prchecklist.services
 
+import prchecklist.infrastructure.{PostgresDatabaseComponent, RedisComponent, GitHubHttpClientComponent}
 import prchecklist.models._
+import prchecklist.repositories.{RepoRepositoryComponent, GitHubRepositoryComponent}
 import prchecklist.test._
 
 import com.github.tarao.nonempty.NonEmpty
@@ -19,7 +21,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     with ChecklistServiceComponent
     with PostgresDatabaseComponent
     with TestAppConfig
-    with TypesComponent
+    with ModelsComponent
     with GitHubRepositoryComponent
     with GitHubHttpClientComponent
     with RedisComponent

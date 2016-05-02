@@ -1,6 +1,6 @@
 package prchecklist.models
 
-trait TypesComponent {
+trait ModelsComponent {
   self: GitHubConfig =>
 
   case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
@@ -28,7 +28,7 @@ trait TypesComponent {
   case class Check(pullRequest: PullRequestReference, checkedUsers: List[User]) {
     def isChecked: Boolean = checkedUsers.nonEmpty
 
-    def isCheckedBy(user: TypesComponent#UserLike) = checkedUsers.exists(_.login == user.login)
+    def isCheckedBy(user: ModelsComponent#UserLike) = checkedUsers.exists(_.login == user.login)
   }
 
   // A Visitor is a GitHub user equipped with access token.

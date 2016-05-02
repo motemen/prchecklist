@@ -1,13 +1,14 @@
 package prchecklist.services
 
 import org.slf4j.LoggerFactory
+import prchecklist.infrastructure.GitHubHttpClientComponent
 import prchecklist.models._
 import prchecklist.utils.UriStringContext._
 
 import scalaz.concurrent.Task
 
 trait GitHubAuthServiceComponent {
-  self: GitHubConfig with TypesComponent with GitHubHttpClientComponent =>
+  self: GitHubConfig with ModelsComponent with GitHubHttpClientComponent =>
 
   def githubAuthService: GitHubAuthService
 

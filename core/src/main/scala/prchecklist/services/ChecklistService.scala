@@ -1,9 +1,11 @@
 package prchecklist.services
 
+import prchecklist.infrastructure.DatabaseComponent
 import prchecklist.models._
 
 import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
 import com.github.tarao.nonempty.NonEmpty
+import prchecklist.repositories.{RepoRepositoryComponent, GitHubRepositoryComponent}
 
 import slick.driver.PostgresDriver.api.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
@@ -22,7 +24,7 @@ trait TaskFromFuture {
 }
 
 trait ChecklistServiceComponent {
-  self: DatabaseComponent with TypesComponent
+  self: DatabaseComponent with ModelsComponent
   with RepoRepositoryComponent
   with GitHubRepositoryComponent
   =>

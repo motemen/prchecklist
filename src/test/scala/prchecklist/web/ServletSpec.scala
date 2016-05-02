@@ -5,6 +5,7 @@ import org.mockito.Mockito._
 import org.scalatest.{ Matchers, OptionValues, mock }
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
+import prchecklist.infrastructure.PostgresDatabaseComponent
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.test._

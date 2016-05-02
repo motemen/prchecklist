@@ -1,33 +1,15 @@
-package prchecklist.services
+package prchecklist.repositories
 
-import prchecklist.models._
-import prchecklist.utils._
+import prchecklist.infrastructure.{RedisComponent, GitHubHttpClientComponent}
+import prchecklist.models.{GitHubTypes, ModelsComponent}
 
 import scalaz.concurrent.Task
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-import scalaj.http.HttpRequest
-
-trait GitHubHttpClientComponent extends HttpComponent {
-  self: GitHubConfig =>
-
-  def githubHttpClient(accessToken: String): GitHubHttpClient = new GitHubHttpClient(accessToken)
-
-  class GitHubHttpClient(accessToken: String) extends Http {
-    override def defaultHttpHeaders: Map[String, String] = {
-      super.defaultHttpHeaders + ("Authorization" -> s"token $accessToken")
-    }
-
-    override def apply(url: String): HttpRequest = {
-      super.apply(s"$githubApiBase$url")
-    }
-  }
-}
-
 trait GitHubRepositoryComponent {
-  self: GitHubHttpClientComponent with RedisComponent with TypesComponent =>
+  self: GitHubHttpClientComponent with RedisComponent with ModelsComponent =>
 
   def githubRepository(accessible: GitHubAccessible): GitHubRepository = new GitHubRepository {
     override val client = githubHttpClient(accessible.accessToken)

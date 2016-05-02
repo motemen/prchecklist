@@ -15,7 +15,7 @@ object Helper {
     pegdown.markdownToHtml(source)
   }
 
-  def checklistPath(checklist: TypesComponent#ReleaseChecklist): String = {
+  def checklistPath(checklist: ModelsComponent#ReleaseChecklist): String = {
     s"/${checklist.repo.fullName}/pull/${checklist.pullRequest.number}" + (checklist.stage match {
       case "" => ""
       case stage => s"/$stage"

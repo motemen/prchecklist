@@ -2,7 +2,9 @@ package prchecklist
 
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
+import prchecklist.infrastructure.{ PostgresDatabaseComponent, DatabaseComponent, RedisComponent, GitHubHttpClientComponent }
 import prchecklist.models._
+import prchecklist.repositories.{ RepoRepositoryComponent, GitHubRepositoryComponent }
 import prchecklist.services._
 import prchecklist.utils.AppConfigFromEnv
 import prchecklist.utils.UriStringContext._
@@ -18,7 +20,7 @@ trait Domain
   with GitHubRepositoryComponent
   with RepoRepositoryComponent
   // model
-  with TypesComponent
+  with ModelsComponent
   // service
   with GitHubAuthServiceComponent
   with ChecklistServiceComponent

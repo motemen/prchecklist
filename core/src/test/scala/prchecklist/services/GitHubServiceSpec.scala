@@ -4,8 +4,10 @@ import org.scalatest.{ FunSuite, Matchers }
 import org.scalatest.mock.MockitoSugar
 
 import org.mockito.Mockito._
+import prchecklist.infrastructure.{RedisComponent, GitHubHttpClientComponent}
 
 import prchecklist.models._
+import prchecklist.repositories.GitHubRepositoryComponent
 import prchecklist.test._
 import prchecklist.utils._
 
@@ -16,7 +18,7 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
     with GitHubHttpClientComponent
     with RedisComponent
     with TestAppConfig
-    with TypesComponent
+    with ModelsComponent
     with GitHubConfig
     with HttpComponent {
 

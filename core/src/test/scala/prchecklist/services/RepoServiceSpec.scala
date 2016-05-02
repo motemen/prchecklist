@@ -1,5 +1,7 @@
 package prchecklist.services
 
+import prchecklist.infrastructure.PostgresDatabaseComponent
+import prchecklist.repositories.RepoRepositoryComponent
 import prchecklist.test._
 import prchecklist.models._
 
@@ -10,7 +12,7 @@ class RepoServiceSpec extends FunSuite with Matchers
     with RepoRepositoryComponent
     with PostgresDatabaseComponent
     with TestAppConfig
-    with TypesComponent
+    with ModelsComponent
     with GitHubConfig {
 
   override val repoRepository = new RepoRepository
