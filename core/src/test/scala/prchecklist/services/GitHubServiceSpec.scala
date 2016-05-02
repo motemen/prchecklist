@@ -26,24 +26,22 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
 
   test("getPullRequestWithCommits") {
 
-    val client = mock[GitHubHttpClient]
-    val c = client
+    val mockedClient = mock[GitHubHttpClient]
 
     when(
-      client.getJson[GitHubTypes.PullRequest]("/repos/test-owner/test-name/pulls/47")
+      mockedClient.getJson[GitHubTypes.PullRequest]("/repos/test-owner/test-name/pulls/47")
     ) thenReturn Task {
         Factory.createGitHubPullRequest.copy(commits = 0)
       }
 
     when(
-      client.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=1")
+      mockedClient.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=1")
     ) thenReturn Task {
         List()
       }
 
     val githubRepository = new GitHubRepository {
-      override def githubAccessor = ???
-      override val client = c
+      override val client = mockedClient
     }
     val prWithCommits = githubRepository.getPullRequestWithCommits(Repo(0, "test-owner", "test-name", ""), 47).run
 
@@ -66,7 +64,6 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
       }
 
     val githubRepository = new GitHubRepository {
-      override def githubAccessor = ???
       override val client = mockedClient
     }
     val prCommits = githubRepository.getPullRequestCommitsPaged(

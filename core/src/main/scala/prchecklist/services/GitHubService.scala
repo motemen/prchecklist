@@ -30,13 +30,11 @@ trait GitHubRepositoryComponent {
   self: GitHubHttpClientComponent with RedisComponent with TypesComponent =>
 
   def githubRepository(accessible: GitHubAccessible): GitHubRepository = new GitHubRepository {
-    override def githubAccessor: GitHubAccessible = accessible
+    override val client = githubHttpClient(accessible.accessToken)
   }
 
   trait GitHubRepository {
-    def githubAccessor: GitHubAccessible
-
-    val client = githubHttpClient(githubAccessor.accessToken)
+    def client: GitHubHttpClient
 
     // https://developer.github.com/v3/repos/#get
     def getRepo(owner: String, name: String): Task[GitHubTypes.Repo] = {
