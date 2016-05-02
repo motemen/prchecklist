@@ -1,8 +1,6 @@
 package prchecklist.views
 
-import org.pegdown.plugins.PegDownPlugins
-import org.pegdown.{ Extensions, Parser, PegDownProcessor }
-
+import org.pegdown.{Extensions, PegDownProcessor}
 import prchecklist.models._
 
 object Helper {

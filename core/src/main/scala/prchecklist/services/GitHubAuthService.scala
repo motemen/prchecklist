@@ -1,15 +1,10 @@
 package prchecklist.services
 
+import org.slf4j.LoggerFactory
 import prchecklist.models._
-import prchecklist.utils.HttpComponent
-import prchecklist.utils.AppConfig
-import prchecklist.utils.UriStringContext._ // uri"..."
-
-import java.net.URLEncoder
+import prchecklist.utils.UriStringContext._
 
 import scalaz.concurrent.Task
-
-import org.slf4j.LoggerFactory
 
 trait GitHubAuthServiceComponent {
   self: GitHubConfig with TypesComponent with GitHubHttpClientComponent =>

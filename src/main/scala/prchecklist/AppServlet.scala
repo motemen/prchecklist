@@ -1,17 +1,12 @@
 package prchecklist
 
-import prchecklist.models._
-import prchecklist.services._
-import prchecklist.utils.{ HttpComponent, AppConfig, AppConfigFromEnv }
-import prchecklist.utils.UriStringContext._ // uri""
-import prchecklist.views.Helper
-
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
-
-import org.json4s.jackson.JsonMethods
-
-import scalaz.concurrent.Task
+import prchecklist.models._
+import prchecklist.services._
+import prchecklist.utils.AppConfigFromEnv
+import prchecklist.utils.UriStringContext._
+import prchecklist.views.Helper
 
 trait Domain
   extends GitHubConfig

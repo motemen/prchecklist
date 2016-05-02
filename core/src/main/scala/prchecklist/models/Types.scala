@@ -1,7 +1,5 @@
 package prchecklist.models
 
-import prchecklist.utils.AppConfig
-
 trait TypesComponent {
   self: GitHubConfig =>
 

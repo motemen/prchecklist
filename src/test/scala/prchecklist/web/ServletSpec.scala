@@ -1,19 +1,14 @@
 package prchecklist.web
 
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
+import org.mockito.Matchers.{ eq => matchEq, _ }
+import org.mockito.Mockito._
 import org.scalatest.{ Matchers, OptionValues, mock }
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
-import org.mockito.Mockito._
-import org.mockito.Matchers._
-import org.mockito.Matchers.{ eq => matchEq }
-
-import prchecklist.{ Domain, AppServlet }
 import prchecklist.models._
 import prchecklist.services._
-import prchecklist.utils._
 import prchecklist.test._
+import prchecklist.{ AppServlet, Domain }
 
 import scalaz.concurrent.Task
 
@@ -34,15 +29,15 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     override val http = new Http
 
     override def githubRepository(accessible: GitHubAccessible): GitHubRepository = {
-      val service = mock[GitHubRepository]
+      val repository = mock[GitHubRepository]
 
-      when(service.getRepo("test-owner", "test-name"))
+      when(repository.getRepo("test-owner", "test-name"))
         .thenReturn(Task{ GitHubTypes.Repo("test-owner/test-name", false) })
 
-      when(service.getRepo("motemen", "test-repository"))
+      when(repository.getRepo("motemen", "test-repository"))
         .thenReturn(Task{ GitHubTypes.Repo("motemen/test-repository", false) })
 
-      when(service.getPullRequestWithCommits(any(), any()))
+      when(repository.getPullRequestWithCommits(any(), any()))
         .thenReturn(Task {
           GitHubTypes.PullRequestWithCommits(
             pullRequest = GitHubTypes.PullRequest(
@@ -71,7 +66,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
           )
         })
 
-      when(service.listReleasePullRequests(any()))
+      when(repository.listReleasePullRequests(any()))
         .thenReturn(
           Task {
             List(
@@ -93,7 +88,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
           }
         )
 
-      service
+      repository
     }
 
     override def githubHttpClient(accessToken: String): GitHubHttpClient = {
@@ -167,10 +162,6 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   }
 
   addServlet(testServlet, "/*")
-
-  import scala.concurrent.Await
-  import scala.concurrent.duration.Duration
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   override def beforeAll(): Unit = {
     super.beforeAll()
