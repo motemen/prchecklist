@@ -1,0 +1,7 @@
+dependencies:
+  override:
+    - npm install
+    - sbt test:compile
+test:
+  override:
+    - sbt core/test test
