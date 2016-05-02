@@ -2,10 +2,8 @@ package prchecklist.services
 
 import prchecklist.test._
 import prchecklist.models._
-import prchecklist.utils._
 
 import org.scalatest._
-import org.scalatest.time._
 
 class RepoServiceSpec extends FunSuite with Matchers
     with WithTestDatabase

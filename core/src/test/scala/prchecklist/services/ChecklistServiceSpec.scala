@@ -1,7 +1,6 @@
 package prchecklist.services
 
 import prchecklist.models._
-import prchecklist.utils._
 import prchecklist.test._
 
 import com.github.tarao.nonempty.NonEmpty
