@@ -187,6 +187,10 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       get("/motemen/test-repository/pull/2") {
         status should equal (200)
       }
+
+      get("/motemen/test-repository/pull/9") {
+        status should equal (404)
+      }
     }
   }
 
