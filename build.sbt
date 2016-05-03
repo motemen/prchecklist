@@ -39,7 +39,9 @@ lazy val core = (project in file("core")).
       "net.debasishg" %% "redisclient" % "3.1",
       "org.pegdown" % "pegdown" % "1.6.0",
       "org.mockito" % "mockito-core" % "2.0.36-beta" % "test",
-      "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+      "org.scalatest" %% "scalatest" % "2.2.6" % "test",
+      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.5.4",
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.7.3"
     )
   )
 

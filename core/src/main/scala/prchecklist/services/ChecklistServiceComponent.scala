@@ -23,11 +23,17 @@ trait TaskFromFuture {
   protected def taskFromFuture[A](fut: Future[A]): Task[A] = Task { Await.result(fut, Duration.Inf) }
 }
 
+/**
+ * ChecklistServiceComponent is the main logic of prchecklist.
+ *
+ * TODO: separate the repository logic
+ */
 trait ChecklistServiceComponent {
-  self: DatabaseComponent with ModelsComponent
-  with RepoRepositoryComponent
-  with GitHubRepositoryComponent
-  =>
+  this: DatabaseComponent
+    with ModelsComponent
+    with RepoRepositoryComponent
+    with GitHubRepositoryComponent
+      =>
 
   def checklistService: ChecklistService
 
@@ -63,7 +69,12 @@ trait ChecklistServiceComponent {
       }
     }
 
+    /**
+     * checkChecklist is the most important logic
+     */
     def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
+      // TODO: to "checklistRepo.ensureChecklistCheck"
+
       val db = getDatabase
 
       val q = sqlu"""
@@ -87,6 +98,12 @@ trait ChecklistServiceComponent {
       }
 
       db.run(q.transactionally)
+
+      // val conf = projectConfig.load()
+      // conf.slackChannels.foreach {
+      //   ch =>
+      //     slackNotification.create(ch, "")
+      // }
     }
 
     def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
