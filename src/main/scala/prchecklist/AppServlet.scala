@@ -114,13 +114,18 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   }
 
   val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)") {
-    requireChecklist {
-      (repo, checklist) =>
-        contentType = "text/html"
-        layoutTemplate(
-          "/WEB-INF/templates/views/pullRequest.jade",
-          "checklist" -> checklist
-        )
+    try {
+      requireChecklist {
+        (repo, checklist) =>
+          contentType = "textre/html"
+          layoutTemplate(
+            "/WEB-INF/templates/views/pullRequest.jade",
+            "checklist" -> checklist
+          )
+      }
+    } catch {
+      case e: Exception =>
+        NotFound("No merged pull requests")
     }
   }
 

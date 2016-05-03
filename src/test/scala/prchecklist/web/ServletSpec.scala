@@ -177,7 +177,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   test("viewPullRequest") {
     session {
       get("/motemen/test-repository/pull/2") {
-        status should equal (200)
+        status should equal (404)
       }
 
       put("/@user?login=test-user") {
@@ -185,7 +185,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       }
 
       get("/motemen/test-repository/pull/2") {
-        status should equal (200)
+        status should equal (404)
       }
     }
   }
