@@ -1,8 +1,8 @@
 package prchecklist.services
 
-import prchecklist.infrastructure.{PostgresDatabaseComponent, RedisComponent, GitHubHttpClientComponent}
+import prchecklist.infrastructure._
 import prchecklist.models._
-import prchecklist.repositories.{RepoRepositoryComponent, GitHubRepositoryComponent}
+import prchecklist.repositories._
 import prchecklist.test._
 
 import com.github.tarao.nonempty.NonEmpty
@@ -17,19 +17,24 @@ import scalaz.concurrent.Task
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures
     with WithTestDatabase
-    with RepoRepositoryComponent
+    with TestAppConfig
     with ChecklistServiceComponent
     with PostgresDatabaseComponent
-    with TestAppConfig
-    with ModelsComponent
+    with SlackNotificationServiceComponent
+    with RepoRepositoryComponent
     with GitHubRepositoryComponent
+    with ProjectConfigRepositoryComponent
+    with ModelsComponent
     with GitHubHttpClientComponent
     with RedisComponent
-    with GitHubConfig {
+    with GitHubConfig
+    {
+
+  val githubAccessor = Visitor(login = "test", accessToken = "")
 
   def repoRepository = new RepoRepository
 
-  def checklistService = new ChecklistService
+  def checklistService = new ChecklistService(githubAccessor)
 
   def http = new Http
 
