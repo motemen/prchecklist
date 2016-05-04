@@ -41,7 +41,8 @@ lazy val core = (project in file("core")).
       "org.mockito" % "mockito-core" % "2.0.36-beta" % "test",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test",
       "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.5.4",
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.7.3"
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.7.3",
+      "commons-codec" % "commons-codec" % "1.10"
     )
   )
 
