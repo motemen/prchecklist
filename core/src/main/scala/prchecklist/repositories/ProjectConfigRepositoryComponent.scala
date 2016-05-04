@@ -1,9 +1,13 @@
 package prchecklist.repositories
 
+import prchecklist.models.GitHubTypes
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
+
+import scalaz.concurrent.Task
 
 /**
  * Represents project.yml
@@ -24,17 +28,22 @@ case class ProjectConfig(
 )
 
 trait ProjectConfigRepositoryComponent {
-  // this: GitHubRepositoryComponent =>
+  this: GitHubRepositoryComponent =>
 
   trait ProjectConfigRepository {
-    // def github: GitHubRepository
+    def github: GitHubRepository
 
-    def parseProjectConfig(source: String): ProjectConfig = {
+    def parseProjectConfig(source: String): Task[ProjectConfig] = {
       val mapper = new ObjectMapper(new YAMLFactory) with ScalaObjectMapper
       mapper.registerModule(DefaultScalaModule)
-      mapper.readValue[ProjectConfig](source)
+      Task { mapper.readValue[ProjectConfig](source) }
     }
 
-    // def loadProjectConfig: ProjectConfig
+    def loadProjectConfig(repo: GitHubTypes.Repo, ref: String): Task[ProjectConfig] = {
+      for {
+        yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
+        conf <- parseProjectConfig(yaml)
+      } yield conf
+    }
   }
 }
