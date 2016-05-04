@@ -4,7 +4,7 @@ import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 import prchecklist.infrastructure.{ PostgresDatabaseComponent, DatabaseComponent, RedisComponent, GitHubHttpClientComponent }
 import prchecklist.models._
-import prchecklist.repositories.{ RepoRepositoryComponent, GitHubRepositoryComponent }
+import prchecklist.repositories._
 import prchecklist.services._
 import prchecklist.utils.AppConfigFromEnv
 import prchecklist.utils.UriStringContext._
@@ -19,16 +19,16 @@ trait Domain
   // repos
   with GitHubRepositoryComponent
   with RepoRepositoryComponent
+  with ProjectConfigRepositoryComponent
   // model
   with ModelsComponent
   // service
   with GitHubAuthServiceComponent
   with ChecklistServiceComponent
+  with SlackNotificationServiceComponent
 
 object RealDomain extends Domain with AppConfigFromEnv with PostgresDatabaseComponent {
   override val repoRepository = new RepoRepository
-
-  override val checklistService = new ChecklistService
 
   override val githubAuthService = new GitHubAuthService
 
@@ -106,9 +106,10 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       repo =>
         // TODO: check visilibity
         val stage = params.getOrElse('stage, "")
-        val prWithCommits = domain.githubRepository(getVisitor getOrElse repo.defaultUser)
+        val githubAccessor = getVisitor getOrElse repo.defaultUser
+        val prWithCommits = domain.githubRepository(githubAccessor)
           .getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
-        val (checklist, _) = domain.checklistService.getChecklist(repo, prWithCommits, stage).run
+        val (checklist, _) = new domain.ChecklistService(githubAccessor).getChecklist(repo, prWithCommits, stage).run
         f(repo, checklist)
     }
   }
@@ -135,7 +136,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       visitor =>
         requireChecklist {
           (repo, checklist) =>
-            domain.checklistService.checkChecklist(checklist, visitor, featureNumber).run
+            new domain.ChecklistService(visitor).checkChecklist(checklist, visitor, featureNumber).run
             redirect(checklistPath(checklist, featureNumber).toString)
         }
     }
@@ -148,7 +149,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       visitor =>
         requireChecklist {
           (repo, checklist) =>
-            domain.checklistService.uncheckChecklist(checklist, visitor, featureNumber).run
+            new domain.ChecklistService(visitor).uncheckChecklist(checklist, visitor, featureNumber).run
             redirect(checklistPath(checklist, featureNumber).toString)
         }
     }

@@ -103,15 +103,17 @@ trait ChecklistServiceComponent {
           }
       }
 
+      // TODO: handle errors
       db.run(q.transactionally).andThen {
         case Success(_) =>
           projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head").map {
             config =>
+              println(config)
               config.notification.channels.foreach {
                 case (name, ch) =>
-                  slackNotificationService.send(ch.url, s"#${featurePRNumber} checked by ${checkerUser.login}")
+                  slackNotificationService.send(ch.url, s"#${featurePRNumber} checked by ${checkerUser.login}").run
               }
-          }
+          }.run
       }
 
       // val conf = projectConfig.load()

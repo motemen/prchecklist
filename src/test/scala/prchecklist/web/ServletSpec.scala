@@ -21,8 +21,6 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   object TestDomain extends Domain with TestAppConfig with PostgresDatabaseComponent {
     override val repoRepository = new RepoRepository
 
-    override val checklistService = new ChecklistService
-
     override val githubAuthService = new GitHubAuthService
 
     override val redis = new Redis
@@ -88,6 +86,12 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
             )
           }
         )
+
+      when {
+        repository.getFileContent(any(), any(), any())
+      } thenReturn {
+        Task.fail(new Error("getFileContent: mock"))
+      }
 
       repository
     }
