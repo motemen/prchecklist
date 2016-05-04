@@ -8,10 +8,11 @@ class ProjectConfigRepositoryComponentSpec extends FunSuite with Matchers
   test("parseProjectConfig") {
     val repo = new ProjectConfigRepository {}
     val conf = repo.parseProjectConfig("""
-channels:
-  default:
-    url: https://slack.com/xxxx
+notification:
+  channels:
+    default:
+      url: https://slack.com/xxxx
 """)
-    conf.channels("default").url shouldBe "https://slack.com/xxxx"
+    conf.notification.channels("default").url shouldBe "https://slack.com/xxxx"
   }
 }
