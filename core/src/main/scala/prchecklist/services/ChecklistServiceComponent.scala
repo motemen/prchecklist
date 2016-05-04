@@ -1,11 +1,13 @@
 package prchecklist.services
 
-import prchecklist.infrastructure.DatabaseComponent
-import prchecklist.models._
+import prchecklist.infrastructure
+import prchecklist.services
+import prchecklist.repositories
+import prchecklist.models
+import prchecklist.models.GitHubTypes
 
 import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
 import com.github.tarao.nonempty.NonEmpty
-import prchecklist.repositories.{RepoRepositoryComponent, GitHubRepositoryComponent}
 
 import slick.driver.PostgresDriver.api.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
@@ -14,6 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.util.Success
 
 import scalaz.concurrent.Task
 
@@ -29,15 +32,18 @@ trait TaskFromFuture {
  * TODO: separate the repository logic
  */
 trait ChecklistServiceComponent {
-  this: DatabaseComponent
-    with ModelsComponent
-    with RepoRepositoryComponent
-    with GitHubRepositoryComponent
+  self: infrastructure.DatabaseComponent
+    with models.ModelsComponent
+    with services.SlackNotificationServiceComponent
+    with repositories.RepoRepositoryComponent
+    with repositories.GitHubRepositoryComponent
+    with repositories.ProjectConfigRepositoryComponent
       =>
 
-  def checklistService: ChecklistService
+  class ChecklistService(githubAccessor: GitHubAccessible) extends SQLInterpolation with CompoundParameter with TaskFromFuture {
+    val githubRepository = self.githubRepository(githubAccessor)
+    val projectConfigRepository = self.projectConfigRepository(githubRepository)
 
-  class ChecklistService extends SQLInterpolation with CompoundParameter with TaskFromFuture {
     private def mergedPullRequests(commits: List[GitHubTypes.Commit]): Option[NonEmpty[PullRequestReference]] = {
       NonEmpty.fromTraversable {
         commits.flatMap {
@@ -97,7 +103,16 @@ trait ChecklistServiceComponent {
           }
       }
 
-      db.run(q.transactionally)
+      db.run(q.transactionally).andThen {
+        case Success(_) =>
+          projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head").map {
+            config =>
+              config.notification.channels.foreach {
+                case (name, ch) =>
+                  slackNotificationService.send(ch.url, s"#${featurePRNumber} checked by ${checkerUser.login}")
+              }
+          }
+      }
 
       // val conf = projectConfig.load()
       // conf.slackChannels.foreach {

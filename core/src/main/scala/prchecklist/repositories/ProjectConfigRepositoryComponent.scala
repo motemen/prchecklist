@@ -1,6 +1,6 @@
 package prchecklist.repositories
 
-import prchecklist.models.GitHubTypes
+import prchecklist.models
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
@@ -28,7 +28,13 @@ case class ProjectConfig(
 )
 
 trait ProjectConfigRepositoryComponent {
-  this: GitHubRepositoryComponent =>
+  this: GitHubRepositoryComponent
+    with models.ModelsComponent
+      =>
+
+  def projectConfigRepository(githubRepos: GitHubRepository): ProjectConfigRepository = new ProjectConfigRepository {
+    override val github = githubRepos
+  }
 
   trait ProjectConfigRepository {
     def github: GitHubRepository
@@ -39,7 +45,7 @@ trait ProjectConfigRepositoryComponent {
       Task { mapper.readValue[ProjectConfig](source) }
     }
 
-    def loadProjectConfig(repo: GitHubTypes.Repo, ref: String): Task[ProjectConfig] = {
+    def loadProjectConfig(repo: Repo, ref: String): Task[ProjectConfig] = {
       for {
         yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
         conf <- parseProjectConfig(yaml)
