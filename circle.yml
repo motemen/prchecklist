@@ -1,7 +1,10 @@
 dependencies:
   override:
     - npm install
+    - sbt clean
     - sbt test:compile
 test:
   override:
-    - sbt core/test test
+    - sbt coverage core/test test
+  post:
+    - sbt coverageReport coveralls
