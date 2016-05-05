@@ -5,6 +5,4 @@ dependencies:
     - sbt test:compile
 test:
   override:
-    - sbt coverage core/test test
-  post:
-    - sbt coverageReport coveralls
+    - sbt core/test test
