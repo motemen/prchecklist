@@ -48,7 +48,6 @@ trait HttpComponent {
       val httpReq = apply(url).postData(org.json4s.jackson.Serialization.write(payload))
       doRequest(httpReq) {
         is =>
-          println(scala.io.Source.fromInputStream(is).mkString)
           ()
       }
     }
