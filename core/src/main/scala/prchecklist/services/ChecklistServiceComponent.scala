@@ -104,8 +104,9 @@ trait ChecklistServiceComponent {
       }
 
       // TODO: handle errors
-      db.run(q.transactionally).andThen {
-        case Success(_) =>
+      val fut = db.run(q.transactionally)
+      fut.onSuccess {
+        case _ =>
           val task = for {
             config <- projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head")
 
@@ -118,6 +119,7 @@ trait ChecklistServiceComponent {
 
           task.run
       }
+      fut
     }
 
     def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
