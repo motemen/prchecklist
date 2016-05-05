@@ -84,20 +84,20 @@ trait ChecklistServiceComponent {
       val db = getDatabase
 
       val q = sqlu"""
-      | UPDATE checks
-      | SET updated_at = NOW()
-      | WHERE checklist_id = ${checklist.id}
-      |   AND feature_pr_number = ${featurePRNumber}
-      |   AND user_login = ${checkerUser.login}
-    """.flatMap {
+        | UPDATE checks
+        | SET updated_at = NOW()
+        | WHERE checklist_id = ${checklist.id}
+        |   AND feature_pr_number = ${featurePRNumber}
+        |   AND user_login = ${checkerUser.login}
+      """.flatMap {
         updated =>
           if (updated == 0) {
             sqlu"""
-            | INSERT INTO checks
-            | (checklist_id, feature_pr_number, user_login, created_at)
-            | VALUES
-            | (${checklist.id}, ${featurePRNumber}, ${checkerUser.login}, NOW())
-          """.map(_ => ())
+              | INSERT INTO checks
+              | (checklist_id, feature_pr_number, user_login, created_at)
+              | VALUES
+              | (${checklist.id}, ${featurePRNumber}, ${checkerUser.login}, NOW())
+            """.map(_ => ())
           } else {
             DBIO.successful(())
           }
@@ -111,7 +111,8 @@ trait ChecklistServiceComponent {
 
             sendNotifications <- Task.gatherUnordered(config.notification.channels.map {
               case (name, ch) =>
-                slackNotificationService.send(ch.url, s"[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] #${featurePRNumber} checked by ${checkerUser.login}")
+                val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
+                slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}""") // TODO: escape
             }.toSeq)
           } yield sendNotifications
 
@@ -123,33 +124,33 @@ trait ChecklistServiceComponent {
       val db = getDatabase
 
       val q = sqlu"""
-      | DELETE FROM checks
-      | WHERE checklist_id = ${checklist.id}
-      |   AND feature_pr_number = ${featurePRNumber}
-      |   AND user_login = ${checkerUser.login}
-    """.map(_ => ())
+        | DELETE FROM checks
+        | WHERE checklist_id = ${checklist.id}
+        |   AND feature_pr_number = ${featurePRNumber}
+        |   AND user_login = ${checkerUser.login}
+      """.map(_ => ())
 
       db.run(q)
     }
 
     private def ensureChecklist(repo: Repo, number: Int, stage: String): DBIO[(Int, Boolean)] = {
       sql"""
-      | SELECT id
-      | FROM checklists
-      | WHERE github_repo_id = ${repo.id}
-      |   AND release_pr_number = ${number}
-      |   AND stage = ${stage}
-      | LIMIT 1
-    """.as[Int].map(_.headOption).flatMap {
+        | SELECT id
+        | FROM checklists
+        | WHERE github_repo_id = ${repo.id}
+        |   AND release_pr_number = ${number}
+        |   AND stage = ${stage}
+        | LIMIT 1
+      """.as[Int].map(_.headOption).flatMap {
         case Some(v) => DBIO.successful((v, false))
         case None =>
           sql"""
-          | INSERT INTO checklists
-          |   (github_repo_id, release_pr_number, stage)
-          | VALUES
-          |   (${repo.id}, ${number}, ${stage})
-          | RETURNING id
-        """.as[Int].head.map((_, true))
+            | INSERT INTO checklists
+            |   (github_repo_id, release_pr_number, stage)
+            | VALUES
+            |   (${repo.id}, ${number}, ${stage})
+            | RETURNING id
+          """.as[Int].head.map((_, true))
       }
     }
 
@@ -161,11 +162,11 @@ trait ChecklistServiceComponent {
 
         case Some(featurePRNumbers) =>
           sql"""
-          | SELECT feature_pr_number,user_login
-          | FROM checks
-          | WHERE checklist_id = ${checklistId}
-          |   AND feature_pr_number IN (${featurePRNumbers})
-        """.as[(Int, String)]
+            | SELECT feature_pr_number,user_login
+            | FROM checks
+            | WHERE checklist_id = ${checklistId}
+            |   AND feature_pr_number IN (${featurePRNumbers})
+          """.as[(Int, String)]
             .map {
               rows =>
                 val prNumberToUser: Map[Int, List[User]] =

@@ -6,9 +6,14 @@ trait ModelsComponent {
   case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
     def pullRequestUrl = repo.pullRequestUrl(pullRequest.number)
 
+    def featurePullRequestUrl(number: Int) = repo.pullRequestUrl(number)
+
     def allGreen = checks.values.forall(_.isChecked)
 
     def featurePRNumbers = featurePullRequests.map(_.number)
+
+    def featurePullRequest(number: Int): Option[PullRequestReference] =
+      featurePullRequests.find(_.number == number)
   }
 
   case class PullRequestReference(number: Int, title: String)
