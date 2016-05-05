@@ -9,13 +9,16 @@ import com.github.tarao.nonempty.NonEmpty
 
 import org.scalatest._
 import org.scalatest.time._
+import org.scalatest.mock._
+import org.mockito.Mockito._
+import org.mockito.Matchers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
 import scalaz.concurrent.Task
 
-class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with concurrent.ScalaFutures
+class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with MockitoSugar with concurrent.ScalaFutures
     with WithTestDatabase
     with TestAppConfig
     with ChecklistServiceComponent
@@ -33,6 +36,18 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
   val githubAccessor = Visitor(login = "test", accessToken = "")
 
   def repoRepository = new RepoRepository
+
+  override def githubRepository(githubAccessor: GitHubAccessible) = {
+    val githubRepository = mock[GitHubRepository]
+
+    when {
+      githubRepository.getFileContent(any(), any(), any())
+    } thenReturn {
+      Task.fail(new Error("getFileContent: mock"))
+    }
+
+    githubRepository
+  }
 
   def checklistService = new ChecklistService(githubAccessor)
 
