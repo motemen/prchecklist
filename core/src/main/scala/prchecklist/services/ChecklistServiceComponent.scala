@@ -6,6 +6,8 @@ import prchecklist.repositories
 import prchecklist.models
 import prchecklist.models.GitHubTypes
 
+import org.slf4j.LoggerFactory
+
 import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
 import com.github.tarao.nonempty.NonEmpty
 
@@ -19,6 +21,7 @@ import scala.concurrent.duration.Duration
 import scala.util.Success
 
 import scalaz.concurrent.Task
+import scalaz.-\/
 
 trait TaskFromFuture {
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,6 +44,8 @@ trait ChecklistServiceComponent {
       =>
 
   class ChecklistService(githubAccessor: GitHubAccessible) extends SQLInterpolation with CompoundParameter with TaskFromFuture {
+    def logger = LoggerFactory.getLogger(getClass)
+
     val githubRepository = self.githubRepository(githubAccessor)
     val projectConfigRepository = self.projectConfigRepository(githubRepository)
 
@@ -117,7 +122,11 @@ trait ChecklistServiceComponent {
             }.toSeq)
           } yield sendNotifications
 
-          task.run
+          task.attemptRun match {
+            case -\/(e) =>
+              logger.warn(s"Error while sending notification: $e")
+            case _ =>
+          }
       }
       fut
     }

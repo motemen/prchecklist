@@ -75,6 +75,7 @@ trait GitHubRepositoryComponent {
     }
 
     // https://developer.github.com/v3/repos/contents/#get-contents
+    // TODO: be Task[Option[String]]
     def getFileContent(repo: Repo, path: String, ref: String = "master"): Task[String] = {
       client.getJson[GitHubTypes.Content](s"/repos/${repo.fullName}/contents/$path?ref=$ref").map {
         content =>

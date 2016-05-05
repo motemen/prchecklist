@@ -42,7 +42,8 @@ lazy val core = (project in file("core")).
       "org.scalatest" %% "scalatest" % "2.2.6" % "test",
       "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.5.4",
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.7.3",
-      "commons-codec" % "commons-codec" % "1.10"
+      "commons-codec" % "commons-codec" % "1.10",
+      "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime"
     )
   )
 
