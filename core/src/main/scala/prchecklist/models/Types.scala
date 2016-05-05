@@ -4,7 +4,7 @@ trait ModelsComponent {
   self: GitHubConfig =>
 
   case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
-    def pullRequestUrl(number: Int) = repo.pullRequestUrl(number)
+    def pullRequestUrl = repo.pullRequestUrl(pullRequest.number)
 
     def allGreen = checks.values.forall(_.isChecked)
 
