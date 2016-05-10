@@ -1,5 +1,6 @@
 = prchecklist
 
+image:https://circleci.com/gh/motemen/prchecklist.svg?style=shield[link="https://circleci.com/gh/motemen/prchecklist"]
 image:https://badges.gitter.im/motemen/prchecklist.svg[link="https://gitter.im/motemen/prchecklist?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
 == Requirements
