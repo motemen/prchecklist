@@ -21,8 +21,6 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   object TestDomain extends Domain with TestAppConfig with PostgresDatabaseComponent {
     override val repoRepository = new RepoRepository
 
-    override val checklistService = new ChecklistService
-
     override val githubAuthService = new GitHubAuthService
 
     override val redis = new Redis
@@ -38,8 +36,10 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       when(repository.getRepo("motemen", "test-repository"))
         .thenReturn(Task{ GitHubTypes.Repo("motemen/test-repository", false) })
 
-      when(repository.getPullRequestWithCommits(any(), any()))
-        .thenReturn(Task {
+      when {
+        repository.getPullRequestWithCommits(any(), any())
+      } thenReturn {
+        Task {
           GitHubTypes.PullRequestWithCommits(
             pullRequest = GitHubTypes.PullRequest(
               number = 2,
@@ -65,29 +65,37 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               ))
             )
           )
-        })
+        }
+      }
 
-      when(repository.listReleasePullRequests(any()))
-        .thenReturn(
-          Task {
-            List(
-              GitHubTypes.PullRequestRef(
-                number = 100,
-                title = "title",
-                state = "open",
-                head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
-              ),
-              GitHubTypes.PullRequestRef(
-                number = 101,
-                title = "title",
-                state = "open",
-                head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-2"),
-                base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
-              )
+      when {
+        repository.listReleasePullRequests(any())
+      } thenReturn {
+        Task {
+          List(
+            GitHubTypes.PullRequestRef(
+              number = 100,
+              title = "title",
+              state = "open",
+              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+            ),
+            GitHubTypes.PullRequestRef(
+              number = 101,
+              title = "title",
+              state = "open",
+              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-2"),
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
             )
-          }
-        )
+          )
+        }
+      }
+
+      when {
+        repository.getFileContent(any(), any(), any())
+      } thenReturn {
+        Task.fail(new Error("getFileContent: mock"))
+      }
 
       repository
     }

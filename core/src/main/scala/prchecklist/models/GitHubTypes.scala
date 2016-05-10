@@ -69,4 +69,22 @@ object GitHubTypes {
     targetUrl: String,
     description: String,
     context: String = "prchecklist")
+
+  // https://developer.github.com/v3/repos/contents/#get-contents
+  case class Content(
+    `type`: String,
+    encoding: String,
+    content: String
+  ) {
+    def fileContent: Option[String] = {
+      import org.apache.commons.codec.binary.Base64
+
+      if (`type` == "file") {
+        assert(encoding == "base64")
+        Some(new String(Base64.decodeBase64(content)))
+      } else {
+        None
+      }
+    }
+  }
 }

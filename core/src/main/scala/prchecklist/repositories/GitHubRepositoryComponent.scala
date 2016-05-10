@@ -73,6 +73,15 @@ trait GitHubRepositoryComponent {
     def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequestRef]] = {
       client.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
     }
+
+    // https://developer.github.com/v3/repos/contents/#get-contents
+    // TODO: be Task[Option[String]]
+    def getFileContent(repo: Repo, path: String, ref: String = "master"): Task[String] = {
+      client.getJson[GitHubTypes.Content](s"/repos/${repo.fullName}/contents/$path?ref=$ref").map {
+        content =>
+          content.fileContent.get
+      }
+    }
   }
 
 }

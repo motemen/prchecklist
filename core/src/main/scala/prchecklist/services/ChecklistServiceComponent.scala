@@ -1,11 +1,15 @@
 package prchecklist.services
 
-import prchecklist.infrastructure.DatabaseComponent
-import prchecklist.models._
+import prchecklist.infrastructure
+import prchecklist.services
+import prchecklist.repositories
+import prchecklist.models
+import prchecklist.models.GitHubTypes
+
+import org.slf4j.LoggerFactory
 
 import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
 import com.github.tarao.nonempty.NonEmpty
-import prchecklist.repositories.{RepoRepositoryComponent, GitHubRepositoryComponent}
 
 import slick.driver.PostgresDriver.api.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
@@ -14,8 +18,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.util.Success
 
 import scalaz.concurrent.Task
+import scalaz.-\/
 
 trait TaskFromFuture {
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,15 +29,26 @@ trait TaskFromFuture {
   protected def taskFromFuture[A](fut: Future[A]): Task[A] = Task { Await.result(fut, Duration.Inf) }
 }
 
+/**
+ * ChecklistServiceComponent is the main logic of prchecklist.
+ *
+ * TODO: separate the repository logic
+ */
 trait ChecklistServiceComponent {
-  self: DatabaseComponent with ModelsComponent
-  with RepoRepositoryComponent
-  with GitHubRepositoryComponent
-  =>
+  self: infrastructure.DatabaseComponent
+    with models.ModelsComponent
+    with services.SlackNotificationServiceComponent
+    with repositories.RepoRepositoryComponent
+    with repositories.GitHubRepositoryComponent
+    with repositories.ProjectConfigRepositoryComponent
+      =>
 
-  def checklistService: ChecklistService
+  class ChecklistService(githubAccessor: GitHubAccessible) extends SQLInterpolation with CompoundParameter with TaskFromFuture {
+    def logger = LoggerFactory.getLogger(getClass)
 
-  class ChecklistService extends SQLInterpolation with CompoundParameter with TaskFromFuture {
+    val githubRepository = self.githubRepository(githubAccessor)
+    val projectConfigRepository = self.projectConfigRepository(githubRepository)
+
     private def mergedPullRequests(commits: List[GitHubTypes.Commit]): Option[NonEmpty[PullRequestReference]] = {
       NonEmpty.fromTraversable {
         commits.flatMap {
@@ -63,63 +80,88 @@ trait ChecklistServiceComponent {
       }
     }
 
+    /**
+     * checkChecklist is the most important logic
+     */
     def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
+      // TODO: to "checklistRepo.ensureChecklistCheck"
+
       val db = getDatabase
 
       val q = sqlu"""
-      | UPDATE checks
-      | SET updated_at = NOW()
-      | WHERE checklist_id = ${checklist.id}
-      |   AND feature_pr_number = ${featurePRNumber}
-      |   AND user_login = ${checkerUser.login}
-    """.flatMap {
+        | UPDATE checks
+        | SET updated_at = NOW()
+        | WHERE checklist_id = ${checklist.id}
+        |   AND feature_pr_number = ${featurePRNumber}
+        |   AND user_login = ${checkerUser.login}
+      """.flatMap {
         updated =>
           if (updated == 0) {
             sqlu"""
-            | INSERT INTO checks
-            | (checklist_id, feature_pr_number, user_login, created_at)
-            | VALUES
-            | (${checklist.id}, ${featurePRNumber}, ${checkerUser.login}, NOW())
-          """.map(_ => ())
+              | INSERT INTO checks
+              | (checklist_id, feature_pr_number, user_login, created_at)
+              | VALUES
+              | (${checklist.id}, ${featurePRNumber}, ${checkerUser.login}, NOW())
+            """.map(_ => ())
           } else {
             DBIO.successful(())
           }
       }
 
-      db.run(q.transactionally)
+      // TODO: handle errors
+      val fut = db.run(q.transactionally)
+      fut.onSuccess {
+        case _ =>
+          val task = for {
+            config <- projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head")
+
+            sendNotifications <- Task.gatherUnordered(config.notification.channels.map {
+              case (name, ch) =>
+                val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
+                slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}""") // TODO: escape
+            }.toSeq)
+          } yield sendNotifications
+
+          task.attemptRun match {
+            case -\/(e) =>
+              logger.warn(s"Error while sending notification: $e")
+            case _ =>
+          }
+      }
+      fut
     }
 
     def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
       val db = getDatabase
 
       val q = sqlu"""
-      | DELETE FROM checks
-      | WHERE checklist_id = ${checklist.id}
-      |   AND feature_pr_number = ${featurePRNumber}
-      |   AND user_login = ${checkerUser.login}
-    """.map(_ => ())
+        | DELETE FROM checks
+        | WHERE checklist_id = ${checklist.id}
+        |   AND feature_pr_number = ${featurePRNumber}
+        |   AND user_login = ${checkerUser.login}
+      """.map(_ => ())
 
       db.run(q)
     }
 
     private def ensureChecklist(repo: Repo, number: Int, stage: String): DBIO[(Int, Boolean)] = {
       sql"""
-      | SELECT id
-      | FROM checklists
-      | WHERE github_repo_id = ${repo.id}
-      |   AND release_pr_number = ${number}
-      |   AND stage = ${stage}
-      | LIMIT 1
-    """.as[Int].map(_.headOption).flatMap {
+        | SELECT id
+        | FROM checklists
+        | WHERE github_repo_id = ${repo.id}
+        |   AND release_pr_number = ${number}
+        |   AND stage = ${stage}
+        | LIMIT 1
+      """.as[Int].map(_.headOption).flatMap {
         case Some(v) => DBIO.successful((v, false))
         case None =>
           sql"""
-          | INSERT INTO checklists
-          |   (github_repo_id, release_pr_number, stage)
-          | VALUES
-          |   (${repo.id}, ${number}, ${stage})
-          | RETURNING id
-        """.as[Int].head.map((_, true))
+            | INSERT INTO checklists
+            |   (github_repo_id, release_pr_number, stage)
+            | VALUES
+            |   (${repo.id}, ${number}, ${stage})
+            | RETURNING id
+          """.as[Int].head.map((_, true))
       }
     }
 
@@ -131,11 +173,11 @@ trait ChecklistServiceComponent {
 
         case Some(featurePRNumbers) =>
           sql"""
-          | SELECT feature_pr_number,user_login
-          | FROM checks
-          | WHERE checklist_id = ${checklistId}
-          |   AND feature_pr_number IN (${featurePRNumbers})
-        """.as[(Int, String)]
+            | SELECT feature_pr_number,user_login
+            | FROM checks
+            | WHERE checklist_id = ${checklistId}
+            |   AND feature_pr_number IN (${featurePRNumbers})
+          """.as[(Int, String)]
             .map {
               rows =>
                 val prNumberToUser: Map[Int, List[User]] =

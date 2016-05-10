@@ -43,6 +43,15 @@ trait HttpComponent {
       requestJson(httpReq)
     }
 
+    // FIXME too specific
+    def postJsonDiscardResult[P <: AnyRef](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, mfP: Manifest[P]): Task[Unit] = {
+      val httpReq = apply(url).postData(org.json4s.jackson.Serialization.write(payload))
+      doRequest(httpReq) {
+        is =>
+          ()
+      }
+    }
+
     def getJson[R](url: String)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Task[R] = {
       requestJson(apply(url))
     }

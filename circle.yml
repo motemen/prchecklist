@@ -1,6 +1,7 @@
 dependencies:
   override:
     - npm install
+    - sbt clean
     - sbt test:compile
 test:
   override:

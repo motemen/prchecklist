@@ -9,7 +9,7 @@
       div
         small
           a(href="/#{checklist.repo.fullName}") #{checklist.repo.fullName}
-        a(href={checklist.pullRequestUrl(checklist.pullRequest.number)})
+        a(href={checklist.pullRequestUrl})
           | ##{checklist.pullRequest.number.toString}
         | #{checklist.pullRequest.title}
         = if (checklist.stage.nonEmpty)
@@ -24,7 +24,7 @@
       = checklist.checks.map
         - case (nr, check) =>
           li(id="feature-#{nr.toString}" class={if (check.isChecked) "checked" else ""})
-            a.number(href={checklist.pullRequestUrl(nr)}) ##{nr.toString}
+            a.number(href={checklist.featurePullRequestUrl(nr)}) ##{nr.toString}
             span.title
               | #{check.pullRequest.title}
             .checkers-container
