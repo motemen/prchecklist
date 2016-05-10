@@ -99,8 +99,8 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
 
   // TODO: Check visibility
   // params: repoOwner, repoName
-  private def requireGitHubRepo(f: domain.Repo => Any): Any = {
-    domain.repoRepository.get(params('repoOwner), params('repoName)).run match {
+  private def requireGitHubRepo(repoOwner: String, repoName: String)(f: domain.Repo => Any): Any = {
+    domain.repoRepository.get(repoOwner, repoName).run match {
       case Some(repo) =>
         f(repo)
 
@@ -110,21 +110,20 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     }
   }
 
-  private def requireChecklist(f: (domain.Repo, domain.ReleaseChecklist) => Any): Any = {
-    requireGitHubRepo {
+  private def requireChecklist(repoOwner: String, repoName: String, pullRequestNumber: Int, stage: Option[String])(f: (domain.Repo, domain.ReleaseChecklist) => Any): Any = {
+    requireGitHubRepo(repoOwner, repoName) {
       repo =>
         // TODO: check visilibity
-        val stage = params.getOrElse('stage, "")
         val githubAccessor = getVisitor getOrElse repo.defaultUser
         val prWithCommits = domain.githubRepository(githubAccessor)
-          .getPullRequestWithCommits(repo, params('pullRequestNumber).toInt).run
-        val (checklist, _) = new domain.ChecklistService(githubAccessor).getChecklist(repo, prWithCommits, stage).run
+          .getPullRequestWithCommits(repo, pullRequestNumber).run
+        val (checklist, _) = new domain.ChecklistService(githubAccessor).getChecklist(repo, prWithCommits, stage getOrElse "").run
         f(repo, checklist)
     }
   }
 
   val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)") {
-    requireChecklist {
+    requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
       (repo, checklist) =>
         contentType = "text/html"
         layoutTemplate(
@@ -143,7 +142,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
 
     requireVisitor {
       visitor =>
-        requireChecklist {
+        requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
           (repo, checklist) =>
             new domain.ChecklistService(visitor).checkChecklist(checklist, visitor, featureNumber).run
             redirect(checklistPath(checklist, featureNumber).toString)
@@ -156,7 +155,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
 
     requireVisitor {
       visitor =>
-        requireChecklist {
+        requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
           (repo, checklist) =>
             new domain.ChecklistService(visitor).uncheckChecklist(checklist, visitor, featureNumber).run
             redirect(checklistPath(checklist, featureNumber).toString)
@@ -183,7 +182,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   }
 
   val viewRepo = get("/:repoOwner/:repoName") {
-    requireGitHubRepo {
+    requireGitHubRepo(params('repoOwner), params('repoName)) {
       repo =>
         contentType = "text/html"
         val pullRequests = domain.githubRepository(getVisitor getOrElse repo.defaultUser).listReleasePullRequests(repo).run
