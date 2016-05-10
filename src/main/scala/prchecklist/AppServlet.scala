@@ -2,6 +2,10 @@ package prchecklist
 
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
+import org.json4s
+import org.json4s._
+import org.json4s.jackson.Serialization
+
 import prchecklist.infrastructure.{ PostgresDatabaseComponent, DatabaseComponent, RedisComponent, GitHubHttpClientComponent }
 import prchecklist.models._
 import prchecklist.repositories._
@@ -51,6 +55,8 @@ class AppServlet extends AppServletBase {
 }
 
 trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport {
+  implicit val jsonFormats = json4s.jackson.Serialization.formats(json4s.NoTypeHints)
+
   import scala.language.implicitConversions
   implicit override def string2RouteMatcher(path: String): RouteMatcher = RailsPathPatternParser(path)
 
@@ -241,4 +247,37 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     serveStaticResource() getOrElse resourceNotFound()
   }
 
+  // TODO: checklist?repo=foo/bar&number=13&stage=qa
+  get("/-/checklist") {
+    requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
+      (repo, checklist) =>
+        Serialization.write(
+          views.Checklist.from(checklist)
+        )
+    }
+  }
+
+  put("/-/checklist/check") {
+    requireVisitor {
+      visitor =>
+        requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
+          (repo, checklist) =>
+            val featureNumber = params('featureNumber).toInt
+            new domain.ChecklistService(visitor).checkChecklist(checklist, visitor, featureNumber).run
+            Serialization.write(views.SuccessfulResult())
+        }
+    }
+  }
+
+  delete("/-/checklist/check") {
+    requireVisitor {
+      visitor =>
+        requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
+          (repo, checklist) =>
+            val featureNumber = params('featureNumber).toInt
+            new domain.ChecklistService(visitor).uncheckChecklist(checklist, visitor, featureNumber).run
+            Serialization.write(views.SuccessfulResult())
+        }
+    }
+  }
 }
