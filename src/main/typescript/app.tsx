@@ -30,7 +30,7 @@ const ChecklistPage = React.createClass<RouteComponentProps<{}, ChecklistPagePar
     const params: ChecklistPageParams = this.props.params;
     return (
       <div style={{ margin: `${Styles.Spacing.desktopGutter * 3}px ${Styles.Spacing.desktopGutter * 4}px`, maxWidth: 768 }}>
-        <ChecklistComponent repoOwner={this.props.params.repoOwner} repoName={this.props.params.repoName} pullRequestNumber={this.props.params.pullRequestNumber} />
+        <ChecklistComponent repoOwner={params.repoOwner} repoName={params.repoName} pullRequestNumber={params.pullRequestNumber} />
       </div>
     );
   }
