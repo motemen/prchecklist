@@ -8,23 +8,26 @@ val npmInstall = taskKey[Unit]("Run `npm install`")
 val npmRunBuild = taskKey[Seq[File]]("Run `npm run build`")
 val npmRunWatch = inputKey[Unit]("Run `npm run watch`")
 
+val commonSettings = Seq(
+  organization := "net.tokyoenvious",
+  scalaVersion := "2.11.7",
+  version := {
+    ("git describe --tags --match v* --dirty=-SNAPSHOT --always" !!) trim
+  },
+
+  scalacOptions ++= Seq(
+    "-unchecked",
+    "-deprecation",
+    "-feature"
+  ),
+
+  resolvers += Classpaths.typesafeReleases
+)
+
 lazy val core = (project in file("core")).
+  settings(commonSettings: _*).
   settings(
-    organization := "net.tokyoenvious",
     name := "prchecklist-core",
-    scalaVersion := "2.11.7",
-    version := {
-      ("git describe --tags --match v* --dirty=-SNAPSHOT --always" !!) trim
-    },
-
-    scalacOptions ++= Seq(
-      "-unchecked",
-      "-deprecation",
-      "-feature",
-      "-Ywarn-unused-import"
-    ),
-
-    resolvers += Classpaths.typesafeReleases,
 
     libraryDependencies ++= Seq(
       "org.scalaj" %% "scalaj-http" % "1.1.6",
@@ -52,22 +55,9 @@ lazy val root = (project in file(".")).
   settings(ScalatraPlugin.scalatraWithJRebel).
   settings(ScalatePlugin.scalateSettings).
   settings(SbtScalariform.scalariformSettings).
+  settings(commonSettings: _*).
   settings(
-    organization := "net.tokyoenvious",
     name := "prchecklist",
-    scalaVersion := "2.11.7",
-    version := {
-      ("git describe --tags --match v* --dirty=-SNAPSHOT --always" !!) trim
-    },
-
-    scalacOptions ++= Seq(
-      "-unchecked",
-      "-deprecation",
-      "-feature",
-      "-Ywarn-unused-import"
-    ),
-
-    resolvers += Classpaths.typesafeReleases,
 
     libraryDependencies ++= Seq(
       "org.scalatra" %% "scalatra" % "2.4.0",
@@ -97,9 +87,6 @@ lazy val root = (project in file(".")).
         )
       )
     }
-  ).
-  settings(
-    fork in Test := true
   ).
   settings(
     // sourceGenerators in Compile <+= buildInfo in Compile,
