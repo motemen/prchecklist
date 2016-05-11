@@ -53,7 +53,7 @@ lazy val root = (project in file(".")).
     BuildInfoPlugin,
     JavaAppPackaging
   ).
-  settings(ScalatraPlugin.scalatraWithJRebel).
+  settings(ScalatraPlugin.scalatraSettings).
   settings(ScalatePlugin.scalateSettings).
   settings(SbtScalariform.scalariformSettings).
   settings(commonSettings: _*).
