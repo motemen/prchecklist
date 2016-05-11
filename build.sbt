@@ -158,6 +158,6 @@ addCommandAlias("devel", Seq(
 watchSources ~= {
   _.filterNot {
     f =>
-      f.getName matches """.*\.(less|css(\.map)?)$"""
+      f.getName matches """.*\.(less|css(\.map)?|js)$"""
   }
 }
