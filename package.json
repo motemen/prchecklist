@@ -7,13 +7,26 @@
   "devDependencies": {
     "@motemen/exor": "0.0.2",
     "browser-sync": "^2.11.1",
+    "browserify": "^13.0.1",
     "gaze-cli": "^0.2.0",
     "less": "^2.5.3",
-    "npm-run-all": "^1.5.0"
+    "material-ui": "^0.14.4",
+    "npm-run-all": "^1.5.0",
+    "react": "^0.14.8",
+    "react-dom": "^0.14.8",
+    "react-router": "^2.4.0",
+    "react-tap-event-plugin": "^0.2.2",
+    "tsify": "^0.15.3",
+    "typescript": "^1.9.0-dev.20160510",
+    "typings": "^0.8.1",
+    "watchify": "^3.7.0"
   },
   "scripts": {
-    "build": "lessc --verbose --source-map src/main/less/*.less src/main/webapp/stylesheets/main.css",
-    "watch": "npm-run-all -p watch:less browser-sync:start",
+    "build": "npm-run-all -p build:less build:script",
+    "build:script": "browserify -v -p tsify src/main/typescript/app.tsx -o src/main/webapp/scripts/app.js",
+    "build:less": "lessc --verbose --source-map src/main/less/*.less src/main/webapp/stylesheets/main.css",
+    "watch": "npm-run-all -p watch:less watch:script browser-sync:start",
+    "watch:script": "watchify -v -p tsify src/main/typescript/app.tsx -o src/main/webapp/scripts/app.js",
     "watch:less": "gaze 'lessc --verbose --source-map src/main/less/*.less src/main/webapp/stylesheets/main.css' 'src/main/less/*.less'",
     "browser-sync:start": "browser-sync start --config bs-config.js",
     "browser-sync:reload": "browser-sync reload"
