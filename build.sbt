@@ -4,6 +4,7 @@ import com.typesafe.sbt.SbtScalariform
 import NativePackagerHelper._
 
 val stylesheetsDirectory = settingKey[File]("Directory where generated stylesheets are placed")
+val scriptsDirectory = settingKey[File]("Directory where generated script files are placed")
 val npmInstall = taskKey[Unit]("Run `npm install`")
 val npmRunBuild = taskKey[Seq[File]]("Run `npm run build`")
 val npmRunWatch = inputKey[Unit]("Run `npm run watch`")
@@ -120,7 +121,8 @@ lazy val root = (project in file(".")).
 
       Seq(
         stylesheetsDirectory.value / "main.css",
-        stylesheetsDirectory.value / "main.css.map"
+        stylesheetsDirectory.value / "main.css.map",
+        scriptsDirectory.value / "app.js"
       )
     },
 
@@ -141,11 +143,16 @@ lazy val root = (project in file(".")).
     // We could have used webappSrc key provided by xsbt-web-plugin,
     // but it is a TaskKey which a SettingKey cannot depend on.
     stylesheetsDirectory := (sourceDirectory in Compile).value / "webapp" / "stylesheets", /* src/main/webapp/stylesheets */
+    scriptsDirectory := (sourceDirectory in Compile).value / "webapp" / "scripts", /* src/main/webapp/scripts */
     resourceGenerators in Compile <+= npmRunBuild,
-    cleanFiles += stylesheetsDirectory.value,
+    cleanFiles ++= Seq(stylesheetsDirectory.value, scriptsDirectory.value),
     mappings in Universal <++= (stylesheetsDirectory, baseDirectory, resources in Compile) map {
       (stylesheetsDirectory, baseDirectory, _) =>
         stylesheetsDirectory.*** x relativeTo(baseDirectory)
+    },
+    mappings in Universal <++= (scriptsDirectory, baseDirectory, resources in Compile) map {
+      (scriptsDirectory, baseDirectory, _) =>
+        scriptsDirectory.*** x relativeTo(baseDirectory)
     }
  )
 
