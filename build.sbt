@@ -157,7 +157,7 @@ lazy val root = (project in file(".")).
     stylesheetsDirectory := (sourceDirectory in Compile).value / "webapp" / "stylesheets", /* src/main/webapp/stylesheets */
     scriptsDirectory := (sourceDirectory in Compile).value / "webapp" / "scripts", /* src/main/webapp/scripts */
     resourceGenerators in Compile <+= npmRunBuild.map(_.toSeq),
-    cleanFiles ++= Seq(stylesheetsDirectory.value, scriptsDirectory.value),
+    cleanFiles ++= Seq(stylesheetsDirectory.value, scriptsDirectory.value / "app.js"),
     mappings in Universal <++= (stylesheetsDirectory, baseDirectory, resources in Compile) map {
       (stylesheetsDirectory, baseDirectory, _) =>
         stylesheetsDirectory.*** x relativeTo(baseDirectory)

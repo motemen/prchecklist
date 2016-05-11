@@ -77,8 +77,9 @@ module API {
 export const ChecklistComponent = React.createClass<ChecklistComponentProps, ChecklistComponentState>({
   _handleCheck(check: Check, i: number) {
     return (e, isChecked) => {
-      let updateChecklist = isChecked ? API.uncheckChecklist : API.checkChecklist;
+      let updateChecklist = isChecked ? API.checkChecklist : API.uncheckChecklist;
       updateChecklist(this.state.checklist, check.number).then(checklist => {
+        console.log(checklist);
         this.setState({ checklist: checklist })
       });
     };
@@ -106,7 +107,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           <h2>
             <small>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
           </h2>
-          <div style={{ textAlign: 'center' }}><CircularProgress /></div>
+          <div style={{ textAlign: 'center', marginTop: 192 }}><CircularProgress /></div>
         </section>
       );
     }
@@ -119,17 +120,21 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
         <h1>
           {this.state.checklist.pullRequest.title}
         </h1>
-        <pre>{this.state.checklist.pullRequest.body}</pre>
+        <pre style={{ padding: 16, backgroundColor: '#F3F3F3' }}>{this.state.checklist.pullRequest.body}</pre>
+        <Paper>
         <List>
         {
           this.state.checklist.checks.map((check: Check, i: number) => (
             <ListItem leftCheckbox={<Checkbox disabled={this.state.checkLoading[i]} defaultChecked={check.checked} onCheck={this._handleCheck(check, i)} />} >
-                #{check.number} {check.title}
-                {check.users.map(user => <Avatar src={user.avatarUrl} size={16} style={{ verticalAlign: 'middle' }} />)}
+              #{check.number} {check.title}
+              <div style={{ position: 'absolute', right: 32, top: 8 }}>
+                {check.users.map(user => <Avatar src={user.avatarUrl} size={32} />)}
+              </div>
             </ListItem>
           ))
         }
         </List>
+        </Paper>
       </section>
     );
   }

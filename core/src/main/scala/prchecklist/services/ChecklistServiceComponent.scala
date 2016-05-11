@@ -62,13 +62,11 @@ trait ChecklistServiceComponent {
     }
 
     // Load checklist with fresh checks
-    def getChecklist(checklist: ReleaseChecklist) = taskFromFuture {
-      val db = getDatabase
-      val q = for {
-        checks <- queryChecklistChecks(checklist.id, NonEmpty.fromTraversable(checklist.featurePullRequests).get)
-      } yield checklist.copy(checks = checks)
-
-      db.run(q.transactionally)
+    def getChecklist(checklist: ReleaseChecklist): Future[ReleaseChecklist] = {
+      checklistRepository.getCheckFromChecklist(checklist).map {
+        checks =>
+          checklist.copy(checks = checks)
+      }
     }
 
     /**
