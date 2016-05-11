@@ -2,7 +2,7 @@ package prchecklist.services
 
 import prchecklist.utils
 
-import scalaz.concurrent.Task
+import scala.concurrent.Future
 
 case class SlackMessage(text: String)
 
@@ -15,7 +15,7 @@ trait SlackNotificationServiceComponent {
   this: utils.HttpComponent =>
 
   object slackNotificationService {
-    def send(url: String, text: String): Task[Unit] = {
+    def send(url: String, text: String): Future[Unit] = {
       http.postJsonDiscardResult(url, SlackMessage(text))
     }
   }

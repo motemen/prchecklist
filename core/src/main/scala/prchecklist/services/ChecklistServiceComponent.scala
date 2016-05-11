@@ -14,20 +14,11 @@ import com.github.tarao.nonempty.NonEmpty
 import slick.driver.PostgresDriver.api.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.Success
-
-import scalaz.concurrent.Task
-import scalaz.-\/
-
-trait TaskFromFuture {
-  import scala.concurrent.ExecutionContext.Implicits.global
-
-  protected def taskFromFuture[A](fut: Future[A]): Task[A] = Task { Await.result(fut, Duration.Inf) }
-}
 
 /**
  * ChecklistServiceComponent is the main logic of prchecklist.
@@ -43,7 +34,7 @@ trait ChecklistServiceComponent {
     with repositories.ProjectConfigRepositoryComponent
       =>
 
-  class ChecklistService(githubAccessor: GitHubAccessible) extends SQLInterpolation with CompoundParameter with TaskFromFuture {
+  class ChecklistService(githubAccessor: GitHubAccessible) extends SQLInterpolation with CompoundParameter {
     def logger = LoggerFactory.getLogger(getClass)
 
     val githubRepository = self.githubRepository(githubAccessor)
@@ -60,7 +51,7 @@ trait ChecklistServiceComponent {
       }
     }
 
-    def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Task[(ReleaseChecklist, Boolean)] = taskFromFuture {
+    def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Future[(ReleaseChecklist, Boolean)] = {
       val db = getDatabase
 
       // repo = repoRepository.get(repoOwner, repoName)
@@ -83,7 +74,7 @@ trait ChecklistServiceComponent {
     /**
      * checkChecklist is the most important logic
      */
-    def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
+    def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
       // TODO: to "checklistRepo.ensureChecklistCheck"
 
       val db = getDatabase
@@ -115,23 +106,22 @@ trait ChecklistServiceComponent {
           val task = for {
             config <- projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head")
 
-            sendNotifications <- Task.gatherUnordered(config.notification.channels.map {
+            sendNotifications <- Future.traverse(config.notification.channels) {
               case (name, ch) =>
                 val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
                 slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}""") // TODO: escape
-            }.toSeq)
+            }
           } yield sendNotifications
 
-          task.attemptRun match {
-            case -\/(e) =>
+          task onFailure {
+            case e =>
               logger.warn(s"Error while sending notification: $e")
-            case _ =>
           }
       }
       fut
     }
 
-    def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Task[Unit] = taskFromFuture {
+    def uncheckChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
       val db = getDatabase
 
       val q = sqlu"""

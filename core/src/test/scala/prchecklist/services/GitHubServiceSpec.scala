@@ -10,8 +10,10 @@ import prchecklist.models._
 import prchecklist.repositories.GitHubRepositoryComponent
 import prchecklist.test._
 import prchecklist.utils._
+import prchecklist.utils.RunnableFuture
 
-import scalaz.concurrent.Task
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
     with GitHubRepositoryComponent
@@ -32,13 +34,13 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
 
     when(
       mockedClient.getJson[GitHubTypes.PullRequest]("/repos/test-owner/test-name/pulls/47")
-    ) thenReturn Task {
+    ) thenReturn Future {
         Factory.createGitHubPullRequest.copy(commits = 0)
       }
 
     when(
       mockedClient.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=1")
-    ) thenReturn Task {
+    ) thenReturn Future {
         List()
       }
 
@@ -55,13 +57,13 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
 
     when(
       mockedClient.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=1")
-    ) thenReturn Task {
+    ) thenReturn Future {
         (1 to 100).map { _ => Factory.createGitHubCommit }.toList
       }
 
     when(
       mockedClient.getJson[List[GitHubTypes.Commit]]("/repos/test-owner/test-name/commits?sha=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&per_page=100&page=2")
-    ) thenReturn Task {
+    ) thenReturn Future {
         (1 to 10).map { _ => Factory.createGitHubCommit }.toList
       }
 

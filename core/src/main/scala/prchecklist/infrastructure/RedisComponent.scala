@@ -12,8 +12,8 @@ import org.json4s.jackson.JsonMethods
 import com.redis.RedisClient
 import com.redis.serialization.{ Format => RedisFormat, Parse => RedisParse }
 
-import scalaz.Monad
-import scalaz.syntax.monad._ // M.map(v) => v.map
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.language.higherKinds
 
@@ -28,19 +28,19 @@ trait RedisComponent {
       b => JsonMethods.parse(new ByteArrayInputStream(b)).extract[A]
     }
 
-    def getOrUpdate[A <: AnyRef, M[_]](key: String, expireIn: scala.concurrent.duration.Duration)(ifNotFound: => M[(A, Boolean)])(implicit M: Monad[M], rf: RedisFormat, jf: JsonFormats = json4s.jackson.Serialization.formats(json4s.NoTypeHints), mf: Manifest[A]): M[A] = {
+    def getOrUpdate[A <: AnyRef](key: String, expireIn: scala.concurrent.duration.Duration)(ifNotFound: => Future[(A, Boolean)])(implicit rf: RedisFormat, jf: JsonFormats = json4s.jackson.Serialization.formats(json4s.NoTypeHints), mf: Manifest[A]): Future[A] = {
       val redis = mkRedis()
-        redis.get[A](key) match {
-          case Some(v) =>
-            M.pure(v)
+      redis.get[A](key) match {
+        case Some(v) =>
+          Future.successful(v)
 
-            case None =>
-            ifNotFound.map {
-              case (v, ok) =>
-                if (ok) redis.setex(key, expireIn.toSeconds, json4s.jackson.Serialization.write(v))
-                  v
-            }
-        }
+        case None =>
+          ifNotFound.map {
+            case (v, ok) =>
+              if (ok) redis.setex(key, expireIn.toSeconds, json4s.jackson.Serialization.write(v))
+                v
+          }
+      }
     }
 
     private def mkRedis(): RedisClient = {

@@ -3,9 +3,10 @@ package prchecklist.repositories
 import prchecklist.infrastructure.{RedisComponent, GitHubHttpClientComponent}
 import prchecklist.models.{GitHubTypes, ModelsComponent}
 
-import scalaz.concurrent.Task
-
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+
 import scala.language.postfixOps
 
 trait GitHubRepositoryComponent {
@@ -19,12 +20,12 @@ trait GitHubRepositoryComponent {
     def client: GitHubHttpClient
 
     // https://developer.github.com/v3/repos/#get
-    def getRepo(owner: String, name: String): Task[GitHubTypes.Repo] = {
+    def getRepo(owner: String, name: String): Future[GitHubTypes.Repo] = {
       client.getJson[GitHubTypes.Repo](s"/repos/$owner/$name")
     }
 
     // https://developer.github.com/v3/issues/comments/#create-a-comment
-    def addIssueComment(repoFullName: String, issueNumber: Int, body: String): Task[Unit] = {
+    def addIssueComment(repoFullName: String, issueNumber: Int, body: String): Future[Unit] = {
       client.postJson(
         s"/repos/$repoFullName/issues/$issueNumber/comments",
         GitHubTypes.IssueComment(body)
@@ -32,14 +33,14 @@ trait GitHubRepositoryComponent {
     }
 
     // https://developer.github.com/v3/repos/statuses/#create-a-status
-    def setCommitStatus(repoFullName: String, sha: String, status: GitHubTypes.CommitStatus): Task[Unit] = {
+    def setCommitStatus(repoFullName: String, sha: String, status: GitHubTypes.CommitStatus): Future[Unit] = {
       client.postJson(
         s"/repos/$repoFullName/statuses/$sha",
         status
       )
     }
 
-    def getPullRequestWithCommits(repo: Repo, number: Int): Task[GitHubTypes.PullRequestWithCommits] = {
+    def getPullRequestWithCommits(repo: Repo, number: Int): Future[GitHubTypes.PullRequestWithCommits] = {
       redis.getOrUpdate(s"pull:${repo.fullName}:$number", 30 seconds) {
         for {
           pr <- client.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
@@ -50,7 +51,7 @@ trait GitHubRepositoryComponent {
 
     // https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
     // https://developer.github.com/v3/repos/commits/#list-commits-on-a-repository
-    def getPullRequestCommitsPaged(repo: Repo, pullRequest: GitHubTypes.PullRequest, allCommits: List[GitHubTypes.Commit] = List(), page: Int = 1): Task[List[GitHubTypes.Commit]] = {
+    def getPullRequestCommitsPaged(repo: Repo, pullRequest: GitHubTypes.PullRequest, allCommits: List[GitHubTypes.Commit] = List(), page: Int = 1): Future[List[GitHubTypes.Commit]] = {
       // The document says "Note: The response includes a maximum of 250 commits"
       // but apparently it returns only 100 commits at maximum
       val commitsPerPage = 100
@@ -65,18 +66,18 @@ trait GitHubRepositoryComponent {
           if (commits.length < pullRequest.commits) {
             getPullRequestCommitsPaged(repo, pullRequest, commits, page + 1)
           } else {
-            Task { commits }
+            Future { commits }
           }
       }
     }
 
-    def listReleasePullRequests(repo: Repo): Task[List[GitHubTypes.PullRequestRef]] = {
+    def listReleasePullRequests(repo: Repo): Future[List[GitHubTypes.PullRequestRef]] = {
       client.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
     }
 
     // https://developer.github.com/v3/repos/contents/#get-contents
-    // TODO: be Task[Option[String]]
-    def getFileContent(repo: Repo, path: String, ref: String = "master"): Task[String] = {
+    // TODO: be Future[Option[String]]
+    def getFileContent(repo: Repo, path: String, ref: String = "master"): Future[String] = {
       client.getJson[GitHubTypes.Content](s"/repos/${repo.fullName}/contents/$path?ref=$ref").map {
         content =>
           content.fileContent.get

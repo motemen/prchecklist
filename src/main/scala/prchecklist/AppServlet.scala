@@ -8,7 +8,13 @@ import prchecklist.repositories._
 import prchecklist.services._
 import prchecklist.utils.AppConfigFromEnv
 import prchecklist.utils.UriStringContext._
+import prchecklist.utils.RunnableFuture
 import prchecklist.views.Helper
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 trait Domain
   extends GitHubConfig

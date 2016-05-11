@@ -10,8 +10,10 @@ import prchecklist.models._
 import prchecklist.services._
 import prchecklist.test._
 import prchecklist.{ AppServletBase, Domain }
+import prchecklist.utils.RunnableFuture
 
-import scalaz.concurrent.Task
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with mock.MockitoSugar with WithTestDatabase {
   override protected def withResponse[A](res: ClientResponse)(f: => A): A = super.withResponse(res) {
@@ -31,15 +33,15 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       val repository = mock[GitHubRepository]
 
       when(repository.getRepo("test-owner", "test-name"))
-        .thenReturn(Task{ GitHubTypes.Repo("test-owner/test-name", false) })
+        .thenReturn(Future{ GitHubTypes.Repo("test-owner/test-name", false) })
 
       when(repository.getRepo("motemen", "test-repository"))
-        .thenReturn(Task{ GitHubTypes.Repo("motemen/test-repository", false) })
+        .thenReturn(Future{ GitHubTypes.Repo("motemen/test-repository", false) })
 
       when {
         repository.getPullRequestWithCommits(any(), any())
       } thenReturn {
-        Task {
+        Future {
           GitHubTypes.PullRequestWithCommits(
             pullRequest = GitHubTypes.PullRequest(
               number = 2,
@@ -71,7 +73,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       when {
         repository.listReleasePullRequests(any())
       } thenReturn {
-        Task {
+        Future {
           List(
             GitHubTypes.PullRequestRef(
               number = 100,
@@ -94,7 +96,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       when {
         repository.getFileContent(any(), any(), any())
       } thenReturn {
-        Task.fail(new Error("getFileContent: mock"))
+        Future.failed(new Error("getFileContent: mock"))
       }
 
       repository
@@ -105,7 +107,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
       def stubJson[A](url: String, data: A) {
         when(client.getJson[A](matchEq(url))(any(), any()))
-          .thenReturn(Task { data })
+          .thenReturn(Future { data })
       }
 
       val repo = GitHubTypes.Repo(fullName = "motemen/test-repository", `private` = false)

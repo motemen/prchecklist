@@ -5,7 +5,8 @@ import prchecklist.infrastructure.GitHubHttpClientComponent
 import prchecklist.models._
 import prchecklist.utils.UriStringContext._
 
-import scalaz.concurrent.Task
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait GitHubAuthServiceComponent {
   self: GitHubConfig with ModelsComponent with GitHubHttpClientComponent =>
@@ -20,8 +21,8 @@ trait GitHubAuthServiceComponent {
       uri"$githubOrigin/login/oauth/authorize?client_id=$githubClientId&redirect_uri=$redirectURI".toString
     }
 
-    def authorize(code: String): Task[Visitor] = {
-      Task {
+    def authorize(code: String): Future[Visitor] = {
+      Future {
         val accessTokenRes = http(
           s"https://$githubDomain/login/oauth/access_token"
         ).postForm(Seq(

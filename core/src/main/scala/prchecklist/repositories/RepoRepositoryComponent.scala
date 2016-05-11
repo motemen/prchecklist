@@ -3,28 +3,26 @@ package prchecklist.repositories
 import com.github.tarao.slickjdbc.interpolation.SQLInterpolation
 import prchecklist.infrastructure.DatabaseComponent
 import prchecklist.models.{GitHubTypes, ModelsComponent}
-import prchecklist.services.TaskFromFuture
 
 import slick.dbio.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods // q.transactionally
 
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import scalaz.concurrent.Task
 
 trait RepoRepositoryComponent {
   self: DatabaseComponent with ModelsComponent =>
 
   def repoRepository: RepoRepository
 
-  class RepoRepository extends SQLInterpolation with TaskFromFuture {
+  class RepoRepository extends SQLInterpolation {
 
-    def get(owner: String, name: String): Task[Option[Repo]] = taskFromFuture {
+    def get(owner: String, name: String): Future[Option[Repo]] = {
       val db = getDatabase
       db.run(getQuery(owner, name))
     }
 
-    def create(githubRepo: GitHubTypes.Repo, defaultAccessToken: String): Task[(Repo, Boolean)] = taskFromFuture {
+    def create(githubRepo: GitHubTypes.Repo, defaultAccessToken: String): Future[(Repo, Boolean)] = {
       val db = getDatabase
 
       val (owner, name) = (githubRepo.owner, githubRepo.name)
@@ -50,7 +48,7 @@ trait RepoRepositoryComponent {
 
     // TODO: visibility
     // TODO: paging
-    def list(): Task[List[Repo]] = taskFromFuture {
+    def list(): Future[List[Repo]] = {
       val db = getDatabase
 
       val q = sql"""

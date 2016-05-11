@@ -7,7 +7,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 
-import scalaz.concurrent.Task
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Represents project.yml
@@ -39,13 +40,13 @@ trait ProjectConfigRepositoryComponent {
   trait ProjectConfigRepository {
     def github: GitHubRepository
 
-    def parseProjectConfig(source: String): Task[ProjectConfig] = {
+    def parseProjectConfig(source: String): Future[ProjectConfig] = {
       val mapper = new ObjectMapper(new YAMLFactory) with ScalaObjectMapper
       mapper.registerModule(DefaultScalaModule)
-      Task { mapper.readValue[ProjectConfig](source) }
+      Future { mapper.readValue[ProjectConfig](source) }
     }
 
-    def loadProjectConfig(repo: Repo, ref: String): Task[ProjectConfig] = {
+    def loadProjectConfig(repo: Repo, ref: String): Future[ProjectConfig] = {
       for {
         yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
         conf <- parseProjectConfig(yaml)
