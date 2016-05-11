@@ -247,36 +247,54 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     serveStaticResource() getOrElse resourceNotFound()
   }
 
+  get("/scripts/*.js") {
+    contentType = null
+    serveStaticResource() getOrElse resourceNotFound()
+  }
+
+  get("/-/") {
+    contentType = "text/html"
+    layoutTemplate("/WEB-INF/templates/views/app.jade", "layout" -> "")
+  }
+
+  get("/-/:repoOwner/:repoName/pull/:pullRequestNumber") {
+    contentType = "text/html"
+    layoutTemplate("/WEB-INF/templates/views/app.jade", "layout" -> "")
+  }
+
   // TODO: checklist?repo=foo/bar&number=13&stage=qa
   get("/-/checklist") {
     requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
       (repo, checklist) =>
-        Serialization.write(
-          views.Checklist.from(checklist)
-        )
+        Serialization.write(views.Checklist.create(checklist, getVisitor))
     }
   }
 
-  put("/-/checklist/check") {
+  post("/-/checklist/check") {
+    println(params)
     requireVisitor {
       visitor =>
         requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
           (repo, checklist) =>
             val featureNumber = params('featureNumber).toInt
-            new domain.ChecklistService(visitor).checkChecklist(checklist, visitor, featureNumber).run
-            Serialization.write(views.SuccessfulResult())
+            val checklistService = new domain.ChecklistService(visitor)
+            checklistService.checkChecklist(checklist, visitor, featureNumber).run
+            val updatedChecklist = checklistService.getChecklist(checklist).run
+            Serialization.write(views.Checklist.create(updatedChecklist, getVisitor))
         }
     }
   }
 
-  delete("/-/checklist/check") {
+  post("/-/checklist/uncheck") {
     requireVisitor {
       visitor =>
         requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
           (repo, checklist) =>
             val featureNumber = params('featureNumber).toInt
-            new domain.ChecklistService(visitor).uncheckChecklist(checklist, visitor, featureNumber).run
-            Serialization.write(views.SuccessfulResult())
+            val checklistService = new domain.ChecklistService(visitor)
+            checklistService.uncheckChecklist(checklist, visitor, featureNumber).run
+            val updatedChecklist = checklistService.getChecklist(checklist).run
+            Serialization.write(views.Checklist.create(updatedChecklist, getVisitor))
         }
     }
   }
