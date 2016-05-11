@@ -26,6 +26,7 @@ trait Domain
   with GitHubRepositoryComponent
   with RepoRepositoryComponent
   with ProjectConfigRepositoryComponent
+  with ChecklistRepositoryComponent
   // model
   with ModelsComponent
   // service
@@ -35,6 +36,8 @@ trait Domain
 
 object RealDomain extends Domain with AppConfigFromEnv with PostgresDatabaseComponent {
   override val repoRepository = new RepoRepository
+
+  override val checklistRepository = new ChecklistRepository
 
   override val githubAuthService = new GitHubAuthService
 

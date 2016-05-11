@@ -30,11 +30,14 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     with GitHubHttpClientComponent
     with RedisComponent
     with GitHubConfig
+    with ChecklistRepositoryComponent
     {
 
   val githubAccessor = Visitor(login = "test", accessToken = "")
 
   def repoRepository = new RepoRepository
+
+  def checklistRepository = new ChecklistRepository
 
   override def githubRepository(githubAccessor: GitHubAccessible) = {
     val githubRepository = mock[GitHubRepository]
