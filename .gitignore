@@ -1,6 +1,8 @@
 /local.sbt
 
 /src/main/webapp/stylesheets/
+/src/main/webapp/scripts/
+/typings/
 
 ## generic files to ignore
 *~
