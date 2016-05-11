@@ -23,6 +23,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   object TestDomain extends Domain with TestAppConfig with PostgresDatabaseComponent {
     override val repoRepository = new RepoRepository
 
+    override val checklistRepository = new ChecklistRepository
+
     override val githubAuthService = new GitHubAuthService
 
     override val redis = new Redis
