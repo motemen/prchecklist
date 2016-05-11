@@ -25,13 +25,10 @@ lazy val core = (project in file("core")).
     ),
 
     resolvers += Classpaths.typesafeReleases,
-    resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
 
     libraryDependencies ++= Seq(
       "org.scalaj" %% "scalaj-http" % "1.1.6",
       "org.json4s" %% "json4s-jackson" % "3.3.0",
-      "org.scalaz" %% "scalaz-core" % "7.1.4",
-      "org.scalaz" %% "scalaz-concurrent" % "7.1.4",
       "com.typesafe.slick" %% "slick" % "3.0.0",
       "org.postgresql" % "postgresql" % "9.4.1207",
       "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
@@ -71,7 +68,6 @@ lazy val root = (project in file(".")).
     ),
 
     resolvers += Classpaths.typesafeReleases,
-    resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
 
     libraryDependencies ++= Seq(
       "org.scalatra" %% "scalatra" % "2.4.0",
@@ -81,8 +77,6 @@ lazy val root = (project in file(".")).
       "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container;compile",
       "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
       "org.json4s" %% "json4s-jackson" % "3.3.0",
-      "org.scalaz" %% "scalaz-core" % "7.1.4",
-      "org.scalaz" %% "scalaz-concurrent" % "7.1.4",
       "org.pegdown" % "pegdown" % "1.6.0",
       "org.mockito" % "mockito-core" % "2.0.36-beta" % "test"
     )
