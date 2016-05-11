@@ -1,6 +1,5 @@
 package prchecklist.services
 
-import prchecklist.infrastructure
 import prchecklist.services
 import prchecklist.repositories
 import prchecklist.models
@@ -17,8 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
  * ChecklistServiceComponent is the main logic of prchecklist.
  */
 trait ChecklistServiceComponent {
-  self: infrastructure.DatabaseComponent
-    with models.ModelsComponent
+  self: models.ModelsComponent
     with services.SlackNotificationServiceComponent
     with repositories.RepoRepositoryComponent
     with repositories.GitHubRepositoryComponent
@@ -44,8 +42,6 @@ trait ChecklistServiceComponent {
     }
 
     def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Future[(ReleaseChecklist, Boolean)] = {
-      val db = getDatabase
-
       // repo = repoRepository.get(repoOwner, repoName)
       // prWithCommits = githubRepository.getPullRequestWithCommits(repo, prNumber)
 
