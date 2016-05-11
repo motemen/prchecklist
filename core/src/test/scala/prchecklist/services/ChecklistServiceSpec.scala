@@ -4,6 +4,7 @@ import prchecklist.infrastructure._
 import prchecklist.models._
 import prchecklist.repositories._
 import prchecklist.test._
+import prchecklist.utils.RunnableFuture
 
 import com.github.tarao.nonempty.NonEmpty
 
@@ -13,10 +14,8 @@ import org.scalatest.mock._
 import org.mockito.Mockito._
 import org.mockito.Matchers._
 
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ Future, Await }
-import scala.concurrent.duration.Duration
-import scalaz.concurrent.Task
 
 class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with MockitoSugar with concurrent.ScalaFutures
     with WithTestDatabase
@@ -43,7 +42,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     when {
       githubRepository.getFileContent(any(), any(), any())
     } thenReturn {
-      Task.fail(new Error("getFileContent: mock"))
+      Future.failed(new Error("getFileContent: mock"))
     }
 
     githubRepository

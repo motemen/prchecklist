@@ -31,6 +31,5 @@ $ ./sbt
 
 == TODO
 
-* Unify interfaces to scala Futures and scalaz Tasks.
 * Repo visibility
 * UI

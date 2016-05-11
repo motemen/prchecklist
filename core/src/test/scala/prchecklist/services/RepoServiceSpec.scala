@@ -2,6 +2,7 @@ package prchecklist.services
 
 import prchecklist.infrastructure.PostgresDatabaseComponent
 import prchecklist.repositories.RepoRepositoryComponent
+import prchecklist.utils.RunnableFuture
 import prchecklist.test._
 import prchecklist.models._
 

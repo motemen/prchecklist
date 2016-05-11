@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory
 import scalaj.http.HttpOptions.HttpOption
 import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
 
-import scalaz.concurrent.Task
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.io.InputStream
 
@@ -38,13 +39,13 @@ trait HttpComponent {
       Map.empty
     }
 
-    def postJson[P <: AnyRef, R](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, mfP: Manifest[P], mfR: Manifest[R]): Task[R] = {
+    def postJson[P <: AnyRef, R](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, mfP: Manifest[P], mfR: Manifest[R]): Future[R] = {
       val httpReq = apply(url).postData(org.json4s.jackson.Serialization.write(payload))
       requestJson(httpReq)
     }
 
     // FIXME too specific
-    def postJsonDiscardResult[P <: AnyRef](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, mfP: Manifest[P]): Task[Unit] = {
+    def postJsonDiscardResult[P <: AnyRef](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, mfP: Manifest[P]): Future[Unit] = {
       val httpReq = apply(url).postData(org.json4s.jackson.Serialization.write(payload))
       doRequest(httpReq) {
         is =>
@@ -52,21 +53,21 @@ trait HttpComponent {
       }
     }
 
-    def getJson[R](url: String)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Task[R] = {
+    def getJson[R](url: String)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Future[R] = {
       requestJson(apply(url))
     }
 
-    protected def requestJson[R](req: HttpRequest)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Task[R] = {
+    protected def requestJson[R](req: HttpRequest)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Future[R] = {
       doRequest(req) {
         is =>
           JsonMethods.parse(is).camelizeKeys.extract[R]
       }
     }
 
-    protected def doRequest[A](httpReq: HttpRequest)(parser: InputStream => A): Task[A] = {
+    protected def doRequest[A](httpReq: HttpRequest)(parser: InputStream => A): Future[A] = {
       logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
-      Task {
+      Future {
         val httpRes = httpReq.exec {
           case (code, headers, is) =>
             // https://developer.github.com/v3/#rate-limiting
