@@ -1,6 +1,9 @@
 import * as React       from 'react';
 import * as ReactDOM    from 'react-dom';
 import { Router, Route, RouteComponentProps, Link, browserHistory }  from 'react-router'
+import * as injectTapEventPlugin from 'react-tap-event-plugin';
+
+injectTapEventPlugin();
 
 import {Styles} from 'material-ui';
 

@@ -82,6 +82,12 @@ module API {
       res => res.json<User>()
     );
   }
+
+  export function registerRepo(repoOwner: string, repoName: string): Promise<any> {
+    return fetch('/-/repos', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `repoOwner=${repoOwner}&repoName=${repoName}` }).then(
+      res => res.json()
+    );
+  }
 }
 
 export const ChecklistComponent = React.createClass<ChecklistComponentProps, ChecklistComponentState>({
@@ -93,6 +99,10 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
         this.setState({ checklist: checklist })
       });
     };
+  },
+
+  _handleRegisterTap() {
+    API.registerRepo(this.props.repoOwner, this.props.repoName).then(() => location.reload());
   },
 
   componentWillMount() {
@@ -121,7 +131,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
             <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
           </h2>
           <p>Repository {this.props.repoOwner}/{this.props.repoName} has not been registered yet.</p>
-          <RaisedButton label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using (WIP)
+          <RaisedButton onTouchTap={this._handleRegisterTap} label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using
         </section>
       );
     }
