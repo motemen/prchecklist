@@ -5,4 +5,4 @@ set -e
 bin="$(basename "$0")"
 base="$(cd "$(dirname "$0")" && cd ../../.. && pwd)"
 
-exec docker run $DOCKER_RUN_OPTS --rm -v "$base":/usr/src/app -w /usr/src/app node:5 "$bin" "$@"
+exec docker run $DOCKER_RUN_OPTS --rm -v "$base":/usr/src/app -w /usr/src/app node:4 "$bin" "$@"
