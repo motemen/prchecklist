@@ -41,6 +41,7 @@ interface ChecklistComponentProps {
   repoOwner:         string;
   repoName:          string;
   pullRequestNumber: number;
+  stage:             string;
 }
 
 interface ChecklistComponentState {
@@ -71,7 +72,7 @@ module API {
     return updateChecklist('uncheck', checklist, featureNumber);
   }
 
-  export function fetchChecklist(repoOwner: string, repoName: string, pullRequestNumber: number, stage: string = ""): Promise<Checklist> {
+  export function fetchChecklist(repoOwner: string, repoName: string, pullRequestNumber: number, stage: string): Promise<Checklist> {
     return fetch(`/-/checklist?repoOwner=${repoOwner}&repoName=${repoName}&pullRequestNumber=${pullRequestNumber}&stage=${stage}`, { credentials: 'same-origin' }).then(
       res => res.json<Checklist>()
     );
@@ -107,7 +108,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
 
   componentWillMount() {
     const props: ChecklistComponentProps = this.props;
-    API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber)
+    API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber, props.stage)
       .then((checklist) => {
         this.setState({ checklist: checklist });
       })
