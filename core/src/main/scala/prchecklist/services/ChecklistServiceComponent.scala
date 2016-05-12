@@ -61,6 +61,14 @@ trait ChecklistServiceComponent {
       }
     }
 
+    // Load checklist with fresh checks
+    def getChecklist(checklist: ReleaseChecklist): Future[ReleaseChecklist] = {
+      checklistRepository.getCheckFromChecklist(checklist).map {
+        checks =>
+          checklist.copy(checks = checks)
+      }
+    }
+
     /**
      * checkChecklist is the most important logic
      */

@@ -282,4 +282,20 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       */
     }
   }
+
+  test("json: checklist") {
+    session {
+      put("/@user?login=test-user") {
+        status should equal (200)
+      }
+
+      get("/-/checklist?repoOwner=motemen&repoName=test-repository&pullRequestNumber=2") {
+        status should equal (200)
+      }
+
+      post("/-/checklist/check?repoOwner=motemen&repoName=test-repository&pullRequestNumber=2&featureNumber=1") {
+        status should equal (200)
+      }
+    }
+  }
 }

@@ -4,8 +4,9 @@ import com.typesafe.sbt.SbtScalariform
 import NativePackagerHelper._
 
 val stylesheetsDirectory = settingKey[File]("Directory where generated stylesheets are placed")
+val scriptsDirectory = settingKey[File]("Directory where generated script files are placed")
 val npmInstall = taskKey[Unit]("Run `npm install`")
-val npmRunBuild = taskKey[Seq[File]]("Run `npm run build`")
+val npmRunBuild = taskKey[Set[File]]("Run `npm run build`")
 val npmRunWatch = inputKey[Unit]("Run `npm run watch`")
 
 val commonSettings = Seq(
@@ -52,7 +53,7 @@ lazy val root = (project in file(".")).
     BuildInfoPlugin,
     JavaAppPackaging
   ).
-  settings(ScalatraPlugin.scalatraWithJRebel).
+  settings(ScalatraPlugin.scalatraSettings).
   settings(ScalatePlugin.scalateSettings).
   settings(SbtScalariform.scalariformSettings).
   settings(commonSettings: _*).
@@ -114,13 +115,26 @@ lazy val root = (project in file(".")).
     npmRunBuild := {
       val s = streams.value
 
-      s.log.info("Running 'npm run build' ...")
-      (("npm" :: "run" :: "build" :: Nil) ! s.log) ensuring (_ == 0)
-      s.log.info("Done 'npm run build'.")
+      val npmRunBuild = FileFunction.cached(cacheDirectory.value / "npm-build") (FilesInfo.hash, FilesInfo.exists) {
+        (changeReport, in) =>
+          s.log.info("Running 'npm run build' ...")
+          (("npm" :: "run" :: "build" :: Nil) ! s.log) ensuring (_ == 0)
+          s.log.info("Done 'npm run build'.")
 
-      Seq(
-        stylesheetsDirectory.value / "main.css",
-        stylesheetsDirectory.value / "main.css.map"
+        Set(
+          stylesheetsDirectory.value / "main.css",
+          stylesheetsDirectory.value / "main.css.map",
+          scriptsDirectory.value / "app.js"
+        )
+      }
+
+      // TODO do this caching on the npm/node layer
+      npmRunBuild(
+        Set(
+          baseDirectory.value / "src/main/less/main.less",
+          baseDirectory.value / "src/main/typescript/app.tsx",
+          baseDirectory.value / "src/main/typescript/ChecklistComponent.tsx"
+        )
       )
     },
 
@@ -141,11 +155,16 @@ lazy val root = (project in file(".")).
     // We could have used webappSrc key provided by xsbt-web-plugin,
     // but it is a TaskKey which a SettingKey cannot depend on.
     stylesheetsDirectory := (sourceDirectory in Compile).value / "webapp" / "stylesheets", /* src/main/webapp/stylesheets */
-    resourceGenerators in Compile <+= npmRunBuild,
-    cleanFiles += stylesheetsDirectory.value,
+    scriptsDirectory := (sourceDirectory in Compile).value / "webapp" / "scripts", /* src/main/webapp/scripts */
+    resourceGenerators in Compile <+= npmRunBuild.map(_.toSeq),
+    cleanFiles ++= Seq(stylesheetsDirectory.value, scriptsDirectory.value / "app.js"),
     mappings in Universal <++= (stylesheetsDirectory, baseDirectory, resources in Compile) map {
       (stylesheetsDirectory, baseDirectory, _) =>
         stylesheetsDirectory.*** x relativeTo(baseDirectory)
+    },
+    mappings in Universal <++= (scriptsDirectory, baseDirectory, resources in Compile) map {
+      (scriptsDirectory, baseDirectory, _) =>
+        scriptsDirectory.*** x relativeTo(baseDirectory)
     }
  )
 
@@ -158,6 +177,6 @@ addCommandAlias("devel", Seq(
 watchSources ~= {
   _.filterNot {
     f =>
-      f.getName matches """.*\.(less|css(\.map)?)$"""
+      f.getName matches """.*\.(less|css(\.map)?|js)$"""
   }
 }
