@@ -143,7 +143,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
         </h2>
         <h1>
-          <ActionThumbUp style={{height: 48, width: 48, verticalAlign: 'middle', marginRight: 16}} color={this.state.checklist.allChecked ? theme.baseTheme.palette.primary1Color : theme.baseTheme.palette.disabledColor} />
+          <ActionThumbUp style={{height: 48, width: 48, verticalAlign: 'middle', marginRight: 16}} color={this.state.checklist.allChecked ? theme.baseTheme.palette.primary1Color : theme.baseTheme.palette.accent2Color} />
           {this.state.checklist.pullRequest.title}
         </h1>
         <LinearProgress mode="determinate" color={theme.baseTheme.palette.accent1Color} value={this.state.checklist.checks.filter(c => c.checked).length} max={this.state.checklist.checks.length}></LinearProgress>
