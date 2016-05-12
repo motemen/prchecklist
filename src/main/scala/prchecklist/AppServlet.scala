@@ -3,7 +3,6 @@ package prchecklist
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 import org.json4s
-import org.json4s._
 import org.json4s.jackson.Serialization
 
 import prchecklist.infrastructure.{ PostgresDatabaseComponent, DatabaseComponent, RedisComponent, GitHubHttpClientComponent }
@@ -14,11 +13,6 @@ import prchecklist.utils.AppConfigFromEnv
 import prchecklist.utils.UriStringContext._
 import prchecklist.utils.RunnableFuture
 import prchecklist.views.Helper
-
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 
 trait Domain
   extends GitHubConfig
@@ -253,13 +247,23 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   }
 
   get("/-/") {
-    contentType = "text/html"
-    layoutTemplate("/WEB-INF/templates/views/app.jade", "layout" -> "")
+    requireVisitor {
+      _ =>
+        contentType = "text/html"
+        layoutTemplate("/WEB-INF/templates/views/app.jade", "layout" -> "")
+    }
+  }
+
+  get("/-/me") {
+    Serialization.write(views.User.create(getVisitor.get)) // FIXME get
   }
 
   get("/-/:repoOwner/:repoName/pull/:pullRequestNumber") {
-    contentType = "text/html"
-    layoutTemplate("/WEB-INF/templates/views/app.jade", "layout" -> "")
+    requireVisitor {
+      _ =>
+        contentType = "text/html"
+        layoutTemplate("/WEB-INF/templates/views/app.jade", "layout" -> "")
+    }
   }
 
   // TODO: checklist?repo=foo/bar&number=13&stage=qa
