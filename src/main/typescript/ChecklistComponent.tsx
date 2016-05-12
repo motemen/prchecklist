@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Checkbox,Paper,List,ListItem,CircularProgress,Avatar} from 'material-ui';
+import {Checkbox,Paper,List,ListItem,CircularProgress,Avatar,RaisedButton,FlatButton} from 'material-ui';
 
 // prchecklist.views.Checklist
 interface Checklist {
@@ -41,7 +41,7 @@ interface ChecklistComponentProps {
 
 interface ChecklistComponentState {
   checklist: Checklist;
-  checkLoading: { [i: number]: boolean; };
+  loadFailed: boolean;
 }
 
 module API {
@@ -90,24 +90,39 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber)
       .then((checklist) => {
         this.setState({ checklist: checklist });
+      })
+      .catch(() => {
+        this.setState({ loadFailed: true });
       });
   },
 
   getInitialState(): ChecklistComponentState {
     return {
       checklist: null,
-      checkLoading: {}
+      loadFailed: false
     };
   },
 
   render() {
+    if (this.state.loadFailed) {
+      return (
+        <section>
+          <h2>
+            <small>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
+          </h2>
+          <p>Repository {this.props.repoOwner}/{this.props.repoName} has not been registered yet.</p>
+          <RaisedButton label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using
+        </section>
+      );
+    }
+
     if (!this.state.checklist) {
       return (
         <section>
           <h2>
             <small>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
           </h2>
-          <div style={{ textAlign: 'center', marginTop: 192 }}><CircularProgress /></div>
+          <div style={{ textAlign: 'center', marginTop: 128 }}><CircularProgress /></div>
         </section>
       );
     }
@@ -122,18 +137,18 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
         </h1>
         <pre style={{ padding: 16, backgroundColor: '#F3F3F3' }}>{this.state.checklist.pullRequest.body}</pre>
         <Paper>
-        <List>
-        {
-          this.state.checklist.checks.map((check: Check, i: number) => (
-            <ListItem leftCheckbox={<Checkbox disabled={this.state.checkLoading[i]} defaultChecked={check.checked} onCheck={this._handleCheck(check, i)} />} >
-              #{check.number} {check.title}
-              <div style={{ position: 'absolute', right: 32, top: 8 }}>
-                {check.users.map(user => <Avatar src={user.avatarUrl} size={32} />)}
-              </div>
-            </ListItem>
-          ))
-        }
-        </List>
+          <List>
+          {
+            this.state.checklist.checks.map((check: Check, i: number) => (
+              <ListItem leftCheckbox={<Checkbox defaultChecked={check.checked} onCheck={this._handleCheck(check, i)} />} >
+                #{check.number} {check.title}
+                <div style={{ position: 'absolute', right: 32, top: 8 }}>
+                  {check.users.map(user => <Avatar src={user.avatarUrl} size={32} />)}
+                </div>
+              </ListItem>
+            ))
+          }
+          </List>
         </Paper>
       </section>
     );
