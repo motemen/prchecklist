@@ -72,6 +72,12 @@ module API {
       res => res.json<Checklist>()
     );
   }
+
+  export function getMe(): Promise<User> {
+    return fetch('/-/me', { credentials: 'same-origin' }).then(
+      res => res.json<User>()
+    );
+  }
 }
 
 export const ChecklistComponent = React.createClass<ChecklistComponentProps, ChecklistComponentState>({
@@ -151,6 +157,30 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           </List>
         </Paper>
       </section>
+    );
+  }
+});
+
+export const MeAvatarComponent = React.createClass({
+  componentWillMount() {
+    API.getMe().then(me => this.setState({ me: me }));
+  },
+
+  getInitialState() {
+    return {
+      me: null
+    };
+  },
+
+  render() {
+    if (!this.state.me) {
+      return (
+        <Avatar style={{position: 'absolute', right: 16}} />
+      );
+    }
+
+    return (
+      <Avatar src={this.state.me.avatarUrl} style={{position: 'absolute', right: 16}} />
     );
   }
 });

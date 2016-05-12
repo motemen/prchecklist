@@ -17,6 +17,12 @@ package object views {
     stage: String,
     checks: List[Check])
 
+  object User {
+    def create(visitor: ModelsComponent#Visitor): User = User(
+      name = visitor.login, avatarUrl = visitor.avatarUrl
+    )
+  }
+
   object Checklist {
     def create(checklist: ModelsComponent#ReleaseChecklist, visitor: Option[ModelsComponent#Visitor]): Checklist = Checklist(
       repo = Repo(fullName = checklist.repo.fullName),

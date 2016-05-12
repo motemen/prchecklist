@@ -4,7 +4,7 @@ import { Router, Route, RouteComponentProps, Link, browserHistory }  from 'react
 
 import {Styles} from 'material-ui';
 
-import {ChecklistComponent} from './ChecklistComponent';
+import {ChecklistComponent, MeAvatarComponent} from './ChecklistComponent';
 
 const IndexPage = React.createClass({
   render() {
@@ -29,7 +29,8 @@ const ChecklistPage = React.createClass<RouteComponentProps<{}, ChecklistPagePar
   render() {
     const params: ChecklistPageParams = this.props.params;
     return (
-      <div style={{ margin: `${Styles.Spacing.desktopGutter * 3}px ${Styles.Spacing.desktopGutter * 4}px`, maxWidth: 768 }}>
+      <div style={{ margin: `${Styles.Spacing.desktopGutter * 3}px ${Styles.Spacing.desktopGutter * 4}px`, maxWidth: 768, position: 'relative' }}>
+        <MeAvatarComponent />
         <ChecklistComponent repoOwner={params.repoOwner} repoName={params.repoName} pullRequestNumber={params.pullRequestNumber} />
       </div>
     );
