@@ -29,7 +29,8 @@
     "watch:script": "watchify -v -p tsify src/main/typescript/app.tsx -o src/main/webapp/scripts/app.js",
     "watch:less": "gaze 'lessc --verbose --source-map src/main/less/*.less src/main/webapp/stylesheets/main.css' 'src/main/less/*.less'",
     "browser-sync:start": "browser-sync start --config bs-config.js",
-    "browser-sync:reload": "browser-sync reload"
+    "browser-sync:reload": "browser-sync reload",
+    "postinstall": "typings install"
   },
   "repository": {
     "type": "git",
