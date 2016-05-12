@@ -8,7 +8,7 @@ val npmInstall = taskKey[Unit]("Run `npm install`")
 val npmRunBuild = taskKey[Seq[File]]("Run `npm run build`")
 val npmRunWatch = inputKey[Unit]("Run `npm run watch`")
 
-val commonSettings = Seq(
+val commonSettings = SbtScalariform.scalariformSettings ++ Seq(
   organization := "net.tokyoenvious",
   scalaVersion := "2.11.7",
   version := {
@@ -54,7 +54,6 @@ lazy val root = (project in file(".")).
   ).
   settings(ScalatraPlugin.scalatraWithJRebel).
   settings(ScalatePlugin.scalateSettings).
-  settings(SbtScalariform.scalariformSettings).
   settings(commonSettings: _*).
   settings(
     name := "prchecklist",

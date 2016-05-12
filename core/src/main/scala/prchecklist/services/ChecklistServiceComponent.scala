@@ -16,13 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
  * ChecklistServiceComponent is the main logic of prchecklist.
  */
 trait ChecklistServiceComponent {
-  self: models.ModelsComponent
-    with services.SlackNotificationServiceComponent
-    with repositories.RepoRepositoryComponent
-    with repositories.GitHubRepositoryComponent
-    with repositories.ProjectConfigRepositoryComponent
-    with repositories.ChecklistRepositoryComponent
-      =>
+  self: models.ModelsComponent with services.SlackNotificationServiceComponent with repositories.RepoRepositoryComponent with repositories.GitHubRepositoryComponent with repositories.ProjectConfigRepositoryComponent with repositories.ChecklistRepositoryComponent =>
 
   class ChecklistService(githubAccessor: GitHubAccessible) {
     def logger = LoggerFactory.getLogger(getClass)

@@ -13,13 +13,12 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ChecklistRepositoryComponent {
-  this: models.ModelsComponent
-    with infrastructure.DatabaseComponent =>
+  this: models.ModelsComponent with infrastructure.DatabaseComponent =>
 
   def checklistRepository: ChecklistRepository
 
   class ChecklistRepository extends SQLInterpolation with CompoundParameter {
-    def getChecks(repo: Repo, pullRequestNumber: Int, stage: String, prRefs: NonEmpty[PullRequestReference]): Future[(Int, Map[Int,Check], Boolean)] = {
+    def getChecks(repo: Repo, pullRequestNumber: Int, stage: String, prRefs: NonEmpty[PullRequestReference]): Future[(Int, Map[Int, Check], Boolean)] = {
       val db = getDatabase
 
       val q = for {

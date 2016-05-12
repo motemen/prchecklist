@@ -25,13 +25,10 @@ object ProjectConfig {
 }
 
 case class ProjectConfig(
-  notification: ProjectConfig.Notification
-)
+  notification: ProjectConfig.Notification)
 
 trait ProjectConfigRepositoryComponent {
-  this: GitHubRepositoryComponent
-    with models.ModelsComponent
-      =>
+  this: GitHubRepositoryComponent with models.ModelsComponent =>
 
   def projectConfigRepository(githubRepos: GitHubRepository): ProjectConfigRepository = new ProjectConfigRepository {
     override val github = githubRepos
@@ -46,6 +43,7 @@ trait ProjectConfigRepositoryComponent {
       Future { mapper.readValue[ProjectConfig](source) }
     }
 
+    // TODO: cache
     def loadProjectConfig(repo: Repo, ref: String): Future[ProjectConfig] = {
       for {
         yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
