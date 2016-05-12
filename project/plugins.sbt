@@ -15,3 +15,5 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.0.1")
 addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.6")
+
+addSbtPlugin("org.ensime" % "sbt-ensime" % "0.5.0")
