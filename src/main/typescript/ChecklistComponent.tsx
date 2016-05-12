@@ -118,10 +118,10 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
       return (
         <section>
           <h2>
-            <small>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
+            <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
           </h2>
           <p>Repository {this.props.repoOwner}/{this.props.repoName} has not been registered yet.</p>
-          <RaisedButton label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using
+          <RaisedButton label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using (WIP)
         </section>
       );
     }
@@ -130,7 +130,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
       return (
         <section>
           <h2>
-            <small>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
+            <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
           </h2>
           <div style={{ textAlign: 'center', marginTop: 128 }}><CircularProgress /></div>
         </section>
