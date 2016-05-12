@@ -15,7 +15,8 @@ package object views {
     repo: Repo,
     pullRequest: PullRequest,
     stage: String,
-    checks: List[Check])
+    checks: List[Check],
+    allChecked: Boolean)
 
   object User {
     def create(visitor: ModelsComponent#Visitor): User = User(
@@ -42,7 +43,8 @@ package object views {
             users = check.checkedUsers.map(u => User(name = u.login, avatarUrl = u.avatarUrl)),
             checked = visitor.exists(check.isCheckedBy(_))
           )
-      }.toList
+      }.toList,
+      allChecked = checklist.allGreen
     )
   }
 }

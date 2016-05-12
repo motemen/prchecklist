@@ -1,5 +1,8 @@
 import * as React from 'react';
-import {Checkbox,Paper,List,ListItem,CircularProgress,Avatar,RaisedButton,FlatButton} from 'material-ui';
+import {Checkbox,Paper,List,ListItem,CircularProgress,Avatar,RaisedButton,FlatButton,Styles,LinearProgress} from 'material-ui';
+import {ActionThumbUp} from 'material-ui/lib/svg-icons';
+
+const theme = Styles.getMuiTheme({})
 
 // prchecklist.views.Checklist
 interface Checklist {
@@ -7,6 +10,7 @@ interface Checklist {
   pullRequest: PullRequest;
   stage:       string;
   checks:      Check[];
+  allChecked:  boolean;
 }
 
 interface Repo {
@@ -136,12 +140,13 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     return (
       <section>
         <h2>
-          <small>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
+          <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
         </h2>
         <h1>
+          <ActionThumbUp style={{height: 48, width: 48, verticalAlign: 'middle', marginRight: 16}} color={this.state.checklist.allChecked ? theme.baseTheme.palette.primary1Color : theme.baseTheme.palette.disabledColor} />
           {this.state.checklist.pullRequest.title}
         </h1>
-        <pre style={{ padding: 16, backgroundColor: '#F3F3F3' }}>{this.state.checklist.pullRequest.body}</pre>
+        <LinearProgress mode="determinate" color={theme.baseTheme.palette.accent1Color} value={this.state.checklist.checks.filter(c => c.checked).length} max={this.state.checklist.checks.length}></LinearProgress>
         <Paper>
           <List>
           {
@@ -156,6 +161,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           }
           </List>
         </Paper>
+        <pre style={{ padding: 16, backgroundColor: '#F3F3F3' }}>{this.state.checklist.pullRequest.body}</pre>
       </section>
     );
   }
