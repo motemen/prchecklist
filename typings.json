@@ -6,6 +6,7 @@
     "react-dom": "registry:dt/react-dom#0.14.0+20160412154040",
     "react-router": "registry:dt/react-router#2.0.0+20160501155536",
     "react-router/history": "registry:dt/react-router/history#2.0.0+20160316155526",
+    "react-tap-event-plugin": "registry:dt/react-tap-event-plugin#0.0.0+20160226083632",
     "whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160412133644"
   }
 }

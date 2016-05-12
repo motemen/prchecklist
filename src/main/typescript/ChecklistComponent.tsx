@@ -41,6 +41,7 @@ interface ChecklistComponentProps {
   repoOwner:         string;
   repoName:          string;
   pullRequestNumber: number;
+  stage:             string;
 }
 
 interface ChecklistComponentState {
@@ -71,7 +72,7 @@ module API {
     return updateChecklist('uncheck', checklist, featureNumber);
   }
 
-  export function fetchChecklist(repoOwner: string, repoName: string, pullRequestNumber: number, stage: string = ""): Promise<Checklist> {
+  export function fetchChecklist(repoOwner: string, repoName: string, pullRequestNumber: number, stage: string): Promise<Checklist> {
     return fetch(`/-/checklist?repoOwner=${repoOwner}&repoName=${repoName}&pullRequestNumber=${pullRequestNumber}&stage=${stage}`, { credentials: 'same-origin' }).then(
       res => res.json<Checklist>()
     );
@@ -80,6 +81,12 @@ module API {
   export function getMe(): Promise<User> {
     return fetch('/-/me', { credentials: 'same-origin' }).then(
       res => res.json<User>()
+    );
+  }
+
+  export function registerRepo(repoOwner: string, repoName: string): Promise<any> {
+    return fetch('/-/repos', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `repoOwner=${repoOwner}&repoName=${repoName}` }).then(
+      res => res.json()
     );
   }
 }
@@ -95,9 +102,13 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     };
   },
 
+  _handleRegisterTap() {
+    API.registerRepo(this.props.repoOwner, this.props.repoName).then(() => location.reload());
+  },
+
   componentWillMount() {
     const props: ChecklistComponentProps = this.props;
-    API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber)
+    API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber, props.stage)
       .then((checklist) => {
         this.setState({ checklist: checklist });
       })
@@ -121,7 +132,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
             <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
           </h2>
           <p>Repository {this.props.repoOwner}/{this.props.repoName} has not been registered yet.</p>
-          <RaisedButton label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using (WIP)
+          <RaisedButton onTouchTap={this._handleRegisterTap} label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using
         </section>
       );
     }
