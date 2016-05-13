@@ -21,6 +21,7 @@ class ProjectConfigRepositoryComponentSpec extends FunSuite with Matchers with M
   with models.ModelsComponent
   with models.GitHubConfig
   with test.TestAppConfig
+  with test.WithTestDatabase
 {
   def redis = new Redis
   def http = new Http
@@ -56,7 +57,9 @@ notification:
 
     projConfRepository.loadProjectConfig(repo, "pull/42/head").run
 
-    // TODO: check cache is used
+    // This should not call getFileContent, as redis cache should be used
     projConfRepository.loadProjectConfig(repo, "pull/42/head").run
+
+    verify(projConfRepository.github, times(1)).getFileContent(any(), any(), any())
   }
 }
