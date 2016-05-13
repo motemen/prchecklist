@@ -5,14 +5,13 @@ import java.net.{HttpURLConnection, URL}
 
 import org.mockito.Mockito
 import prchecklist.services
-import prchecklist.utils
 import prchecklist.utils.RunnableFuture
 import prchecklist.test
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
 import prchecklist.infrastructure.HttpComponent
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scalaj.http.HttpRequest
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -25,7 +24,7 @@ class SlackNotificationServiceSpec extends FunSuite with Matchers
   var httpOutputCapture: OutputStream = null
 
   override def http: Http = new Http {
-    override protected def doRequest[A](httpReq: HttpRequest)(parser: (InputStream) => A): Future[A] = {
+    override protected def doRequest[A](httpReq: HttpRequest)(parser: (InputStream) => A)(implicit ec: ExecutionContext): Future[A] = {
       val spy = Mockito.spy(new URL(httpReq.url).openConnection().asInstanceOf[HttpURLConnection])
 
       Mockito.doNothing().when(spy).connect()
