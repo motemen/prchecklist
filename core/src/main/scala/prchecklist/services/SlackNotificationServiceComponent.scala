@@ -8,8 +8,7 @@ case class SlackMessage(text: String)
 
 case class SlackResponse(
   ok: Boolean,
-  error: Option[String]
-)
+  error: Option[String])
 
 trait SlackNotificationServiceComponent {
   this: utils.HttpComponent =>

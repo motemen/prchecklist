@@ -2,7 +2,7 @@ package prchecklist.repositories
 
 import com.github.tarao.slickjdbc.interpolation.SQLInterpolation
 import prchecklist.infrastructure.DatabaseComponent
-import prchecklist.models.{GitHubTypes, ModelsComponent}
+import prchecklist.models.{ GitHubTypes, ModelsComponent }
 
 import slick.dbio.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods // q.transactionally

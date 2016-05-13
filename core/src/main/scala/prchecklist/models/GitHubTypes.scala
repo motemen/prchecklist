@@ -72,10 +72,9 @@ object GitHubTypes {
 
   // https://developer.github.com/v3/repos/contents/#get-contents
   case class Content(
-    `type`: String,
-    encoding: String,
-    content: String
-  ) {
+      `type`: String,
+      encoding: String,
+      content: String) {
     def fileContent: Option[String] = {
       import org.apache.commons.codec.binary.Base64
 

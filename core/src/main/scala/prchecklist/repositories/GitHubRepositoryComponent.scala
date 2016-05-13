@@ -1,7 +1,7 @@
 package prchecklist.repositories
 
-import prchecklist.infrastructure.{RedisComponent, GitHubHttpClientComponent}
-import prchecklist.models.{GitHubTypes, ModelsComponent}
+import prchecklist.infrastructure.{ RedisComponent, GitHubHttpClientComponent }
+import prchecklist.models.{ GitHubTypes, ModelsComponent }
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
