@@ -1,16 +1,15 @@
 import * as React from 'react';
-import {Checkbox,Paper,List,ListItem,CircularProgress,Avatar,RaisedButton,FlatButton,Styles,LinearProgress} from 'material-ui';
+import {Checkbox,Paper,List,ListItem,CircularProgress,Avatar,RaisedButton,FlatButton,Styles,LinearProgress,DropDownMenu,MenuItem} from 'material-ui';
 import {ActionThumbUp} from 'material-ui/lib/svg-icons';
-
-const theme = Styles.getMuiTheme({})
 
 // prchecklist.views.Checklist
 interface Checklist {
   repo:        Repo;
   pullRequest: PullRequest;
   stage:       string;
+  stages:      string[];
   checks:      Check[];
-  allChecked:  boolean;
+  allChecked:  boolean; // XXX not needed?
 }
 
 interface Repo {
@@ -45,8 +44,9 @@ interface ChecklistComponentProps {
 }
 
 interface ChecklistComponentState {
-  checklist: Checklist;
+  checklist:  Checklist;
   loadFailed: boolean;
+  muiTheme:   Styles.MuiTheme;
 }
 
 module API {
@@ -106,7 +106,52 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     API.registerRepo(this.props.repoOwner, this.props.repoName).then(() => location.reload());
   },
 
+  contextTypes: {
+    muiTheme: React.PropTypes.object,
+  },
+
   componentWillMount() {
+    // const checklist: Checklist = {
+    //   repo: { fullName: "motemen/test" },
+    //   pullRequest: {
+    //     url: '#',
+    //     number: 3,
+    //     title: 'test pr',
+    //     body: 'bobobdy'
+    //   },
+    //   stage: 'staging',
+    //   stages: [ 'de', 'staging', 'production' ],
+    //   checks: [
+    //     {
+    //       url: '#',
+    //       number: 1,
+    //       title: 'feature-a',
+    //       users: [
+    //         { name: 'foo', avatarUrl: '' }
+    //       ],
+    //       checked: false
+    //     },
+    //     {
+    //       url: '#',
+    //       number: 2,
+    //       title: 'feature-b',
+    //       users: [
+    //         { name: 'motemen', avatarUrl: '' }
+    //       ],
+    //       checked: true
+    //     },
+    //     {
+    //       url: '#',
+    //       number: 3,
+    //       title: 'feature-c',
+    //       users: [
+    //       ],
+    //       checked: false
+    //     }
+    //   ],
+    //   allChecked: false
+    // }
+    // this.setState({ checklist: checklist });
     const props: ChecklistComponentProps = this.props;
     API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber, props.stage)
       .then((checklist) => {
@@ -120,19 +165,28 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
   getInitialState(): ChecklistComponentState {
     return {
       checklist: null,
-      loadFailed: false
+      loadFailed: false,
+      muiTheme: this.context.muiTheme
     };
   },
 
   render() {
+    let theme = this.state.muiTheme;
+
+    const header = (
+      <h2>
+        <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber} { this.props.stage ? `:: ${this.props.stage}` : '' }</small>
+      </h2>
+    )
+
     if (this.state.loadFailed) {
       return (
         <section>
-          <h2>
-            <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
-          </h2>
-          <p>Repository {this.props.repoOwner}/{this.props.repoName} has not been registered yet.</p>
-          <RaisedButton onTouchTap={this._handleRegisterTap} label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using
+          {header}
+          <div style={{ marginTop: 128 }}>
+            <p>Repository {this.props.repoOwner}/{this.props.repoName} has not been registered yet.</p>
+            <RaisedButton onTouchTap={this._handleRegisterTap} label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using
+          </div>
         </section>
       );
     }
@@ -140,9 +194,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     if (!this.state.checklist) {
       return (
         <section>
-          <h2>
-            <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
-          </h2>
+          {header}
           <div style={{ textAlign: 'center', marginTop: 128 }}><CircularProgress /></div>
         </section>
       );
@@ -150,19 +202,17 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
 
     return (
       <section>
-        <h2>
-          <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber}</small>
-        </h2>
+        {header}
         <h1>
           <ActionThumbUp style={{height: 48, width: 48, verticalAlign: 'middle', marginRight: 16}} color={this.state.checklist.allChecked ? theme.baseTheme.palette.primary1Color : theme.baseTheme.palette.accent2Color} />
           {this.state.checklist.pullRequest.title}
         </h1>
-        <LinearProgress mode="determinate" color={theme.baseTheme.palette.accent1Color} value={this.state.checklist.checks.filter(c => c.checked).length} max={this.state.checklist.checks.length}></LinearProgress>
+        <LinearProgress mode="determinate" color={theme.baseTheme.palette.accent1Color} value={this.state.checklist.checks.filter(c => c.users.length > 0).length} max={this.state.checklist.checks.length}></LinearProgress>
         <Paper>
           <List>
           {
-            this.state.checklist.checks.map((check: Check, i: number) => (
-              <ListItem leftCheckbox={<Checkbox defaultChecked={check.checked} onCheck={this._handleCheck(check, i)} />} >
+            this.state.checklist.checks.map((check: Check) => (
+              <ListItem leftCheckbox={<Checkbox defaultChecked={check.checked} onCheck={this._handleCheck(check)} checkedIcon={<ActionThumbUp />} unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.accent2Color}/>} />} >
                 #{check.number} {check.title}
                 <div style={{ position: 'absolute', right: 32, top: 8 }}>
                   {check.users.map(user => <Avatar src={user.avatarUrl} size={32} />)}

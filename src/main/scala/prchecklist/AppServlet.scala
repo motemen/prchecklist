@@ -252,9 +252,13 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         <title>prchecklist</title>
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400italic,700,700italic|Roboto:400,700" rel="stylesheet" type="text/css"/>
       </head>
-      <body style="font-family: 'Open Sans'">
-        <div id="app">
+      <body style="font-family: 'Open Sans'; display: flex; flex-direction: column">
+        <div id="app" style="flex: 1">
         </div>
+        <footer style="text-align: center; font-size: small; color: #999; height: 2em;">
+          <a href="https://github.com/motemen/prchecklist" style="color: inherit">prchecklist</a>
+          &nbsp;{ BuildInfo.version }
+        </footer>
       </body>
       <script src="/scripts/app.js"></script>
     </html>
