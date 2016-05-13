@@ -48,6 +48,7 @@ trait ProjectConfigRepositoryComponent {
       Future { mapper.readValue[ProjectConfig](source) }
     }
 
+    // TODO: accept Checklist as an argument
     def loadProjectConfig(repo: Repo, ref: String): Future[ProjectConfig] = {
       import scala.concurrent.duration._
       import scala.language.postfixOps
