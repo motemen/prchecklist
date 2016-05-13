@@ -41,6 +41,7 @@ trait GitHubRepositoryComponent {
     }
 
     def getPullRequestWithCommits(repo: Repo, number: Int): Future[GitHubTypes.PullRequestWithCommits] = {
+      // TODO use cache from the caller side
       redis.getOrUpdate(s"pull:${repo.fullName}:$number", 30 seconds) {
         for {
           pr <- client.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
@@ -71,8 +72,10 @@ trait GitHubRepositoryComponent {
       }
     }
 
-    def listReleasePullRequests(repo: Repo): Future[List[GitHubTypes.PullRequestRef]] = {
-      client.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repo.fullName}/pulls?base=master&state=all&per_page=20")
+    def listReleasePullRequests(repo: Repo): Future[List[GitHubTypes.PullRequestRef]] = listReleasePullRequests(repo.owner, repo.name)
+
+    def listReleasePullRequests(repoOwner: String, repoName: String): Future[List[GitHubTypes.PullRequestRef]] = {
+      client.getJson[List[GitHubTypes.PullRequestRef]](s"/repos/${repoOwner}/${repoName}/pulls?base=master&state=all&per_page=20")
     }
 
     // https://developer.github.com/v3/repos/contents/#get-contents

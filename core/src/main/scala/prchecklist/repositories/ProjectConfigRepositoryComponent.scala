@@ -1,6 +1,7 @@
 package prchecklist.repositories
 
 import prchecklist.models
+import prchecklist.infrastructure
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
@@ -31,6 +32,7 @@ case class ProjectConfig(
 trait ProjectConfigRepositoryComponent {
   this: GitHubRepositoryComponent
     with models.ModelsComponent
+    with infrastructure.RedisComponent
       =>
 
   def projectConfigRepository(githubRepos: GitHubRepository): ProjectConfigRepository = new ProjectConfigRepository {
@@ -46,11 +48,17 @@ trait ProjectConfigRepositoryComponent {
       Future { mapper.readValue[ProjectConfig](source) }
     }
 
+    // TODO: accept Checklist as an argument
     def loadProjectConfig(repo: Repo, ref: String): Future[ProjectConfig] = {
-      for {
-        yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
-        conf <- parseProjectConfig(yaml)
-      } yield conf
+      import scala.concurrent.duration._
+      import scala.language.postfixOps
+
+      redis.getOrUpdate(s"projectConfig:${repo.fullName}:${ref}", 30 seconds) {
+        for {
+          yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
+          conf <- parseProjectConfig(yaml)
+        } yield (conf, true)
+      }
     }
   }
 }

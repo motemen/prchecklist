@@ -8,11 +8,10 @@ import prchecklist.utils.RunnableFuture
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
+import org.mockito.Matchers._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 
 class ProjectConfigRepositoryComponentSpec extends FunSuite with Matchers with MockitoSugar
   with ProjectConfigRepositoryComponent
@@ -22,21 +21,45 @@ class ProjectConfigRepositoryComponentSpec extends FunSuite with Matchers with M
   with models.ModelsComponent
   with models.GitHubConfig
   with test.TestAppConfig
+  with test.WithTestDatabase
 {
   def redis = new Redis
   def http = new Http
 
-  test("parseProjectConfig") {
-    val repo = new ProjectConfigRepository {
-      override val github = mock[GitHubRepository]
-    }
-
-    val conf = repo.parseProjectConfig("""
+  val validProjectConfigYaml = """
 notification:
   channels:
     default:
       url: https://slack.com/xxxx
-""").run
+"""
+
+  test("parseProjectConfig") {
+    val projConfRepository = new ProjectConfigRepository {
+      override val github = mock[GitHubRepository]
+    }
+
+    val conf = projConfRepository.parseProjectConfig(validProjectConfigYaml).run
     conf.notification.channels("default").url shouldBe "https://slack.com/xxxx"
+  }
+
+  test("loadProjectConfig") {
+    val projConfRepository = new ProjectConfigRepository {
+      override val github = mock[GitHubRepository]
+
+      when {
+        github.getFileContent(any(), any(), any())
+      } thenReturn {
+        Future { validProjectConfigYaml }
+      }
+    }
+
+    val repo = Repo(id = 1, owner = "test", name = "repo", defaultAccessToken = "")
+
+    projConfRepository.loadProjectConfig(repo, "pull/42/head").run
+
+    // This should not call getFileContent, as redis cache should be used
+    projConfRepository.loadProjectConfig(repo, "pull/42/head").run
+
+    verify(projConfRepository.github, times(1)).getFileContent(any(), any(), any())
   }
 }

@@ -108,7 +108,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       val client = mock[GitHubHttpClient]
 
       def stubJson[A](url: String, data: A) {
-        when(client.getJson[A](matchEq(url))(any(), any()))
+        when(client.getJson[A](matchEq(url))(any(), any(), any()))
           .thenReturn(Future { data })
       }
 

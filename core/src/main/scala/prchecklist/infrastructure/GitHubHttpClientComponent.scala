@@ -1,7 +1,6 @@
 package prchecklist.infrastructure
 
 import prchecklist.models.GitHubConfig
-import prchecklist.utils.HttpComponent
 
 import scalaj.http.HttpRequest
 
