@@ -16,7 +16,7 @@ trait SlackNotificationServiceComponent {
 
   object slackNotificationService {
     def send(url: String, text: String): Future[Unit] = {
-      http.postJsonDiscardResult(url, SlackMessage(text))
+      http.postJson(url, SlackMessage(text))
     }
   }
 }
