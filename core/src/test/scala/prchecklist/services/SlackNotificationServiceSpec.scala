@@ -10,6 +10,7 @@ import prchecklist.utils.RunnableFuture
 import prchecklist.test
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
+import prchecklist.infrastructure.HttpComponent
 
 import scala.concurrent.Future
 import scalaj.http.HttpRequest
@@ -18,7 +19,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class SlackNotificationServiceSpec extends FunSuite with Matchers
     with MockitoSugar
     with services.SlackNotificationServiceComponent
-    with utils.HttpComponent
+    with HttpComponent
     with test.TestAppConfig {
 
   var httpOutputCapture: OutputStream = null

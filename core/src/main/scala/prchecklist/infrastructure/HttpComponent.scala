@@ -1,17 +1,15 @@
-package prchecklist.utils
+package prchecklist.infrastructure
+
+import java.io.InputStream
 
 import org.json4s
 import org.json4s.jackson.JsonMethods
-
 import org.slf4j.LoggerFactory
-
-import scalaj.http.HttpOptions.HttpOption
-import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
+import prchecklist.utils.AppConfig
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-
-import java.io.InputStream
+import scalaj.http.HttpOptions._
+import scalaj.http.{BaseHttp, HttpOptions, HttpRequest}
 
 trait HttpComponent {
   self: AppConfig =>

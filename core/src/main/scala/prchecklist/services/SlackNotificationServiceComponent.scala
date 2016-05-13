@@ -1,5 +1,6 @@
 package prchecklist.services
 
+import prchecklist.infrastructure.HttpComponent
 import prchecklist.utils
 
 import scala.concurrent.Future
@@ -12,7 +13,7 @@ case class SlackResponse(
 )
 
 trait SlackNotificationServiceComponent {
-  this: utils.HttpComponent =>
+  this: HttpComponent =>
 
   object slackNotificationService {
     def send(url: String, text: String): Future[Unit] = {
