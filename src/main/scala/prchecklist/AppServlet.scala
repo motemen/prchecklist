@@ -3,7 +3,7 @@ package prchecklist
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 import org.json4s
-import org.json4s.jackson.Serialization
+import org.json4s.jackson.{ Serialization => JsonSerialization }
 
 import prchecklist.infrastructure.{ PostgresDatabaseComponent, DatabaseComponent, RedisComponent, GitHubHttpClientComponent }
 import prchecklist.models._
@@ -49,7 +49,7 @@ class AppServlet extends AppServletBase {
 }
 
 trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport {
-  implicit val jsonFormats = json4s.jackson.Serialization.formats(json4s.NoTypeHints)
+  implicit val jsonFormats = JsonSerialization.formats(json4s.NoTypeHints)
 
   import scala.language.implicitConversions
   implicit override def string2RouteMatcher(path: String): RouteMatcher = RailsPathPatternParser(path)
@@ -255,7 +255,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   }
 
   get("/-/me") {
-    Serialization.write(views.User.create(getVisitor.get)) // FIXME get
+    JsonSerialization.write(views.User.create(getVisitor.get)) // FIXME get
   }
 
   get("/-/:repoOwner/:repoName/pull/:pullRequestNumber") {
@@ -270,12 +270,18 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
   get("/-/checklist") {
     requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
       (repo, checklist) =>
-        Serialization.write(views.Checklist.create(checklist, getVisitor))
+        JsonSerialization.write(views.Checklist.create(checklist, getVisitor))
+    }
+  }
+
+  get("/-/pullRequests") {
+    requireVisitor {
+      visitor =>
+        val pullRequests = domain.githubRepository(visitor).listReleasePullRequests(params('repoOwner), params('repoName)).run
     }
   }
 
   post("/-/checklist/check") {
-    println(params)
     requireVisitor {
       visitor =>
         requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
@@ -284,7 +290,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
             val checklistService = new domain.ChecklistService(visitor)
             checklistService.checkChecklist(checklist, visitor, featureNumber).run
             val updatedChecklist = checklistService.getChecklist(checklist).run
-            Serialization.write(views.Checklist.create(updatedChecklist, getVisitor))
+            JsonSerialization.write(views.Checklist.create(updatedChecklist, getVisitor))
         }
     }
   }
@@ -298,7 +304,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
             val checklistService = new domain.ChecklistService(visitor)
             checklistService.uncheckChecklist(checklist, visitor, featureNumber).run
             val updatedChecklist = checklistService.getChecklist(checklist).run
-            Serialization.write(views.Checklist.create(updatedChecklist, getVisitor))
+            JsonSerialization.write(views.Checklist.create(updatedChecklist, getVisitor))
         }
     }
   }
