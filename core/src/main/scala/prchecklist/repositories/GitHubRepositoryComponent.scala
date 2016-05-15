@@ -86,6 +86,11 @@ trait GitHubRepositoryComponent {
           content.fileContent.get
       }
     }
+
+    // https://developer.github.com/v3/activity/starring/#list-repositories-being-starred
+    def listStarredRepos(): Future[List[GitHubTypes.Repo]] = {
+      client.getJson[List[GitHubTypes.Repo]]("/user/starred?sort=updated")
+    }
   }
 
 }

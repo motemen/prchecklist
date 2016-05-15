@@ -9,7 +9,9 @@
     "files": [
         "typings/browser.d.ts",
         "src/main/typescript/app.tsx",
-        "src/main/typescript/ChecklistComponent.tsx"
+        "src/main/typescript/api.ts",
+        "src/main/typescript/ChecklistComponent.tsx",
+        "src/main/typescript/NewsComponent.tsx"
     ],
     "exclude": [
         "node_modules"

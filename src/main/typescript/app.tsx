@@ -15,6 +15,7 @@ const theme = Styles.ThemeManager.modifyRawThemePalette(
 )
 
 import {ChecklistComponent, MeAvatarComponent} from './ChecklistComponent';
+import {NewsComponent} from './NewsComponent';
 
 const Layout = React.createClass({
   render() {
@@ -31,6 +32,7 @@ const IndexPage = React.createClass({
   render() {
     return (
       <div>
+        <NewsComponent></NewsComponent>
         <h2>For development</h2>
         <ul>
           <li><Link to={"/-/motemen/test/pull/3"}>motemen/test#3</Link></li>

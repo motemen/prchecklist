@@ -4,8 +4,7 @@ import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 import org.json4s
 import org.json4s.jackson.{ Serialization => JsonSerialization }
-
-import prchecklist.infrastructure.{ PostgresDatabaseComponent, DatabaseComponent, RedisComponent, GitHubHttpClientComponent }
+import prchecklist.infrastructure.{ DatabaseComponent, GitHubHttpClientComponent, PostgresDatabaseComponent, RedisComponent }
 import prchecklist.models._
 import prchecklist.repositories._
 import prchecklist.services._
@@ -352,4 +351,28 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     }
   }
 
+  import scala.concurrent.Future
+
+  get("/-/news") {
+    requireVisitor {
+      visitor =>
+        val githubRepository = domain.githubRepository(visitor)
+        val fut = githubRepository.listStarredRepos() flatMap {
+          repos =>
+            Future.fold(
+              repos.map {
+                repo =>
+                  githubRepository.listReleasePullRequests(repo.owner, repo.name)
+              }
+            )(Map.empty[String, List[GitHubTypes.PullRequestRef]]) {
+                (m, prList) =>
+                  prList.headOption match {
+                    case None     => m
+                    case Some(pr) => m + (pr.base.repo.fullName -> prList)
+                  }
+              }
+        }
+        JsonSerialization.write(fut.run)
+    }
+  }
 }
