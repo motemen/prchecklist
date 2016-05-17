@@ -58,7 +58,7 @@ trait GitHubRepositoryComponent {
       val commitsPerPage = 100
 
       if (page > 10) {
-        throw new Error(s"page too far: $page")
+        throw new IllegalArgumentException(s"page too far: $page")
       }
 
       client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/commits?sha=${pullRequest.head.sha}&per_page=${commitsPerPage}&page=${page}").flatMap {

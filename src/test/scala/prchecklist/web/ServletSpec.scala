@@ -98,7 +98,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       when {
         repository.getFileContent(any(), any(), any())
       } thenReturn {
-        Future.failed(new Error("getFileContent: mock"))
+        Future.failed(new Exception("getFileContent: mock"))
       }
 
       repository

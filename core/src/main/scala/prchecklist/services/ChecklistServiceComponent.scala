@@ -50,7 +50,7 @@ trait ChecklistServiceComponent {
 
       mergedPullRequests(prWithCommits.commits) match {
         case None =>
-          Future.failed(new Error("No merged pull requests"))
+          Future.failed(new IllegalStateException("No merged pull requests"))
 
         case Some(prRefs) =>
           checklistRepository.getChecks(repo, prWithCommits.pullRequest.number, stage, prRefs).map {
