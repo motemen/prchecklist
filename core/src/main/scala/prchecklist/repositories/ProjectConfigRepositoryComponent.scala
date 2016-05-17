@@ -42,10 +42,10 @@ trait ProjectConfigRepositoryComponent {
   trait ProjectConfigRepository {
     def github: GitHubRepository
 
-    def parseProjectConfig(source: String): Future[ProjectConfig] = {
+    def parseProjectConfig(source: String): ProjectConfig = {
       val mapper = new ObjectMapper(new YAMLFactory) with ScalaObjectMapper
       mapper.registerModule(DefaultScalaModule)
-      Future { mapper.readValue[ProjectConfig](source) }
+      mapper.readValue[ProjectConfig](source)
     }
 
     // TODO: accept Checklist as an argument
@@ -55,9 +55,10 @@ trait ProjectConfigRepositoryComponent {
 
       redis.getOrUpdate(s"projectConfig:${repo.fullName}:${ref}", 30 seconds) {
         for {
-          yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
-          conf <- yaml.map(parseProjectConfig(_).map(Some(_))) getOrElse Future.successful(None: Option[ProjectConfig])
-        } yield (conf, true)
+          yamlOption <- github.getFileContent(repo, "prchecklist.yml", ref)
+        } yield {
+          ( yamlOption.map(parseProjectConfig(_)), true )
+        }
       }
     }
   }
