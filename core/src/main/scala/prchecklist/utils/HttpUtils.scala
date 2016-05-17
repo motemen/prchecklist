@@ -80,7 +80,7 @@ trait HttpComponent {
             logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}${limitRateInfo.mkString}")
 
             if (code >= 400) {
-              throw HttpResponseError(code, httpReq)
+              throw FailedHttpResponseException(code, httpReq)
             }
 
             parser(is)
@@ -91,7 +91,7 @@ trait HttpComponent {
     }
   }
 
-  case class HttpResponseError(code: Int, request: HttpRequest) extends Error {
+  case class FailedHttpResponseException(code: Int, request: HttpRequest) extends Exception {
     override def toString = s"${request.method} ${request.url} failed: ${code}"
   }
 }

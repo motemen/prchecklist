@@ -87,7 +87,7 @@ trait GitHubRepositoryComponent {
             Some(content.fileContent.get)
         }
         .recover {
-          case e: HttpResponseError if e.code == 404 => None
+          case e: FailedHttpResponseException if e.code == 404 => None
         }
     }
   }
