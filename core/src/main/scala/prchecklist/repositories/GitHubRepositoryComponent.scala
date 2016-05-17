@@ -80,11 +80,15 @@ trait GitHubRepositoryComponent {
 
     // https://developer.github.com/v3/repos/contents/#get-contents
     // TODO: be Future[Option[String]]
-    def getFileContent(repo: Repo, path: String, ref: String = "master"): Future[String] = {
-      client.getJson[GitHubTypes.Content](s"/repos/${repo.fullName}/contents/$path?ref=$ref").map {
-        content =>
-          content.fileContent.get
-      }
+    def getFileContent(repo: Repo, path: String, ref: String = "master"): Future[Option[String]] = {
+      client.getJson[GitHubTypes.Content](s"/repos/${repo.fullName}/contents/$path?ref=$ref")
+        .map {
+          content =>
+            Some(content.fileContent.get)
+        }
+        .recover {
+          case e: HttpResponseError if e.code == 404 => None
+        }
     }
   }
 

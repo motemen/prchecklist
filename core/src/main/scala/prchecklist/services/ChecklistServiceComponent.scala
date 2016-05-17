@@ -5,13 +5,12 @@ import prchecklist.services
 import prchecklist.repositories
 import prchecklist.models
 import prchecklist.models.GitHubTypes
-
 import org.slf4j.LoggerFactory
-
 import com.github.tarao.nonempty.NonEmpty
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Success
 
 /**
  * ChecklistServiceComponent is the main logic of prchecklist.
@@ -77,17 +76,14 @@ trait ChecklistServiceComponent {
       val fut = checklistRepository.createCheck(checklist, checkerUser, featurePRNumber)
       fut.onSuccess {
         case _ =>
-          val task = for {
-            config <- projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head")
-
-            sendNotifications <- Future.traverse(config.notification.channels) {
-              case (name, ch) =>
-                val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
-                slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}""") // TODO: escape
-            }
-          } yield sendNotifications
-
-          task onFailure {
+          projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head") andThen {
+            case Success(Some(config)) =>
+              Future.traverse(config.notification.channels) {
+                case (name, ch) =>
+                  val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
+                  slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}""") // TODO: escape
+              }
+          } onFailure {
             case e =>
               logger.warn(s"Error while sending notification: $e")
           }

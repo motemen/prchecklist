@@ -49,14 +49,14 @@ trait ProjectConfigRepositoryComponent {
     }
 
     // TODO: accept Checklist as an argument
-    def loadProjectConfig(repo: Repo, ref: String): Future[ProjectConfig] = {
+    def loadProjectConfig(repo: Repo, ref: String): Future[Option[ProjectConfig]] = {
       import scala.concurrent.duration._
       import scala.language.postfixOps
 
       redis.getOrUpdate(s"projectConfig:${repo.fullName}:${ref}", 30 seconds) {
         for {
           yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
-          conf <- parseProjectConfig(yaml)
+          conf <- yaml.map(parseProjectConfig(_).map(Some(_))) getOrElse Future.successful(None: Option[ProjectConfig])
         } yield (conf, true)
       }
     }
