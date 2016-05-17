@@ -1,11 +1,9 @@
 package prchecklist.services
 
-import org.scalatest.{ FunSuite, Matchers }
+import org.scalatest.{FunSuite, Matchers}
 import org.scalatest.mock.MockitoSugar
-
 import org.mockito.Mockito._
-import prchecklist.infrastructure.{RedisComponent, GitHubHttpClientComponent}
-
+import prchecklist.infrastructure.{GitHubHttpClientComponent, HttpComponent, RedisComponent}
 import prchecklist.models._
 import prchecklist.repositories.GitHubRepositoryComponent
 import prchecklist.test._

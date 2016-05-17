@@ -1,18 +1,16 @@
-package prchecklist.utils
+package prchecklist.infrastructure
+
+import java.io.InputStream
 
 import org.json4s
 import org.json4s.native.JsonMethods
 import org.json4s.native.{Serialization => JsonSerialization}
-
 import org.slf4j.LoggerFactory
+import prchecklist.utils.AppConfig
 
-import scalaj.http.HttpOptions.HttpOption
-import scalaj.http.{ BaseHttp, HttpRequest, HttpResponse, HttpOptions }
-
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-
-import java.io.InputStream
+import scala.concurrent.{ExecutionContext, Future}
+import scalaj.http.HttpOptions._
+import scalaj.http.{BaseHttp, HttpOptions, HttpRequest}
 
 trait HttpComponent {
   self: AppConfig =>
@@ -40,32 +38,27 @@ trait HttpComponent {
       Map.empty
     }
 
-    def postJson[P <: AnyRef, R](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, mfP: Manifest[P], mfR: Manifest[R]): Future[R] = {
+    def postJson[P <: AnyRef, R](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, ec: ExecutionContext, mfP: Manifest[P], mfR: Manifest[R]): Future[R] = {
       val httpReq = apply(url).postData(JsonSerialization.write(payload))
       requestJson(httpReq)
     }
 
-    // FIXME too specific
-    def postJsonDiscardResult[P <: AnyRef](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, mfP: Manifest[P]): Future[Unit] = {
-      val httpReq = apply(url).postData(JsonSerialization.write(payload))
-      doRequest(httpReq) {
-        is =>
-          ()
-      }
-    }
-
-    def getJson[R](url: String)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Future[R] = {
+    def getJson[R](url: String)(implicit formats: json4s.Formats = json4s.DefaultFormats, ec: ExecutionContext, mf: Manifest[R]): Future[R] = {
       requestJson(apply(url))
     }
 
-    protected def requestJson[R](req: HttpRequest)(implicit formats: json4s.Formats = json4s.DefaultFormats, mf: Manifest[R]): Future[R] = {
+    protected def requestJson[R](req: HttpRequest)(implicit formats: json4s.Formats = json4s.DefaultFormats, ec: ExecutionContext, mf: Manifest[R]): Future[R] = {
       doRequest(req) {
         is =>
-          JsonMethods.parse(is).camelizeKeys.extract[R]
+          if (mf == manifest[Nothing] || mf == manifest[Unit]) {
+            Unit.asInstanceOf[R]
+          } else {
+            JsonMethods.parse(is).camelizeKeys.extract[R]
+          }
       }
     }
 
-    protected def doRequest[A](httpReq: HttpRequest)(parser: InputStream => A): Future[A] = {
+    protected def doRequest[A](httpReq: HttpRequest)(parser: InputStream => A)(implicit ec: ExecutionContext): Future[A] = {
       logger.debug(s"--> ${httpReq.method} ${httpReq.url}")
 
       Future {

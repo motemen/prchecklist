@@ -246,24 +246,47 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     serveStaticResource() getOrElse resourceNotFound()
   }
 
+  val sapTemplate =
+    <html>
+      <head>
+        <title>prchecklist</title>
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400italic,700,700italic|Roboto:400,700" rel="stylesheet" type="text/css"/>
+      </head>
+      <body style="font-family: 'Open Sans'">
+        <div id="app">
+        </div>
+      </body>
+      <script src="/scripts/app.js"></script>
+    </html>
+
   get("/-/") {
     requireVisitor {
       _ =>
         contentType = "text/html"
-        layoutTemplate("/WEB-INF/templates/views/app.jade", "layout" -> "")
+        sapTemplate
     }
-  }
-
-  get("/-/me") {
-    JsonSerialization.write(views.User.create(getVisitor.get)) // FIXME get
   }
 
   get("/-/:repoOwner/:repoName/pull/:pullRequestNumber") {
     requireVisitor {
       _ =>
         contentType = "text/html"
-        layoutTemplate("/WEB-INF/templates/views/app.jade", "layout" -> "")
+        sapTemplate
     }
+  }
+
+  get("/-/:repoOwner/:repoName/pull/:pullRequestNumber/:stage") {
+    requireVisitor {
+      _ =>
+        contentType = "text/html"
+        sapTemplate
+    }
+  }
+
+  ///// JSON API /////
+
+  get("/-/me") {
+    JsonSerialization.write(views.User.create(getVisitor.get)) // FIXME get
   }
 
   // TODO: checklist?repo=foo/bar&number=13&stage=qa
@@ -308,4 +331,21 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         }
     }
   }
+
+  post("/-/repos") {
+    requireVisitor {
+      visitor =>
+        val repoOwner = params('repoOwner)
+        val repoName = params('repoName)
+
+        val fut = for {
+          githubRepo <- domain.githubRepository(visitor).getRepo(repoOwner, repoName)
+          (repo, created) <- domain.repoRepository.create(githubRepo, visitor.accessToken)
+        } yield repo
+
+        val repo = fut.run
+        JsonSerialization.write(views.Repo(fullName = repo.fullName))
+    }
+  }
+
 }

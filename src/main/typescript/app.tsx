@@ -1,6 +1,9 @@
 import * as React       from 'react';
 import * as ReactDOM    from 'react-dom';
 import { Router, Route, RouteComponentProps, Link, browserHistory }  from 'react-router'
+import * as injectTapEventPlugin from 'react-tap-event-plugin';
+
+injectTapEventPlugin();
 
 import {Styles} from 'material-ui';
 
@@ -23,6 +26,7 @@ interface ChecklistPageParams {
   repoOwner:         string;
   repoName:          string;
   pullRequestNumber: number;
+  stage:             string;
 }
 
 const ChecklistPage = React.createClass<RouteComponentProps<{}, ChecklistPageParams>, {}>({
@@ -31,7 +35,7 @@ const ChecklistPage = React.createClass<RouteComponentProps<{}, ChecklistPagePar
     return (
       <div style={{ margin: `${Styles.Spacing.desktopGutter * 3}px ${Styles.Spacing.desktopGutter * 4}px`, maxWidth: 768, position: 'relative' }}>
         <MeAvatarComponent />
-        <ChecklistComponent repoOwner={params.repoOwner} repoName={params.repoName} pullRequestNumber={params.pullRequestNumber} />
+        <ChecklistComponent repoOwner={params.repoOwner} repoName={params.repoName} pullRequestNumber={params.pullRequestNumber} stage={params.stage || ''} />
       </div>
     );
   }
@@ -41,6 +45,7 @@ ReactDOM.render(
   <Router history={browserHistory}>
     <Route path="/-/" component={IndexPage} />
     <Route path="/-/:repoOwner/:repoName/pull/:pullRequestNumber" component={ChecklistPage} />
+    <Route path="/-/:repoOwner/:repoName/pull/:pullRequestNumber/:stage" component={ChecklistPage} />
   </Router>,
   document.querySelector('#app')
 );
