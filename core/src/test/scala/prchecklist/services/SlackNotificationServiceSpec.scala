@@ -50,7 +50,7 @@ class SlackNotificationServiceSpec extends FunSuite with Matchers
     httpOutputCapture = new ByteArrayOutputStream()
     slackNotificationService.send("http://slack.test/", "hello").run
 
-    val json = org.json4s.jackson.parseJson(httpOutputCapture.toString)
+    val json = org.json4s.native.parseJson(httpOutputCapture.toString)
     (json \ "text") shouldEqual JString("hello")
   }
 }

@@ -58,7 +58,7 @@ trait GitHubRepositoryComponent {
       val commitsPerPage = 100
 
       if (page > 10) {
-        throw new Error(s"page too far: $page")
+        throw new IllegalArgumentException(s"page too far: $page")
       }
 
       client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/commits?sha=${pullRequest.head.sha}&per_page=${commitsPerPage}&page=${page}").flatMap {
@@ -80,11 +80,15 @@ trait GitHubRepositoryComponent {
 
     // https://developer.github.com/v3/repos/contents/#get-contents
     // TODO: be Future[Option[String]]
-    def getFileContent(repo: Repo, path: String, ref: String = "master"): Future[String] = {
-      client.getJson[GitHubTypes.Content](s"/repos/${repo.fullName}/contents/$path?ref=$ref").map {
-        content =>
-          content.fileContent.get
-      }
+    def getFileContent(repo: Repo, path: String, ref: String = "master"): Future[Option[String]] = {
+      client.getJson[GitHubTypes.Content](s"/repos/${repo.fullName}/contents/$path?ref=$ref")
+        .map {
+          content =>
+            Some(content.fileContent.get)
+        }
+        .recover {
+          case e: FailedHttpResponseException if e.code == 404 => None
+        }
     }
   }
 

@@ -3,7 +3,8 @@ package prchecklist.infrastructure
 import java.io.InputStream
 
 import org.json4s
-import org.json4s.jackson.JsonMethods
+import org.json4s.native.JsonMethods
+import org.json4s.native.{Serialization => JsonSerialization}
 import org.slf4j.LoggerFactory
 import prchecklist.utils.AppConfig
 
@@ -38,7 +39,7 @@ trait HttpComponent {
     }
 
     def postJson[P <: AnyRef, R](url: String, payload: P)(implicit formats: json4s.Formats = json4s.DefaultFormats, ec: ExecutionContext, mfP: Manifest[P], mfR: Manifest[R]): Future[R] = {
-      val httpReq = apply(url).postData(org.json4s.jackson.Serialization.write(payload))
+      val httpReq = apply(url).postData(JsonSerialization.write(payload))
       requestJson(httpReq)
     }
 
@@ -72,17 +73,18 @@ trait HttpComponent {
             logger.debug(s"<-- ${httpReq.method} ${httpReq.url} -- ${code}${limitRateInfo.mkString}")
 
             if (code >= 400) {
-              throw new Error(s"${httpReq.method} ${httpReq.url} failed: ${code}")
+              throw FailedHttpResponseException(code, httpReq)
             }
 
             parser(is)
         }
-        if (httpRes.isSuccess) {
-          httpRes.body
-        } else {
-          throw new Error(s"${httpReq.method} ${httpReq.url} failed: ${httpRes.statusLine}")
-        }
+        assert(httpRes.isNotError)
+        httpRes.body
       }
     }
+  }
+
+  case class FailedHttpResponseException(code: Int, request: HttpRequest) extends Exception {
+    override def toString = s"${request.method} ${request.url} failed: ${code}"
   }
 }

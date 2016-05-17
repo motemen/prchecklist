@@ -31,10 +31,10 @@ trait GitHubAuthServiceComponent {
             "code" -> code
           )).asParamMap
         if (!accessTokenRes.isSuccess) {
-          throw new Error(s"could not get access_token status=${accessTokenRes.statusLine}")
+          throw new Exception(s"could not get access_token status=${accessTokenRes.statusLine}")
         }
         accessTokenRes.body.get("access_token").getOrElse {
-          throw new Error(s"could not get access_token [$accessTokenRes.body]")
+          throw new Exception(s"could not get access_token [$accessTokenRes.body]")
         }
       }.flatMap {
         token =>

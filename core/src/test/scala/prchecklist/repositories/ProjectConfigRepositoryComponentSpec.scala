@@ -38,18 +38,18 @@ notification:
       override val github = mock[GitHubRepository]
     }
 
-    val conf = projConfRepository.parseProjectConfig(validProjectConfigYaml).run
+    val conf = projConfRepository.parseProjectConfig(validProjectConfigYaml)
     conf.notification.channels("default").url shouldBe "https://slack.com/xxxx"
   }
 
-  test("loadProjectConfig") {
+  test("loadProjectConfig should use Redis cache") {
     val projConfRepository = new ProjectConfigRepository {
       override val github = mock[GitHubRepository]
 
       when {
         github.getFileContent(any(), any(), any())
       } thenReturn {
-        Future { validProjectConfigYaml }
+        Future { Some(validProjectConfigYaml) }
       }
     }
 
@@ -59,6 +59,29 @@ notification:
 
     // This should not call getFileContent, as redis cache should be used
     projConfRepository.loadProjectConfig(repo, "pull/42/head").run
+
+    verify(projConfRepository.github, times(1)).getFileContent(any(), any(), any())
+  }
+
+  test("loadProjectConfig: when the yaml not found") {
+    val projConfRepository = new ProjectConfigRepository {
+      override val github = mock[GitHubRepository]
+
+      when {
+        github.getFileContent(any(), any(), any())
+      } thenReturn {
+        Future.successful(None)
+      }
+    }
+
+    val repo = Repo(id = 1, owner = "test", name = "repo", defaultAccessToken = "")
+
+    projConfRepository.loadProjectConfig(repo, "pull/43/head").run
+
+    verify(projConfRepository.github, times(1)).getFileContent(any(), any(), any())
+
+    // This should not call getFileContent, as redis cache should be used
+    projConfRepository.loadProjectConfig(repo, "pull/43/head").run
 
     verify(projConfRepository.github, times(1)).getFileContent(any(), any(), any())
   }
