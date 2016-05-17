@@ -33,6 +33,7 @@ lazy val core = (project in file("core")).
     libraryDependencies ++= Seq(
       "org.scalaj" %% "scalaj-http" % "1.1.6",
       "org.json4s" %% "json4s-jackson" % "3.3.0",
+      "org.json4s" %% "json4s-native" % "3.3.0",
       "com.typesafe.slick" %% "slick" % "3.0.0",
       "org.postgresql" % "postgresql" % "9.4.1207",
       "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
