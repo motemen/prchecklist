@@ -42,22 +42,23 @@ trait ProjectConfigRepositoryComponent {
   trait ProjectConfigRepository {
     def github: GitHubRepository
 
-    def parseProjectConfig(source: String): Future[ProjectConfig] = {
+    def parseProjectConfig(source: String): ProjectConfig = {
       val mapper = new ObjectMapper(new YAMLFactory) with ScalaObjectMapper
       mapper.registerModule(DefaultScalaModule)
-      Future { mapper.readValue[ProjectConfig](source) }
+      mapper.readValue[ProjectConfig](source)
     }
 
     // TODO: accept Checklist as an argument
-    def loadProjectConfig(repo: Repo, ref: String): Future[ProjectConfig] = {
+    def loadProjectConfig(repo: Repo, ref: String): Future[Option[ProjectConfig]] = {
       import scala.concurrent.duration._
       import scala.language.postfixOps
 
       redis.getOrUpdate(s"projectConfig:${repo.fullName}:${ref}", 30 seconds) {
         for {
-          yaml <- github.getFileContent(repo, "prchecklist.yml", ref)
-          conf <- parseProjectConfig(yaml)
-        } yield (conf, true)
+          yamlOption <- github.getFileContent(repo, "prchecklist.yml", ref)
+        } yield {
+          ( yamlOption.map(parseProjectConfig(_)), true )
+        }
       }
     }
   }

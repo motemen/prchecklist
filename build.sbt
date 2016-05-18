@@ -32,7 +32,7 @@ lazy val core = (project in file("core")).
 
     libraryDependencies ++= Seq(
       "org.scalaj" %% "scalaj-http" % "1.1.6",
-      "org.json4s" %% "json4s-jackson" % "3.3.0",
+      "org.json4s" %% "json4s-native" % "3.3.0",
       "com.typesafe.slick" %% "slick" % "3.0.0",
       "org.postgresql" % "postgresql" % "9.4.1207",
       "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
@@ -67,7 +67,6 @@ lazy val root = (project in file(".")).
       "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime",
       "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container;compile",
       "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-      "org.json4s" %% "json4s-jackson" % "3.3.0",
       "org.pegdown" % "pegdown" % "1.6.0",
       "org.mockito" % "mockito-core" % "2.0.36-beta" % "test"
     )

@@ -45,7 +45,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     when {
       githubRepository.getFileContent(any(), any(), any())
     } thenReturn {
-      Future.failed(new Error("getFileContent: mock"))
+      Future.failed(new Exception("getFileContent: mock"))
     }
 
     githubRepository

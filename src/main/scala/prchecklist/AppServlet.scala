@@ -3,7 +3,7 @@ package prchecklist
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 import org.json4s
-import org.json4s.jackson.{ Serialization => JsonSerialization }
+import org.json4s.native.{ Serialization => JsonSerialization }
 import prchecklist.infrastructure.{ DatabaseComponent, GitHubHttpClientComponent, PostgresDatabaseComponent, RedisComponent }
 import prchecklist.models._
 import prchecklist.repositories._
