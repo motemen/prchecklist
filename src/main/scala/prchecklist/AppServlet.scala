@@ -359,18 +359,16 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         val githubRepository = domain.githubRepository(visitor)
         val fut = githubRepository.listStarredRepos() flatMap {
           repos =>
-            Future.fold(
-              repos.map {
-                repo =>
-                  githubRepository.listReleasePullRequests(repo.owner, repo.name)
-              }
-            )(Map.empty[String, List[GitHubTypes.PullRequestRef]]) {
-                (m, prList) =>
-                  prList.headOption match {
-                    case None     => m
-                    case Some(pr) => m + (pr.base.repo.fullName -> prList)
-                  }
-              }
+            for {
+              news <- Future.fold(
+                repos.map {
+                  repo =>
+                    githubRepository.listReleasePullRequests(repo.owner, repo.name)
+                }
+              )(List.empty[List[GitHubTypes.PullRequestRef]]) { _ :+ _ }
+            } yield {
+              news.sortBy { _.headOption.map(_.updatedAt) }.reverse.filter(_.nonEmpty)
+            }
         }
         JsonSerialization.write(fut.run)
     }

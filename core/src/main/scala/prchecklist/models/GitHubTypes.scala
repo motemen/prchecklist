@@ -25,7 +25,8 @@ object GitHubTypes {
       title: String,
       state: String,
       head: CommitRef,
-      base: CommitRef) {
+      base: CommitRef,
+      updatedAt: java.util.Date) {
 
     def isOpen = state == "open"
     def isClosed = state == "closed"

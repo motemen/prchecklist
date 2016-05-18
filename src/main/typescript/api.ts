@@ -44,7 +44,7 @@ export interface User {
 }
 
 export interface News {
-  [repoName: string]: PullRequestRef[];
+  [n: number]: PullRequestRef[];
 }
 
 export module API {
