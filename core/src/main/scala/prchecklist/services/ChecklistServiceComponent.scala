@@ -60,14 +60,6 @@ trait ChecklistServiceComponent {
       }
     }
 
-    // Load checklist with fresh checks
-    def getChecklist(checklist: ReleaseChecklist): Future[ReleaseChecklist] = {
-      checklistRepository.getCheckFromChecklist(checklist).map {
-        checks =>
-          checklist.copy(checks = checks)
-      }
-    }
-
     /**
      * checkChecklist is the most important logic
      */
@@ -81,7 +73,7 @@ trait ChecklistServiceComponent {
               Future.traverse(config.notification.channels) {
                 case (name, ch) =>
                   val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
-                  val additionalMssage = if (newCkecklist.allGreen) { "\n:tada::tada:all ckecks are done:tada::tada:" } else { "" }
+                  val additionalMssage = if (newCkecklist.allGreen) { "\n:tada::tada:All ckecks are done:tada::tada:" } else { "" }
                   slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login} ${additionalMssage}""")
               }
           } onFailure {
