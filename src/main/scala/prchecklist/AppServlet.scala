@@ -4,8 +4,7 @@ import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 import org.json4s
 import org.json4s.native.{ Serialization => JsonSerialization }
-
-import prchecklist.infrastructure.{ PostgresDatabaseComponent, DatabaseComponent, RedisComponent, GitHubHttpClientComponent }
+import prchecklist.infrastructure.{ DatabaseComponent, GitHubHttpClientComponent, PostgresDatabaseComponent, RedisComponent }
 import prchecklist.models._
 import prchecklist.repositories._
 import prchecklist.services._
@@ -252,9 +251,13 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         <title>prchecklist</title>
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400italic,700,700italic|Roboto:400,700" rel="stylesheet" type="text/css"/>
       </head>
-      <body style="font-family: 'Open Sans'">
-        <div id="app">
+      <body style="font-family: 'Open Sans'; display: flex; flex-direction: column">
+        <div id="app" style="flex: 1">
         </div>
+        <footer style="text-align: center; font-size: small; color: #999; height: 2em;">
+          <a href="https://github.com/motemen/prchecklist" style="color: inherit">prchecklist</a>
+          &nbsp;{ BuildInfo.version }
+        </footer>
       </body>
       <script src="/scripts/app.js"></script>
     </html>
@@ -348,4 +351,26 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     }
   }
 
+  import scala.concurrent.Future
+
+  get("/-/news") {
+    requireVisitor {
+      visitor =>
+        val githubRepository = domain.githubRepository(visitor)
+        val fut = githubRepository.listStarredRepos() flatMap {
+          repos =>
+            for {
+              news <- Future.fold(
+                repos.map {
+                  repo =>
+                    githubRepository.listReleasePullRequests(repo.owner, repo.name)
+                }
+              )(List.empty[List[GitHubTypes.PullRequestRef]]) { _ :+ _ }
+            } yield {
+              news.sortBy { _.headOption.map(_.updatedAt) }.reverse.filter(_.nonEmpty)
+            }
+        }
+        JsonSerialization.write(fut.run)
+    }
+  }
 }

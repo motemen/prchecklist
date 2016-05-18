@@ -82,14 +82,16 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               title = "title",
               state = "open",
               head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
+              updatedAt = new java.util.Date()
             ),
             GitHubTypes.PullRequestRef(
               number = 101,
               title = "title",
               state = "open",
               head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-2"),
-              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master")
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
+              updatedAt = new java.util.Date()
             )
           )
         }
