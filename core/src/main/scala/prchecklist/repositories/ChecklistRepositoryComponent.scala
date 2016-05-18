@@ -30,7 +30,15 @@ trait ChecklistRepositoryComponent {
       db.run(q.transactionally)
     }
 
-    def getCheckFromChecklist(checklist: ReleaseChecklist): Future[Map[Int,Check]] = {
+    // Load checklist with fresh checks
+    def reloadChecklistChecks(checklist: ReleaseChecklist): Future[ReleaseChecklist] = {
+      getCheckFromChecklist(checklist).map {
+        checks =>
+          checklist.copy(checks = checks)
+      }
+    }
+
+    private def getCheckFromChecklist(checklist: ReleaseChecklist): Future[Map[Int,Check]] = {
       val db = getDatabase
       val q = for {
         checks <- queryChecklistChecks(checklist.id, NonEmpty.fromTraversable(checklist.featurePullRequests).get)
@@ -39,7 +47,7 @@ trait ChecklistRepositoryComponent {
       db.run(q.transactionally)
     }
 
-    def createCheck(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
+    def createCheck(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[ReleaseChecklist] = {
       val db = getDatabase
 
       val q = sqlu"""
@@ -62,7 +70,12 @@ trait ChecklistRepositoryComponent {
           }
       }
 
-      db.run(q.transactionally)
+      db.run(q.transactionally).flatMap {
+        _ => checklistRepository.getCheckFromChecklist(checklist).map {
+          checks =>
+            checklist.copy(checks = checks)
+        }
+      }
     }
 
     def deleteCheck(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {

@@ -60,28 +60,21 @@ trait ChecklistServiceComponent {
       }
     }
 
-    // Load checklist with fresh checks
-    def getChecklist(checklist: ReleaseChecklist): Future[ReleaseChecklist] = {
-      checklistRepository.getCheckFromChecklist(checklist).map {
-        checks =>
-          checklist.copy(checks = checks)
-      }
-    }
-
     /**
      * checkChecklist is the most important logic
      */
-    def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[Unit] = {
+    def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[ReleaseChecklist] = {
       // TODO: handle errors
       val fut = checklistRepository.createCheck(checklist, checkerUser, featurePRNumber)
       fut.onSuccess {
-        case _ =>
+        case newCkecklist =>
           projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head") andThen {
             case Success(Some(config)) =>
               Future.traverse(config.notification.channels) {
                 case (name, ch) =>
                   val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
-                  slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}""") // TODO: escape
+                  val additionalMssage = if (newCkecklist.allGreen) { "\n:tada::tada:All ckecks are done:tada::tada:" } else { "" }
+                  slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login} ${additionalMssage}""")
               }
           } onFailure {
             case e =>
@@ -96,4 +89,3 @@ trait ChecklistServiceComponent {
     }
   }
 }
-

@@ -315,7 +315,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
             val featureNumber = params('featureNumber).toInt
             val checklistService = new domain.ChecklistService(visitor)
             checklistService.checkChecklist(checklist, visitor, featureNumber).run
-            val updatedChecklist = checklistService.getChecklist(checklist).run
+            val updatedChecklist = domain.checklistRepository.reloadChecklistChecks(checklist).run
             JsonSerialization.write(views.Checklist.create(updatedChecklist, getVisitor))
         }
     }
@@ -329,7 +329,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
             val featureNumber = params('featureNumber).toInt
             val checklistService = new domain.ChecklistService(visitor)
             checklistService.uncheckChecklist(checklist, visitor, featureNumber).run
-            val updatedChecklist = checklistService.getChecklist(checklist).run
+            val updatedChecklist = domain.checklistRepository.reloadChecklistChecks(checklist).run
             JsonSerialization.write(views.Checklist.create(updatedChecklist, getVisitor))
         }
     }
