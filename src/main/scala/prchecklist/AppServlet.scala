@@ -1,7 +1,6 @@
 package prchecklist
 
 import org.scalatra._
-import org.scalatra.scalate.ScalateSupport
 import org.json4s
 import org.json4s.native.{ Serialization => JsonSerialization }
 import prchecklist.infrastructure.{ DatabaseComponent, GitHubHttpClientComponent, PostgresDatabaseComponent, RedisComponent }
@@ -47,7 +46,7 @@ class AppServlet extends AppServletBase {
   override val domain: Domain = RealDomain
 }
 
-trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport {
+trait AppServletBase extends ScalatraServlet with FutureSupport {
   implicit val jsonFormats = JsonSerialization.formats(json4s.NoTypeHints)
 
   import scala.language.implicitConversions
@@ -58,15 +57,9 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     serveStaticResource() getOrElse resourceNotFound()
   }
 
-  before () {
-    templateAttributes += "visitor" -> getVisitor
-  }
-
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
   val domain: Domain
-
-  override def isScalateErrorPageEnabled = false
 
   def getVisitor: Option[domain.Visitor] = {
     for {
