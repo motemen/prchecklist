@@ -61,7 +61,7 @@ const ChecklistPage = React.createClass<RouteComponentProps<{}, ChecklistPagePar
 ReactDOM.render(
   <ThemeWrapper theme={theme}>
     <Router history={browserHistory}>
-      <Route path="/-/" component={Layout}>
+      <Route path="/" component={Layout}>
         <IndexRoute component={IndexPage} />
         <Route path=":repoOwner/:repoName/pull/:pullRequestNumber" component={ChecklistPage} />
         <Route path=":repoOwner/:repoName/pull/:pullRequestNumber/:stage" component={ChecklistPage} />

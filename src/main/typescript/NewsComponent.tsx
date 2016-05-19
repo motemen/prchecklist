@@ -27,7 +27,7 @@ export const NewsComponent = React.createClass<{}, NewsComponentState>({
 
   _handlePullRequestItemTouchTap(newsItem, pr) {
     return () => {
-      this.context.router.push(`/-/${newsItem.head.repo.fullName}/pull/${pr.number}`)
+      this.context.router.push(`/${newsItem.head.repo.fullName}/pull/${pr.number}`)
     };
   },
 
