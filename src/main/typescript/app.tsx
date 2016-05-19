@@ -3,6 +3,8 @@ import * as ReactDOM    from 'react-dom';
 import { Router, Route, IndexRoute, RouteComponentProps, Link, browserHistory }  from 'react-router'
 import * as injectTapEventPlugin from 'react-tap-event-plugin';
 
+import 'whatwg-fetch';
+
 injectTapEventPlugin();
 
 import {Styles,ThemeWrapper} from 'material-ui';
@@ -31,13 +33,7 @@ const Layout = React.createClass({
 const IndexPage = React.createClass({
   render() {
     return (
-      <div>
-        <NewsComponent></NewsComponent>
-        <h2>For development</h2>
-        <ul>
-          <li><Link to={"/-/motemen/test/pull/3"}>motemen/test#3</Link></li>
-        </ul>
-      </div>
+      <NewsComponent></NewsComponent>
     );
   }
 });

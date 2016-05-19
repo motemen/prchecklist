@@ -138,10 +138,13 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           <List>
           {
             this.state.checklist.checks.map((check: Check) => (
-              <ListItem leftCheckbox={<Checkbox defaultChecked={check.checked} onCheck={this._handleCheck(check)} checkedIcon={<ActionThumbUp />} unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.accent2Color}/>} />} >
-                #{check.number} {check.title}
-                <div style={{ position: 'absolute', right: 32, top: 8 }}>
-                  {check.users.map(user => <Avatar src={user.avatarUrl} size={32} />)}
+              <ListItem>
+                <Checkbox style={{position: 'absolute', left: 16, top: 12, width: 24}} defaultChecked={check.checked} onCheck={this._handleCheck(check)} checkedIcon={<ActionThumbUp />} unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.disabledColor}/>} />
+                <div style={{paddingLeft: 36}}>
+                  <a href={check.url} target="_blank" style={{display: 'block'}}>#{check.number} {check.title}</a>
+                  <div style={{ position: 'absolute', right: 32, top: 8 }}>
+                    {check.users.map(user => <Avatar src={user.avatarUrl} size={32} />)}
+                  </div>
                 </div>
               </ListItem>
             ))
