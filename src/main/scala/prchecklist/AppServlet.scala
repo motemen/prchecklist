@@ -1,7 +1,6 @@
 package prchecklist
 
 import org.scalatra._
-import org.scalatra.scalate.ScalateSupport
 import org.json4s
 import org.json4s.native.{ Serialization => JsonSerialization }
 import prchecklist.infrastructure.{ DatabaseComponent, GitHubHttpClientComponent, PostgresDatabaseComponent, RedisComponent }
@@ -47,7 +46,7 @@ class AppServlet extends AppServletBase {
   override val domain: Domain = RealDomain
 }
 
-trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupport {
+trait AppServletBase extends ScalatraServlet with FutureSupport {
   implicit val jsonFormats = JsonSerialization.formats(json4s.NoTypeHints)
 
   import scala.language.implicitConversions
@@ -58,15 +57,9 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     serveStaticResource() getOrElse resourceNotFound()
   }
 
-  before () {
-    templateAttributes += "visitor" -> getVisitor
-  }
-
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global
 
   val domain: Domain
-
-  override def isScalateErrorPageEnabled = false
 
   def getVisitor: Option[domain.Visitor] = {
     for {
@@ -75,11 +68,6 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     } yield {
       domain.Visitor(login = login.asInstanceOf[String], accessToken = accessToken.asInstanceOf[String])
     }
-  }
-
-  val getRoot = get("/") {
-    contentType = "text/html"
-    layoutTemplate("/WEB-INF/templates/views/index.jade")
   }
 
   private def requireVisitor(f: domain.Visitor => Any): Any = {
@@ -119,101 +107,6 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
         val (checklist, _) = new domain.ChecklistService(githubAccessor).getChecklist(repo, prWithCommits, stage getOrElse "").run
         f(repo, checklist)
     }
-  }
-
-  val viewPullRequest = get("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)") {
-    requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
-      (repo, checklist) =>
-        contentType = "text/html"
-        layoutTemplate(
-          "/WEB-INF/templates/views/pullRequest.jade",
-          "checklist" -> checklist
-        )
-    }
-  }
-
-  private def checklistPath(checklist: domain.ReleaseChecklist, featureNumber: Int): java.net.URI = {
-    new java.net.URI(f"${Helper.checklistPath(checklist)}%s#feature-$featureNumber%d")
-  }
-
-  val checkFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)/-/check/:featureNumber") {
-    val featureNumber = params('featureNumber).toInt
-
-    requireVisitor {
-      visitor =>
-        requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
-          (repo, checklist) =>
-            new domain.ChecklistService(visitor).checkChecklist(checklist, visitor, featureNumber).run
-            redirect(checklistPath(checklist, featureNumber).toString)
-        }
-    }
-  }
-
-  val uncheckFeaturePR = post("/:repoOwner/:repoName/pull/:pullRequestNumber(/:stage)/-/uncheck/:featureNumber") {
-    val featureNumber = params('featureNumber).toInt
-
-    requireVisitor {
-      visitor =>
-        requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
-          (repo, checklist) =>
-            new domain.ChecklistService(visitor).uncheckChecklist(checklist, visitor, featureNumber).run
-            redirect(checklistPath(checklist, featureNumber).toString)
-        }
-    }
-  }
-
-  val listRepos = get("/repos") {
-    contentType = "text/html"
-    val repos = domain.repoRepository.list().run
-    layoutTemplate("/WEB-INF/templates/views/repos.jade", "repos" -> repos)
-  }
-
-  val registerRepo = post("/repos") {
-    val repoOwner = params('owner)
-    val repoName = params('name)
-
-    requireVisitor {
-      visitor =>
-        val githubRepo = domain.githubRepository(visitor).getRepo(repoOwner, repoName).run
-        val (repo, created) = domain.repoRepository.create(githubRepo, visitor.accessToken).run
-        redirect("/repos")
-    }
-  }
-
-  val viewRepo = get("/:repoOwner/:repoName") {
-    requireGitHubRepo(params('repoOwner), params('repoName)) {
-      repo =>
-        contentType = "text/html"
-        val pullRequests = domain.githubRepository(getVisitor getOrElse repo.defaultUser).listReleasePullRequests(repo).run
-        layoutTemplate("/WEB-INF/templates/views/repo.jade", "repo" -> repo, "pullRequests" -> pullRequests)
-    }
-  }
-
-  val receiveWebhook = post("/webhook") {
-    /*
-    // TODO: Add comment (checklist created, checklist completed)
-    // TODO: Set status (pending, success)
-    JsonMethods.parse(req.body).camelizeKeys.extractOpt[GitHubWebhookPullRequestEvent].map {
-      payload =>
-        repoRepository.get(payload.repository.fullName).map {
-          repo =>
-            val client = repo.makeOwnerClient()
-            val githubService = createGitHubRepository(client)
-            githubService.getChecklist(repo, payload.pullRequest, useFresh = true).map {
-              case (checklist, created) =>
-                if (created) {
-                  githubService.addIssueComment(pr.number, s"Checklist created: ${checklist.url}")
-                }
-                githubService.setCommitStatus(pr.head, checklist.githubStatus)
-            }
-        }
-    }
-    // getChecklist(pr).map { case (checklist, created) =>
-    //   if (created) githubService.addComment(pr, s"Created: $checklistUrl")
-    // checklistService.invalidateCache(pr)
-    // githubService.setStatus(pr.head, checklist.status)
-    */
-    "OK"
   }
 
   val enterAuth = get("/auth") {
@@ -262,7 +155,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
       <script src="/scripts/app.js"></script>
     </html>
 
-  get("/-/") {
+  get("/") {
     requireVisitor {
       _ =>
         contentType = "text/html"
@@ -270,7 +163,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     }
   }
 
-  get("/-/:repoOwner/:repoName/pull/:pullRequestNumber") {
+  get("/:repoOwner/:repoName/pull/:pullRequestNumber") {
     requireVisitor {
       _ =>
         contentType = "text/html"
@@ -278,7 +171,7 @@ trait AppServletBase extends ScalatraServlet with FutureSupport with ScalateSupp
     }
   }
 
-  get("/-/:repoOwner/:repoName/pull/:pullRequestNumber/:stage") {
+  get("/:repoOwner/:repoName/pull/:pullRequestNumber/:stage") {
     requireVisitor {
       _ =>
         contentType = "text/html"

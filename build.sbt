@@ -1,5 +1,4 @@
 import org.scalatra.sbt.ScalatraPlugin
-import com.mojolly.scalate.ScalatePlugin
 import com.typesafe.sbt.SbtScalariform
 import NativePackagerHelper._
 
@@ -54,7 +53,6 @@ lazy val root = (project in file(".")).
     JavaAppPackaging
   ).
   settings(ScalatraPlugin.scalatraSettings).
-  settings(ScalatePlugin.scalateSettings).
   settings(SbtScalariform.scalariformSettings).
   settings(commonSettings: _*).
   settings(
@@ -62,7 +60,6 @@ lazy val root = (project in file(".")).
 
     libraryDependencies ++= Seq(
       "org.scalatra" %% "scalatra" % "2.4.0",
-      "org.scalatra" %% "scalatra-scalate" % "2.4.0",
       "org.scalatra" %% "scalatra-scalatest" % "2.4.0" % "test",
       "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime",
       "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container;compile",
@@ -70,23 +67,6 @@ lazy val root = (project in file(".")).
       "org.pegdown" % "pegdown" % "1.6.0",
       "org.mockito" % "mockito-core" % "2.0.36-beta" % "test"
     )
-  ).
-  settings(
-    ScalateKeys.scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) { base =>
-      Seq(
-        TemplateConfig(
-          base / "webapp" / "WEB-INF" / "templates",
-          Seq(
-            "import prchecklist.views.Helper._",
-            "import prchecklist.BuildInfo"
-          ),
-          Seq(
-            Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
-          ),
-          Some("templates")
-        )
-      )
-    }
   ).
   settings(
     // sourceGenerators in Compile <+= buildInfo in Compile,
