@@ -59,8 +59,8 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
               title = "",
               body = "",
               state = "closed",
-              head = GitHubTypes.CommitRef(GitHubTypes.Repo("", false), "xxx", "xxx"),
-              base = GitHubTypes.CommitRef(GitHubTypes.Repo("", false), "xxx", "xxx"),
+              head = GitHubTypes.CommitRef("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "branch"),
+              base = GitHubTypes.CommitRef("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "master"),
               commits = 1,
               assignee = None,
               user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")

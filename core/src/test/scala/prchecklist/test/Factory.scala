@@ -25,5 +25,5 @@ object Factory {
     )
 
   def createGitHubCommitRef: GitHubTypes.CommitRef =
-    GitHubTypes.CommitRef(GitHubTypes.Repo("owner/name", false), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "branch")
+    GitHubTypes.CommitRef("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "branch")
 }
