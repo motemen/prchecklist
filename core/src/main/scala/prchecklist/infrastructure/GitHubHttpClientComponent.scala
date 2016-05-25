@@ -4,9 +4,6 @@ import prchecklist.models.GitHubConfig
 
 import scalaj.http.HttpRequest
 
-/**
-  * Created by motemen on 2016/05/02.
-  */
 trait GitHubHttpClientComponent extends HttpComponent {
   self: GitHubConfig =>
 

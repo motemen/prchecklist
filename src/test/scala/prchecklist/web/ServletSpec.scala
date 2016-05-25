@@ -1,17 +1,17 @@
 package prchecklist.web
 
-import org.mockito.Matchers.{ eq => matchEq, _ }
+import org.mockito.Matchers.{eq => matchEq, _}
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.{ Matchers, OptionValues, mock }
+import org.scalatest.{Matchers, OptionValues, mock}
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
 import prchecklist.infrastructure.PostgresDatabaseComponent
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.test._
-import prchecklist.{ AppServletBase, Domain }
+import prchecklist.{AppServletBase, Domain, views}
 import prchecklist.utils.RunnableFuture
 
 import scala.concurrent.Future
@@ -235,7 +235,12 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     }
   }
 
+  import org.json4s.DefaultFormats
+  import org.json4s.native.{Serialization => JsonSerialization}
+
   test("json: checklist") {
+    implicit val formats = DefaultFormats
+
     session {
       put("/@user?login=test-user") {
         status should equal (200)
@@ -243,10 +248,22 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
       get("/-/checklist?repoOwner=motemen&repoName=test-repository&pullRequestNumber=2") {
         status should equal (200)
+
+        val checklist = JsonSerialization.read[views.Checklist](body)
+        checklist.repo.fullName shouldBe "motemen/test-repository"
+        checklist.pullRequest.number shouldBe 2
+        checklist.checks.find(_.number == 1).value.checked shouldBe false
       }
 
       post("/-/checklist/check?repoOwner=motemen&repoName=test-repository&pullRequestNumber=2&featureNumber=1") {
         status should equal (200)
+      }
+
+      get("/-/checklist?repoOwner=motemen&repoName=test-repository&pullRequestNumber=2") {
+        status should equal (200)
+
+        val checklist = JsonSerialization.read[views.Checklist](body)
+        checklist.checks.find(_.number == 1).value.checked shouldBe true
       }
     }
   }
