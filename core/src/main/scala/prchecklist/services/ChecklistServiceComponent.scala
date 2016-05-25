@@ -48,6 +48,16 @@ trait ChecklistServiceComponent {
       }
     }
 
+    // def getReleaseChecklist(repoOwner: String, repoName: String, number: Int, stage: Option[String]): Future[ReleaseChecklist] = {
+    //   for {
+    //     repo           <- repoRepository.get(repoOwner, repoName).map(_.getOrElse { throw new Exception("Could not load repo") }) // TODO: throw reasonable excep
+    //     prWithCommits  <- githubRepository.getPullRequestWithCommits(repo, number)
+    //     (checklist, _) <- getChecklist(repo, prWithCommits, stage getOrElse "")
+    //     projectConfig  <- projectConfigRepository.loadProjectConfig(repo, prWithCommits.pullRequest.head.sha)
+    //   } yield ReleaseChecklist(checklist, projectConfig)
+    // }
+
+    // TODO: make stage Option[String]
     def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Future[(ReleaseChecklist, Boolean)] = {
       val db = getDatabase
 
@@ -59,10 +69,10 @@ trait ChecklistServiceComponent {
           Future.failed(new IllegalStateException("No merged pull requests"))
 
         case Some(prs) =>
-          checklistRepository.getChecks(repo, prWithCommits.pullRequest.number, stage, prs).map {
-            case (checklistId, checks, created) =>
-              (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, stage, prs.toList, checks), created)
-          }
+          for {
+            (checklistId, checks, created) <- checklistRepository.getChecklist(repo, prWithCommits.pullRequest.number, stage, prs)
+            projectConfig <- projectConfigRepository.loadProjectConfig(repo, prWithCommits.pullRequest.head.sha)
+          } yield (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, stage, prs.toList, checks, projectConfig), created)
       }
     }
 
@@ -73,13 +83,13 @@ trait ChecklistServiceComponent {
       // TODO: handle errors
       val fut = checklistRepository.createCheck(checklist, checkerUser, featurePRNumber)
       fut.onSuccess {
-        case newCkecklist =>
+        case newChecklist =>
           projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head") andThen {
             case Success(Some(config)) =>
               Future.traverse(config.notification.channels) {
                 case (name, ch) =>
                   val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
-                  val additionalMssage = if (newCkecklist.allGreen) { "\n:tada::tada:All ckecks are done:tada::tada:" } else { "" }
+                  val additionalMssage = if (newChecklist.allChecked) { "\n:tada::tada:All ckecks are done:tada::tada:" } else { "" }
                   slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login} ${additionalMssage}""")
               }
           } onFailure {

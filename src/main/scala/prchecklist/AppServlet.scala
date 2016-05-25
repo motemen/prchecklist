@@ -99,15 +99,24 @@ trait AppServletBase extends ScalatraServlet with FutureSupport {
     }
   }
 
+  private def requireReleaseChecklist(repoOwner: String, repoName: String, pullRequestNumber: Int, stage: Option[String])(f: (domain.Repo, domain.ReleaseChecklist) => Any): Any = {
+    requireVisitor {
+      visitor =>
+    }
+  }
+
   private def requireChecklist(repoOwner: String, repoName: String, pullRequestNumber: Int, stage: Option[String])(f: (domain.Repo, domain.ReleaseChecklist) => Any): Any = {
-    requireGitHubRepo(repoOwner, repoName) {
-      repo =>
-        // TODO: check visilibity
-        val githubAccessor = getVisitor getOrElse repo.defaultUser
-        val prWithCommits = domain.githubRepository(githubAccessor)
-          .getPullRequestWithCommits(repo, pullRequestNumber).run
-        val (checklist, _) = new domain.ChecklistService(githubAccessor).getChecklist(repo, prWithCommits, stage getOrElse "").run
-        f(repo, checklist)
+    requireVisitor {
+      visitor =>
+        requireGitHubRepo(repoOwner, repoName) {
+          repo =>
+            // TODO: check visilibity
+            val githubAccessor = getVisitor getOrElse repo.defaultUser
+            val prWithCommits = domain.githubRepository(githubAccessor)
+              .getPullRequestWithCommits(repo, pullRequestNumber).run
+            val (checklist, _) = new domain.ChecklistService(githubAccessor).getChecklist(repo, prWithCommits, stage getOrElse "").run
+            f(repo, checklist)
+        }
     }
   }
 
@@ -187,11 +196,13 @@ trait AppServletBase extends ScalatraServlet with FutureSupport {
     JsonSerialization.write(views.User.create(getVisitor.get)) // FIXME get
   }
 
-  // TODO: checklist?repo=foo/bar&number=13&stage=qa
   get("/-/checklist") {
-    requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
-      (repo, checklist) =>
-        JsonSerialization.write(views.Checklist.create(checklist, getVisitor))
+    requireVisitor {
+      visitor =>
+        requireChecklist(params('repoOwner), params('repoName), params('pullRequestNumber).toInt, params.get('stage)) {
+          (repo, checklist) =>
+            JsonSerialization.write(views.Checklist.create(checklist, getVisitor))
+        }
     }
   }
 
