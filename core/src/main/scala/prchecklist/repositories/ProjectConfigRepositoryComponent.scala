@@ -14,6 +14,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
  * Represents project.yml
  *
+ *   stages:
+ *     - staging
+ *     - production
  *   notification:
  *     channels:
  *       default:
@@ -26,8 +29,11 @@ object ProjectConfig {
 }
 
 case class ProjectConfig(
+  stages: Option[List[String]],
   notification: ProjectConfig.Notification
-)
+) {
+  def defaultStage: Option[String] = stages.flatMap(_.headOption)
+}
 
 trait ProjectConfigRepositoryComponent {
   this: GitHubRepositoryComponent
