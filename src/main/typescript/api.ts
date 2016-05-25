@@ -31,11 +31,12 @@ export interface PullRequestRef {
 }
 
 export interface Check {
-  url:     string;
-  number:  number;
-  title:   string;
-  users:   User[];
-  checked: boolean;
+  url:      string;
+  number:   number;
+  title:    string;
+  users:    User[];
+  checked:  boolean;
+  assignee: User;
 }
 
 export interface User {

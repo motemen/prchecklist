@@ -59,6 +59,7 @@ object GitHubTypes {
     sha: String,
     commit: CommitDetail)
 
+  // can we tweak jackson to embed CommitDetail into Commit?
   case class CommitDetail(
     message: String)
 
