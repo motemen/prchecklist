@@ -1,7 +1,7 @@
 package prchecklist.models
 
 object GitHubTypes {
-  case class User(login: String)
+  case class User(login: String, avatarUrl: String)
 
   // https://developer.github.com/v3/pulls/#get-a-single-pull-request
   case class PullRequest(
@@ -11,10 +11,14 @@ object GitHubTypes {
       state: String,
       head: CommitRef,
       base: CommitRef,
-      commits: Int) {
+      commits: Int,
+      assignee: Option[User],
+      user: User) {
 
     def isOpen = state == "open"
     def isClosed = state == "closed"
+
+    def userInCharge = assignee getOrElse user
   }
 
   case class PullRequestWithCommits(pullRequest: PullRequest, commits: List[Commit])

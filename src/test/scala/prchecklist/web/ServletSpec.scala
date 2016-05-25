@@ -2,6 +2,8 @@ package prchecklist.web
 
 import org.mockito.Matchers.{ eq => matchEq, _ }
 import org.mockito.Mockito._
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.{ Matchers, OptionValues, mock }
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
@@ -52,7 +54,9 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               state = "open",
               head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
               base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
-              commits = 1
+              commits = 1,
+              assignee = None,
+              user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
             ),
             commits = List(
               GitHubTypes.Commit("", GitHubTypes.CommitDetail(
@@ -103,6 +107,28 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
         Future.failed(new Exception("getFileContent: mock"))
       }
 
+      when {
+        repository.getPullRequest(any(), any())
+      } thenAnswer {
+        new Answer[Future[GitHubTypes.PullRequest]] {
+          override def answer(invocation: InvocationOnMock) = {
+            Future.successful {
+              GitHubTypes.PullRequest(
+                number = invocation.getArgumentAt(1, classOf[Int]),
+                title = "",
+                body = "",
+                state = "closed",
+                head = GitHubTypes.CommitRef(GitHubTypes.Repo("", false), "xxx", "xxx"),
+                base = GitHubTypes.CommitRef(GitHubTypes.Repo("", false), "xxx", "xxx"),
+                commits = 1,
+                assignee = None,
+                user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
+              )
+            }
+          }
+        }
+      }
+
       repository
     }
 
@@ -139,7 +165,9 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
             sha = "",
             ref = "master"
           ),
-          commits = 1
+          commits = 1,
+          assignee = None,
+          user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
         )
       )
 

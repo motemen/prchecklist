@@ -11,7 +11,9 @@ object Factory {
       state = "open",
       head = createGitHubCommitRef.copy(ref = "feature-1"),
       base = createGitHubCommitRef.copy(ref = "master"),
-      commits = 1
+      commits = 1,
+      assignee = None,
+      user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
     )
 
   def createGitHubCommit: GitHubTypes.Commit =

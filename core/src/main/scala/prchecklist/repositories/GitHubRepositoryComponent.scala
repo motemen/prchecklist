@@ -40,6 +40,13 @@ trait GitHubRepositoryComponent {
       )
     }
 
+    def getPullRequest(repo: Repo, number: Int): Future[GitHubTypes.PullRequest] = {
+      // TODO use cache from the caller side
+      redis.getOrUpdate(s"pullSimple:${repo.fullName}:$number", 30 seconds) {
+        client.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number").map { (_, true) }
+      }
+    }
+
     def getPullRequestWithCommits(repo: Repo, number: Int): Future[GitHubTypes.PullRequestWithCommits] = {
       // TODO use cache from the caller side
       redis.getOrUpdate(s"pull:${repo.fullName}:$number", 30 seconds) {

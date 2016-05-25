@@ -3,7 +3,7 @@ package prchecklist.models
 trait ModelsComponent {
   self: GitHubConfig =>
 
-  case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[PullRequestReference], checks: Map[Int, Check]) {
+  case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[GitHubTypes.PullRequest], checks: Map[Int, Check]) {
     def pullRequestUrl = repo.pullRequestUrl(pullRequest.number)
 
     def featurePullRequestUrl(number: Int) = repo.pullRequestUrl(number)
@@ -12,11 +12,9 @@ trait ModelsComponent {
 
     def featurePRNumbers = featurePullRequests.map(_.number)
 
-    def featurePullRequest(number: Int): Option[PullRequestReference] =
+    def featurePullRequest(number: Int): Option[GitHubTypes.PullRequest] =
       featurePullRequests.find(_.number == number)
   }
-
-  case class PullRequestReference(number: Int, title: String)
 
   // A Repo is a GitHub repository registered to prchecklist with default access token (of the user registered it).
   // Do not get confused with GitHubTypes.Repo (TODO: rename GitHubTypes.Repo)
@@ -30,7 +28,7 @@ trait ModelsComponent {
     def defaultUser = RepoDefaultUser(defaultAccessToken)
   }
 
-  case class Check(pullRequest: PullRequestReference, checkedUsers: List[User]) {
+  case class Check(pullRequest: GitHubTypes.PullRequest, checkedUsers: List[User]) {
     def isChecked: Boolean = checkedUsers.nonEmpty
 
     def isCheckedBy(user: ModelsComponent#UserLike) = checkedUsers.exists(_.login == user.login)
