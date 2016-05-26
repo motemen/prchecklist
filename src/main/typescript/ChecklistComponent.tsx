@@ -14,6 +14,7 @@ interface ChecklistComponentProps {
 interface ChecklistComponentState {
   checklist:  Checklist;
   loadFailed: boolean;
+  loading:    boolean;
   muiTheme:   Styles.MuiTheme;
 }
 
@@ -31,9 +32,9 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     API.registerRepo(this.props.repoOwner, this.props.repoName).then(() => location.reload());
   },
 
-  // TODO use react-router API
   navigateToStage(stage: string) {
-    location.href = location.pathname.replace(/\/(\d+)(\/[^\/]+)?$/, '/$1/' + stage);
+    // TODO build URL smartly
+    this.context.router.push(location.pathname.replace(/\/(\d+)(\/[^\/]+)?$/, '/$1/' + stage));
   },
 
   contextTypes: {
@@ -83,17 +84,26 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     //   allChecked: false
     // }
     // this.setState({ checklist: checklist });
-    const props: ChecklistComponentProps = this.props;
+    this.loadChecklist(this.props);
+  },
+
+  componentWillReceiveProps(nextProps: ChecklistComponentProps) {
+    this.loadChecklist(nextProps);
+  },
+
+  loadChecklist(props: ChecklistComponentProps) {
+    this.setState({ loading: true });
     API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber, props.stage)
       .then((checklist) => {
         if (checklist.stage === '' && checklist.stages.length > 0) {
           // XXX: move this logic to server-side?
           this.navigateToStage(checklist.stages[0]);
         }
-        this.setState({ checklist: checklist });
+        this.setState({ loading: false, checklist: checklist });
       })
-      .catch(() => {
-        this.setState({ loadFailed: true });
+      .catch((e) => {
+        console.error(e);
+        this.setState({ loading: false, loadFailed: true });
       });
   },
 
@@ -101,6 +111,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     return {
       checklist: null,
       loadFailed: false,
+      loading: false,
       muiTheme: this.context.muiTheme
     };
   },
@@ -168,7 +179,14 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           {
             this.state.checklist.checks.map((check: Check) => (
               <ListItem secondaryText={<div style={{paddingLeft: 48}}>@{check.assignee.name}</div>}>
-                <Checkbox style={{position: 'absolute', left: 20, top: 24, width: 24}} defaultChecked={check.checked} onCheck={this._handleCheck(check)} checkedIcon={<ActionThumbUp />} unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.disabledColor}/>} />
+                <Checkbox
+                  style={{position: 'absolute', left: 20, top: 24, width: 24}}
+                  defaultChecked={check.checked}
+                  onCheck={this._handleCheck(check)}
+                  checkedIcon={<ActionThumbUp />}
+                  unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.disabledColor}/>}
+                  disabled={!!this.state.loading}
+                  />
                 <div style={{paddingLeft: 48}}>
                   <a href={check.url} target="_blank" style={{display: 'block'}}>#{check.number} {check.title}</a>
                   <div style={{ position: 'absolute', right: 32, top: 20 }}>
