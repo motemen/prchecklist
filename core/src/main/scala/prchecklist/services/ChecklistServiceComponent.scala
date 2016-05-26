@@ -31,14 +31,20 @@ trait ChecklistServiceComponent {
     val githubRepository = self.githubRepository(githubAccessor)
     val projectConfigRepository = self.projectConfigRepository(githubRepository)
 
-    private def mergedPullRequests(commits: List[GitHubTypes.Commit]): Option[NonEmpty[PullRequestReference]] = {
-      NonEmpty.fromTraversable {
+    val rxMergedPullRequestCommitMessage = """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r
+
+    private def getMergedPullRequests(repo: Repo, commits: List[GitHubTypes.Commit]): Future[Option[NonEmpty[GitHubTypes.PullRequest]]] = {
+      Future.sequence {
         commits.flatMap {
-          c =>
-            """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r.findFirstMatchIn(c.commit.message) map {
-              m => PullRequestReference(m.group(1).toInt, m.group(2))
+          case GitHubTypes.Commit(_, commit) =>
+            rxMergedPullRequestCommitMessage.findFirstMatchIn(commit.message) map {
+              m =>
+                githubRepository.getPullRequest(repo, m.group(1).toInt)
             }
         }
+      }.map {
+        prs =>
+          NonEmpty.fromTraversable(prs)
       }
     }
 
@@ -48,14 +54,14 @@ trait ChecklistServiceComponent {
       // repo = repoRepository.get(repoOwner, repoName)
       // prWithCommits = githubRepository.getPullRequestWithCommits(repo, prNumber)
 
-      mergedPullRequests(prWithCommits.commits) match {
+      getMergedPullRequests(repo, prWithCommits.commits) flatMap {
         case None =>
           Future.failed(new IllegalStateException("No merged pull requests"))
 
-        case Some(prRefs) =>
-          checklistRepository.getChecks(repo, prWithCommits.pullRequest.number, stage, prRefs).map {
+        case Some(prs) =>
+          checklistRepository.getChecks(repo, prWithCommits.pullRequest.number, stage, prs).map {
             case (checklistId, checks, created) =>
-              (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, stage, prRefs.toList, checks), created)
+              (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, stage, prs.toList, checks), created)
           }
       }
     }

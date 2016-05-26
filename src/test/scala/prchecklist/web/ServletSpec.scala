@@ -1,15 +1,17 @@
 package prchecklist.web
 
-import org.mockito.Matchers.{ eq => matchEq, _ }
+import org.mockito.Matchers.{eq => matchEq, _}
 import org.mockito.Mockito._
-import org.scalatest.{ Matchers, OptionValues, mock }
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
+import org.scalatest.{Matchers, OptionValues, mock}
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
 import prchecklist.infrastructure.PostgresDatabaseComponent
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.test._
-import prchecklist.{ AppServletBase, Domain }
+import prchecklist.{AppServletBase, Domain, views}
 import prchecklist.utils.RunnableFuture
 
 import scala.concurrent.Future
@@ -50,9 +52,11 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               title = "title",
               body = "body",
               state = "open",
-              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
-              commits = 1
+              head = GitHubTypes.CommitRef("", "feature-1"),
+              base = GitHubTypes.CommitRef("", "master"),
+              commits = 1,
+              assignee = None,
+              user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
             ),
             commits = List(
               GitHubTypes.Commit("", GitHubTypes.CommitDetail(
@@ -81,16 +85,16 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               number = 100,
               title = "title",
               state = "open",
-              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
-              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
+              head = GitHubTypes.CommitRef("", "feature-1"),
+              base = GitHubTypes.CommitRef("", "master"),
               updatedAt = new java.util.Date()
             ),
             GitHubTypes.PullRequestRef(
               number = 101,
               title = "title",
               state = "open",
-              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-2"),
-              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
+              head = GitHubTypes.CommitRef("", "feature-2"),
+              base = GitHubTypes.CommitRef("", "master"),
               updatedAt = new java.util.Date()
             )
           )
@@ -101,6 +105,28 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
         repository.getFileContent(any(), any(), any())
       } thenReturn {
         Future.failed(new Exception("getFileContent: mock"))
+      }
+
+      when {
+        repository.getPullRequest(any(), any())
+      } thenAnswer {
+        new Answer[Future[GitHubTypes.PullRequest]] {
+          override def answer(invocation: InvocationOnMock) = {
+            Future.successful {
+              GitHubTypes.PullRequest(
+                number = invocation.getArgumentAt(1, classOf[Int]),
+                title = "",
+                body = "",
+                state = "closed",
+                head = GitHubTypes.CommitRef("xxx", "xxx"),
+                base = GitHubTypes.CommitRef("xxx", "xxx"),
+                commits = 1,
+                assignee = None,
+                user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
+              )
+            }
+          }
+        }
       }
 
       repository
@@ -130,16 +156,16 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
           body = "body",
           state = "open",
           head = GitHubTypes.CommitRef(
-            repo = repo,
             sha = "",
             ref = "feature-1"
           ),
           base = GitHubTypes.CommitRef(
-            repo = repo,
             sha = "",
             ref = "master"
           ),
-          commits = 1
+          commits = 1,
+          assignee = None,
+          user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
         )
       )
 
@@ -209,7 +235,12 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     }
   }
 
+  import org.json4s.DefaultFormats
+  import org.json4s.native.{Serialization => JsonSerialization}
+
   test("json: checklist") {
+    implicit val formats = DefaultFormats
+
     session {
       put("/@user?login=test-user") {
         status should equal (200)
@@ -217,10 +248,22 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
       get("/-/checklist?repoOwner=motemen&repoName=test-repository&pullRequestNumber=2") {
         status should equal (200)
+
+        val checklist = JsonSerialization.read[views.Checklist](body)
+        checklist.repo.fullName shouldBe "motemen/test-repository"
+        checklist.pullRequest.number shouldBe 2
+        checklist.checks.find(_.number == 1).value.checked shouldBe false
       }
 
       post("/-/checklist/check?repoOwner=motemen&repoName=test-repository&pullRequestNumber=2&featureNumber=1") {
         status should equal (200)
+      }
+
+      get("/-/checklist?repoOwner=motemen&repoName=test-repository&pullRequestNumber=2") {
+        status should equal (200)
+
+        val checklist = JsonSerialization.read[views.Checklist](body)
+        checklist.checks.find(_.number == 1).value.checked shouldBe true
       }
     }
   }

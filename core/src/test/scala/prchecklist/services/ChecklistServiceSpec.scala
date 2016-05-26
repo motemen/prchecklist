@@ -5,14 +5,14 @@ import prchecklist.models._
 import prchecklist.repositories._
 import prchecklist.test._
 import prchecklist.utils.RunnableFuture
-
 import com.github.tarao.nonempty.NonEmpty
-
 import org.scalatest._
 import org.scalatest.time._
 import org.scalatest.mock._
 import org.mockito.Mockito._
 import org.mockito.Matchers._
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,6 +46,28 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
       githubRepository.getFileContent(any(), any(), any())
     } thenReturn {
       Future.failed(new Exception("getFileContent: mock"))
+    }
+
+    when {
+      githubRepository.getPullRequest(any(), any())
+    } thenAnswer {
+      new Answer[Future[GitHubTypes.PullRequest]] {
+        override def answer(invocation: InvocationOnMock) = {
+          Future.successful {
+            GitHubTypes.PullRequest(
+              number = invocation.getArgumentAt(1, classOf[Int]),
+              title = "",
+              body = "",
+              state = "closed",
+              head = GitHubTypes.CommitRef("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "branch"),
+              base = GitHubTypes.CommitRef("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "master"),
+              commits = 1,
+              assignee = None,
+              user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
+            )
+          }
+        }
+      }
     }
 
     githubRepository

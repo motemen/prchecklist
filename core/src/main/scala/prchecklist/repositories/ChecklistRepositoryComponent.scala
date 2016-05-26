@@ -2,10 +2,9 @@ package prchecklist.repositories
 
 import prchecklist.infrastructure
 import prchecklist.models
-
-import com.github.tarao.slickjdbc.interpolation.{ SQLInterpolation, CompoundParameter }
+import com.github.tarao.slickjdbc.interpolation.{CompoundParameter, SQLInterpolation}
 import com.github.tarao.nonempty.NonEmpty
-
+import prchecklist.models.GitHubTypes
 import slick.driver.PostgresDriver.api.DBIO
 import slick.driver.PostgresDriver.api.jdbcActionExtensionMethods
 
@@ -19,12 +18,12 @@ trait ChecklistRepositoryComponent {
   def checklistRepository: ChecklistRepository
 
   class ChecklistRepository extends SQLInterpolation with CompoundParameter {
-    def getChecks(repo: Repo, pullRequestNumber: Int, stage: String, prRefs: NonEmpty[PullRequestReference]): Future[(Int, Map[Int,Check], Boolean)] = {
+    def getChecks(repo: Repo, pullRequestNumber: Int, stage: String, prs: NonEmpty[GitHubTypes.PullRequest]): Future[(Int, Map[Int,Check], Boolean)] = {
       val db = getDatabase
 
       val q = for {
         (checklistId, created) <- ensureChecklist(repo, pullRequestNumber, stage)
-        checks <- queryChecklistChecks(checklistId, prRefs)
+        checks <- queryChecklistChecks(checklistId, prs)
       } yield (checklistId, checks, created)
 
       db.run(q.transactionally)
@@ -112,7 +111,7 @@ trait ChecklistRepositoryComponent {
       }
     }
 
-    private def queryChecklistChecks(checklistId: Int, featurePRs: NonEmpty[PullRequestReference]): DBIO[Map[Int, Check]] = {
+    private def queryChecklistChecks(checklistId: Int, featurePRs: NonEmpty[GitHubTypes.PullRequest]): DBIO[Map[Int, Check]] = {
       // TODO fix NonEmpty so that NonEmpty#map returns NonEmpty
       NonEmpty.fromTraversable(featurePRs.map(_.number)) match {
         case None =>
