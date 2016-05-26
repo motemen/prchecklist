@@ -22,7 +22,6 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     return (e, isChecked) => {
       let updateChecklist = isChecked ? API.checkChecklist : API.uncheckChecklist;
       updateChecklist(this.state.checklist, check.number).then(checklist => {
-        console.log(checklist);
         this.setState({ checklist: checklist })
       });
     };
@@ -32,8 +31,14 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     API.registerRepo(this.props.repoOwner, this.props.repoName).then(() => location.reload());
   },
 
+  // TODO use react-router API
+  navigateToStage(stage: string) {
+    location.href = location.pathname.replace(/\/(\d+)(\/[^\/]+)?$/, '/$1/' + stage);
+  },
+
   contextTypes: {
-    muiTheme: React.PropTypes.object
+    muiTheme: React.PropTypes.object,
+    router: React.PropTypes.object
   },
 
   componentWillMount() {
@@ -81,6 +86,10 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     const props: ChecklistComponentProps = this.props;
     API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber, props.stage)
       .then((checklist) => {
+        if (checklist.stage === '' && checklist.stages.length > 0) {
+          // XXX: move this logic to server-side?
+          this.navigateToStage(checklist.stages[0]);
+        }
         this.setState({ checklist: checklist });
       })
       .catch(() => {
@@ -96,12 +105,32 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     };
   },
 
+  _handleStageChange(event, key: number, payload: any) {
+    this.navigateToStage(payload);
+  },
+
   render() {
     let theme = this.state.muiTheme;
 
+    let stages = this.state.checklist && this.state.checklist.stages || [];
+
     const header = (
-      <h2>
-        <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber} { this.props.stage ? `:: ${this.props.stage}` : '' }</small>
+      <h2 style={{color: theme.baseTheme.palette.disabledColor, lineHeight: '56px'}}>
+        {this.props.repoOwner}/{this.props.repoName}
+        { ` #${this.props.pullRequestNumber}` }
+        { (this.props.stage || stages.length) && ' :: ' || '' }
+        {
+          stages.length ? (
+            <DropDownMenu value={this.props.stage} style={{fontSize: 'inherit', marginLeft: -20}} onChange={this._handleStageChange}>
+              { stages.map(stage => <MenuItem value={stage} primaryText={stage} />) }
+              {
+                // Non-declared stage
+                stages.some(stage => stage === this.props.stage) ? [] :
+                  <MenuItem value={this.props.stage} primaryText={this.props.stage} />
+              }
+            </DropDownMenu>
+          ) : this.props.stage
+        }
       </h2>
     )
 
