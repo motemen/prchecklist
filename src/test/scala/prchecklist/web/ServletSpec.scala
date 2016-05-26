@@ -52,8 +52,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               title = "title",
               body = "body",
               state = "open",
-              head = GitHubTypes.CommitRef("", "feature-1"),
-              base = GitHubTypes.CommitRef("", "master"),
+              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
               commits = 1,
               assignee = None,
               user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
@@ -85,16 +85,16 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               number = 100,
               title = "title",
               state = "open",
-              head = GitHubTypes.CommitRef("", "feature-1"),
-              base = GitHubTypes.CommitRef("", "master"),
+              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
               updatedAt = new java.util.Date()
             ),
             GitHubTypes.PullRequestRef(
               number = 101,
               title = "title",
               state = "open",
-              head = GitHubTypes.CommitRef("", "feature-2"),
-              base = GitHubTypes.CommitRef("", "master"),
+              head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-2"),
+              base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
               updatedAt = new java.util.Date()
             )
           )
@@ -118,8 +118,8 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
                 title = "",
                 body = "",
                 state = "closed",
-                head = GitHubTypes.CommitRef("xxx", "xxx"),
-                base = GitHubTypes.CommitRef("xxx", "xxx"),
+                head = GitHubTypes.CommitRef(GitHubTypes.Repo("", false), "xxx", "xxx"),
+                base = GitHubTypes.CommitRef(GitHubTypes.Repo("", false), "xxx", "xxx"),
                 commits = 1,
                 assignee = None,
                 user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
@@ -156,10 +156,12 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
           body = "body",
           state = "open",
           head = GitHubTypes.CommitRef(
+            repo = repo,
             sha = "",
             ref = "feature-1"
           ),
           base = GitHubTypes.CommitRef(
+            repo = repo,
             sha = "",
             ref = "master"
           ),

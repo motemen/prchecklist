@@ -64,6 +64,7 @@ object GitHubTypes {
     message: String)
 
   case class CommitRef(
+    repo: Repo,
     sha: String,
     ref: String)
 
