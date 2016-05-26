@@ -33,7 +33,7 @@ trait ChecklistServiceComponent {
 
     val rxMergedPullRequestCommitMessage = """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r
 
-    private def mergedPullRequests(repo: Repo, commits: List[GitHubTypes.Commit]): Future[Option[NonEmpty[GitHubTypes.PullRequest]]] = {
+    private def getMergedPullRequests(repo: Repo, commits: List[GitHubTypes.Commit]): Future[Option[NonEmpty[GitHubTypes.PullRequest]]] = {
       Future.sequence {
         commits.flatMap {
           case GitHubTypes.Commit(_, commit) =>
@@ -54,7 +54,7 @@ trait ChecklistServiceComponent {
       // repo = repoRepository.get(repoOwner, repoName)
       // prWithCommits = githubRepository.getPullRequestWithCommits(repo, prNumber)
 
-      mergedPullRequests(repo, prWithCommits.commits) flatMap {
+      getMergedPullRequests(repo, prWithCommits.commits) flatMap {
         case None =>
           Future.failed(new IllegalStateException("No merged pull requests"))
 
