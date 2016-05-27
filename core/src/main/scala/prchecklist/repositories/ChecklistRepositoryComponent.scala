@@ -18,7 +18,15 @@ trait ChecklistRepositoryComponent {
   def checklistRepository: ChecklistRepository
 
   class ChecklistRepository extends SQLInterpolation with CompoundParameter {
-    def getChecks(repo: Repo, pullRequestNumber: Int, stage: String, prs: NonEmpty[GitHubTypes.PullRequest]): Future[(Int, Map[Int,Check], Boolean)] = {
+    /**
+      *
+      * @param repo
+      * @param pullRequestNumber
+      * @param stage
+      * @param prRefs
+      * @return (checklistId, checks, created)
+      */
+    def getChecklist(repo: Repo, pullRequestNumber: Int, stage: String, prs: NonEmpty[GitHubTypes.PullRequest]): Future[(Int, Map[Int, Check], Boolean)] = {
       val db = getDatabase
 
       val q = for {

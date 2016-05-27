@@ -14,6 +14,7 @@ interface ChecklistComponentProps {
 interface ChecklistComponentState {
   checklist:  Checklist;
   loadFailed: boolean;
+  loading:    boolean;
   muiTheme:   Styles.MuiTheme;
 }
 
@@ -22,7 +23,6 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     return (e, isChecked) => {
       let updateChecklist = isChecked ? API.checkChecklist : API.uncheckChecklist;
       updateChecklist(this.state.checklist, check.number).then(checklist => {
-        console.log(checklist);
         this.setState({ checklist: checklist })
       });
     };
@@ -32,8 +32,14 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     API.registerRepo(this.props.repoOwner, this.props.repoName).then(() => location.reload());
   },
 
+  navigateToStage(stage: string) {
+    // TODO build URL smartly
+    this.context.router.push(location.pathname.replace(/\/(\d+)(\/[^\/]+)?$/, '/$1/' + stage));
+  },
+
   contextTypes: {
-    muiTheme: React.PropTypes.object
+    muiTheme: React.PropTypes.object,
+    router: React.PropTypes.object
   },
 
   componentWillMount() {
@@ -78,13 +84,26 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     //   allChecked: false
     // }
     // this.setState({ checklist: checklist });
-    const props: ChecklistComponentProps = this.props;
+    this.loadChecklist(this.props);
+  },
+
+  componentWillReceiveProps(nextProps: ChecklistComponentProps) {
+    this.loadChecklist(nextProps);
+  },
+
+  loadChecklist(props: ChecklistComponentProps) {
+    this.setState({ loading: true });
     API.fetchChecklist(props.repoOwner, props.repoName, props.pullRequestNumber, props.stage)
       .then((checklist) => {
-        this.setState({ checklist: checklist });
+        if (checklist.stage === '' && checklist.stages.length > 0) {
+          // XXX: move this logic to server-side?
+          this.navigateToStage(checklist.stages[0]);
+        }
+        this.setState({ loading: false, checklist: checklist });
       })
-      .catch(() => {
-        this.setState({ loadFailed: true });
+      .catch((e) => {
+        console.error(e);
+        this.setState({ loading: false, loadFailed: true });
       });
   },
 
@@ -92,16 +111,37 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
     return {
       checklist: null,
       loadFailed: false,
+      loading: false,
       muiTheme: this.context.muiTheme
     };
+  },
+
+  _handleStageChange(event, key: number, payload: any) {
+    this.navigateToStage(payload);
   },
 
   render() {
     let theme = this.state.muiTheme;
 
+    let stages = this.state.checklist && this.state.checklist.stages || [];
+
     const header = (
-      <h2>
-        <small style={{color: theme.baseTheme.palette.disabledColor}}>{this.props.repoOwner}/{this.props.repoName} #{this.props.pullRequestNumber} { this.props.stage ? `:: ${this.props.stage}` : '' }</small>
+      <h2 style={{color: theme.baseTheme.palette.disabledColor, lineHeight: '56px'}}>
+        {this.props.repoOwner}/{this.props.repoName}
+        { ` #${this.props.pullRequestNumber}` }
+        { (this.props.stage || stages.length) && ' :: ' || '' }
+        {
+          stages.length ? (
+            <DropDownMenu value={this.props.stage} style={{fontSize: 'inherit', marginLeft: -20}} onChange={this._handleStageChange}>
+              { stages.map(stage => <MenuItem value={stage} primaryText={stage} />) }
+              {
+                // Non-declared stage
+                stages.some(stage => stage === this.props.stage) ? [] :
+                  <MenuItem value={this.props.stage} primaryText={this.props.stage} />
+              }
+            </DropDownMenu>
+          ) : this.props.stage
+        }
       </h2>
     )
 
@@ -139,7 +179,14 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           {
             this.state.checklist.checks.map((check: Check) => (
               <ListItem secondaryText={<div style={{paddingLeft: 48}}>@{check.assignee.name}</div>}>
-                <Checkbox style={{position: 'absolute', left: 20, top: 24, width: 24}} defaultChecked={check.checked} onCheck={this._handleCheck(check)} checkedIcon={<ActionThumbUp />} unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.disabledColor}/>} />
+                <Checkbox
+                  style={{position: 'absolute', left: 20, top: 24, width: 24}}
+                  defaultChecked={check.checked}
+                  onCheck={this._handleCheck(check)}
+                  checkedIcon={<ActionThumbUp />}
+                  unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.disabledColor}/>}
+                  disabled={!!this.state.loading}
+                  />
                 <div style={{paddingLeft: 48}}>
                   <a href={check.url} target="_blank" style={{display: 'block'}}>#{check.number} {check.title}</a>
                   <div style={{ position: 'absolute', right: 32, top: 20 }}>

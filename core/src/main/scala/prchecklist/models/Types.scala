@@ -1,16 +1,58 @@
 package prchecklist.models
 
+/**
+  * Represents project.yml
+  *
+  *   stages:
+  *     - staging
+  *     - production
+  *   notification:
+  *     channels:
+  *       default:
+  *         url: https://slack.com/xxxxx
+  */
+object ProjectConfig {
+  case class Notification(channels: Map[String, Channel])
+
+  case class Channel(url: String)
+}
+
+case class ProjectConfig(
+                          stages: Option[List[String]],
+                          notification: ProjectConfig.Notification
+                        ) {
+  def defaultStage: Option[String] = stages.flatMap(_.headOption)
+}
+
 trait ModelsComponent {
   self: GitHubConfig =>
 
-  case class ReleaseChecklist(id: Int, repo: Repo, pullRequest: GitHubTypes.PullRequest, stage: String, featurePullRequests: List[GitHubTypes.PullRequest], checks: Map[Int, Check]) {
+  /**
+    * ReleaseChecklist is the topmost object which aggregates all single release checklist related information.
+    * This represents a checklist state built from Pull Requests obtained by GitHub API
+    * and check states from the prchecklist database.
+    * @param id
+    * @param repo
+    * @param pullRequest
+    * @param stage
+    * @param featurePullRequests
+    * @param checks
+    * @param projectConfig
+    */
+  case class ReleaseChecklist(
+      id: Int,
+      repo: Repo,
+      pullRequest: GitHubTypes.PullRequest,
+      stage: String, // TODO: be Option[String]
+      featurePullRequests: List[GitHubTypes.PullRequest],
+      checks: Map[Int, Check],
+      projectConfig: Option[ProjectConfig]
+  ) {
     def pullRequestUrl = repo.pullRequestUrl(pullRequest.number)
 
     def featurePullRequestUrl(number: Int) = repo.pullRequestUrl(number)
 
-    def allGreen = checks.values.forall(_.isChecked)
-
-    def featurePRNumbers = featurePullRequests.map(_.number)
+    def allChecked = checks.values.forall(_.isChecked)
 
     def featurePullRequest(number: Int): Option[GitHubTypes.PullRequest] =
       featurePullRequests.find(_.number == number)

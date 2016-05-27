@@ -27,6 +27,16 @@ class ProjectConfigRepositoryComponentSpec extends FunSuite with Matchers with M
   def http = new Http
 
   val validProjectConfigYaml = """
+stages:
+  - staging
+  - production
+notification:
+  channels:
+    default:
+      url: https://slack.com/xxxx
+"""
+
+  val validProjectConfigYamlWithoutStages = """
 notification:
   channels:
     default:
@@ -39,7 +49,14 @@ notification:
     }
 
     val conf = projConfRepository.parseProjectConfig(validProjectConfigYaml)
+    conf.stages shouldBe Some(List("staging", "production"))
     conf.notification.channels("default").url shouldBe "https://slack.com/xxxx"
+    conf.defaultStage shouldBe Some("staging")
+
+    val conf2 = projConfRepository.parseProjectConfig(validProjectConfigYamlWithoutStages)
+    conf2.stages shouldBe None
+    conf2.notification.channels("default").url shouldBe "https://slack.com/xxxx"
+    conf2.defaultStage shouldBe None
   }
 
   test("loadProjectConfig should use Redis cache") {

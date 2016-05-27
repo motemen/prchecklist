@@ -1,6 +1,7 @@
 package prchecklist.repositories
 
 import prchecklist.models
+import prchecklist.models.ProjectConfig
 import prchecklist.infrastructure
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -10,24 +11,6 @@ import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
-/**
- * Represents project.yml
- *
- *   notification:
- *     channels:
- *       default:
- *         url: https://slack.com/xxxxx
- */
-object ProjectConfig {
-  case class Notification(channels: Map[String, Channel])
-
-  case class Channel(url: String)
-}
-
-case class ProjectConfig(
-  notification: ProjectConfig.Notification
-)
 
 trait ProjectConfigRepositoryComponent {
   this: GitHubRepositoryComponent
