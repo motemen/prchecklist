@@ -1,17 +1,17 @@
 package prchecklist.web
 
-import org.mockito.Matchers.{eq => matchEq, _}
+import org.mockito.Matchers.{ eq => matchEq, _ }
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.{Matchers, OptionValues, mock}
+import org.scalatest.{ Matchers, OptionValues, mock }
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
 import prchecklist.infrastructure.PostgresDatabaseComponent
 import prchecklist.models._
 import prchecklist.services._
 import prchecklist.test._
-import prchecklist.{AppServletBase, Domain, views}
+import prchecklist.{ AppServletBase, Domain, views }
 import prchecklist.utils.RunnableFuture
 
 import scala.concurrent.Future
@@ -238,7 +238,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
   }
 
   import org.json4s.DefaultFormats
-  import org.json4s.native.{Serialization => JsonSerialization}
+  import org.json4s.native.{ Serialization => JsonSerialization }
 
   test("json: checklist") {
     implicit val formats = DefaultFormats

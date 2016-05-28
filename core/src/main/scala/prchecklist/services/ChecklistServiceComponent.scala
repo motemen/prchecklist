@@ -3,10 +3,12 @@ package prchecklist.services
 import prchecklist.infrastructure
 import prchecklist.services
 import prchecklist.repositories
+import prchecklist.repositories.ProjectConfig
 import prchecklist.models
 import prchecklist.models.GitHubTypes
 import org.slf4j.LoggerFactory
 import com.github.tarao.nonempty.NonEmpty
+import prchecklist.repositories.ProjectConfig.NotificationEvent
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -73,14 +75,46 @@ trait ChecklistServiceComponent {
       // TODO: handle errors
       val fut = checklistRepository.createCheck(checklist, checkerUser, featurePRNumber)
       fut.onSuccess {
-        case newCkecklist =>
+        case updatedChecklist =>
           projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head") andThen {
             case Success(Some(config)) =>
-              Future.traverse(config.notification.channels) {
-                case (name, ch) =>
-                  val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
-                  val additionalMssage = if (newCkecklist.allGreen) { "\n:tada::tada:All ckecks are done:tada::tada:" } else { "" }
-                  slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login} ${additionalMssage}""")
+              def buildMessage(events: List[ProjectConfig.NotificationEvent]): String = {
+                def ifOption(b: Boolean)(s: => String) = if (b) Some(s) else None
+
+                List(
+                  ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnCheck)) {
+                    val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
+                    s"[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>]" +
+                      s""" <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}"""
+                  },
+                  ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnComplete)) {
+                    ":tada: All checked"
+                  }
+                ).flatten.mkString("\n")
+              }
+
+              val events: List[ProjectConfig.NotificationEvent] =
+                List(ProjectConfig.NotificationEvent.EventOnCheck) ++
+                  (if (updatedChecklist.allGreen) { List(ProjectConfig.NotificationEvent.EventOnComplete) } else { List() })
+
+              val channelAndEvents = events.flatMap {
+                event =>
+                  config.notification.getChannels(event) map {
+                    channel => (channel, event)
+                  }
+              } .groupBy { case (channel, event) => channel }
+                .mapValues { _.map { case (channel, event) => event } }
+
+              Future.sequence {
+                channelAndEvents.map {
+                  case (channel, eventsForCh) =>
+                    val message = buildMessage(eventsForCh)
+                    if (message.isEmpty) {
+                      Future.successful(())
+                    } else {
+                      slackNotificationService.send(channel.url, message)
+                    }
+                }
               }
           } onFailure {
             case e =>

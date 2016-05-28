@@ -15,7 +15,13 @@ case class SlackResponse(
 trait SlackNotificationServiceComponent {
   this: HttpComponent =>
 
-  object slackNotificationService {
+  def slackNotificationService: SlackNotificationService = SlackNotificationService
+
+  trait SlackNotificationService {
+    def send(url: String, text: String)(implicit ec: ExecutionContext): Future[Unit]
+  }
+
+  object SlackNotificationService extends SlackNotificationService {
     def send(url: String, text: String)(implicit ec: ExecutionContext): Future[Unit] = {
       http.postJson(url, SlackMessage(text))
     }
