@@ -8,6 +8,7 @@ import prchecklist.models
 import prchecklist.models.GitHubTypes
 import org.slf4j.LoggerFactory
 import com.github.tarao.nonempty.NonEmpty
+import com.sun.org.apache.xalan.internal.utils.FeatureManager.Feature
 import prchecklist.repositories.ProjectConfig.NotificationEvent
 
 import scala.concurrent.Future
@@ -68,6 +69,21 @@ trait ChecklistServiceComponent {
       }
     }
 
+    private[this] def buildMessage(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int, events: List[ProjectConfig.NotificationEvent]): String = {
+      def ifOption(b: Boolean)(s: => String) = if (b) Some(s) else None
+
+      List(
+        ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnCheck)) {
+          val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
+          s"[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>]" +
+            s""" <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}"""
+        },
+        ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnComplete)) {
+          ":tada: All checked"
+        }
+      ).flatten.mkString("\n")
+    }
+
     /**
      * checkChecklist is the most important logic
      */
@@ -78,21 +94,6 @@ trait ChecklistServiceComponent {
         case updatedChecklist =>
           projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head") andThen {
             case Success(Some(config)) =>
-              def buildMessage(events: List[ProjectConfig.NotificationEvent]): String = {
-                def ifOption(b: Boolean)(s: => String) = if (b) Some(s) else None
-
-                List(
-                  ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnCheck)) {
-                    val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
-                    s"[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>]" +
-                      s""" <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}"""
-                  },
-                  ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnComplete)) {
-                    ":tada: All checked"
-                  }
-                ).flatten.mkString("\n")
-              }
-
               val events: List[ProjectConfig.NotificationEvent] =
                 List(ProjectConfig.NotificationEvent.EventOnCheck) ++
                   (if (updatedChecklist.allGreen) { List(ProjectConfig.NotificationEvent.EventOnComplete) } else { List() })
@@ -108,7 +109,7 @@ trait ChecklistServiceComponent {
               Future.sequence {
                 channelAndEvents.map {
                   case (channel, eventsForCh) =>
-                    val message = buildMessage(eventsForCh)
+                    val message = buildMessage(checklist, checkerUser, featurePRNumber, eventsForCh)
                     if (message.isEmpty) {
                       Future.successful(())
                     } else {

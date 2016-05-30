@@ -40,10 +40,18 @@ object ProjectConfig {
     def getChannels(event: NotificationEvent): List[Channel] = {
       val names = events match {
         case None      => List("default")
-        case Some(map) => map.get(event) getOrElse List()
+        case Some(map) => map.getOrElse(event, List())
       }
       names.flatMap { name => channels.get(name).toList }
     }
+
+    def getChannelsAndEvents(events: Traversable[NotificationEvent]): Traversable[(Channel, List[NotificationEvent])] =
+      events.flatMap {
+        event =>
+          getChannels(event) map {
+            channel => (channel, event)
+          }
+      }.groupBy { case (channel, event) => channel }.values
   }
 
   case class Channel(url: String)
