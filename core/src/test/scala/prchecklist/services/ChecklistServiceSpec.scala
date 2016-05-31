@@ -39,7 +39,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
 
   def checklistRepository = new ChecklistRepository
 
-  override def githubRepository(githubAccessor: GitHubAccessible) = {
+  override def newGitHubRepository(githubAccessor: GitHubAccessible) = {
     val githubRepository = mock[GitHubRepository]
 
     when {

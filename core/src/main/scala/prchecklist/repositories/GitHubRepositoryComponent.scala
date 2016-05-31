@@ -12,7 +12,7 @@ import scala.language.postfixOps
 trait GitHubRepositoryComponent {
   self: GitHubHttpClientComponent with RedisComponent with ModelsComponent =>
 
-  def githubRepository(accessible: GitHubAccessible): GitHubRepository = new GitHubRepository {
+  def newGitHubRepository(accessible: GitHubAccessible): GitHubRepository = new GitHubRepository {
     override val client = githubHttpClient(accessible.accessToken)
   }
 

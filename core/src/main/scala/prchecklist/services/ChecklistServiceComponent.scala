@@ -28,7 +28,7 @@ trait ChecklistServiceComponent {
   class ChecklistService(githubAccessor: GitHubAccessible) {
     def logger = LoggerFactory.getLogger(getClass)
 
-    val githubRepository = self.githubRepository(githubAccessor)
+    val githubRepository = self.newGitHubRepository(githubAccessor)
     val projectConfigRepository = self.projectConfigRepository(githubRepository)
 
     val rxMergedPullRequestCommitMessage = """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r
