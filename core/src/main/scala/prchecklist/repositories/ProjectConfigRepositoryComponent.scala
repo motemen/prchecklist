@@ -2,8 +2,7 @@ package prchecklist.repositories
 
 import prchecklist.models
 import prchecklist.infrastructure
-
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
@@ -97,6 +96,7 @@ trait ProjectConfigRepositoryComponent {
     def parseProjectConfig(source: String): ProjectConfig = {
       val mapper = new ObjectMapper(new YAMLFactory) with ScalaObjectMapper
       mapper.registerModule(DefaultScalaModule)
+      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
       mapper.readValue[ProjectConfig](source)
     }
 
