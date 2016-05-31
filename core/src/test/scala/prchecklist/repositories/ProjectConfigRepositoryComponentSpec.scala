@@ -85,4 +85,31 @@ notification:
 
     verify(projConfRepository.github, times(1)).getFileContent(any(), any(), any())
   }
+
+  test("Notification#getChannelsWithAssociatedEvents") {
+    ProjectConfig.Notification(
+      events = None,
+      channels = Map("default" -> ProjectConfig.Channel(url = "test://default"))
+    ).getChannelsWithAssociatedEvents(List("on_check", "on_complete")) shouldBe
+      Map(
+        ProjectConfig.Channel(url = "test://default") -> Set("on_check", "on_complete")
+      )
+
+    ProjectConfig.Notification(
+      events = Some(
+        Map(
+          "on_complete" -> List("default", "ch_completion"),
+          "on_check" -> List("default")
+        )
+      ),
+      channels = Map(
+        "default" -> ProjectConfig.Channel(url = "test://default"),
+        "ch_completion" -> ProjectConfig.Channel(url = "test://ch_completion")
+      )
+    ).getChannelsWithAssociatedEvents(Set("on_check", "on_complete")) shouldBe
+      Map(
+        ProjectConfig.Channel(url = "test://default") -> Set("on_check", "on_complete"),
+        ProjectConfig.Channel(url = "test://ch_completion") -> Set("on_complete")
+      )
+  }
 }

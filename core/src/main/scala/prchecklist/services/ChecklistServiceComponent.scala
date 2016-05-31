@@ -69,8 +69,9 @@ trait ChecklistServiceComponent {
       }
     }
 
-    private[this] def buildMessage(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int, events: List[ProjectConfig.NotificationEvent]): String = {
-      def ifOption(b: Boolean)(s: => String) = if (b) Some(s) else None
+    private[this] def ifOption(b: Boolean)(s: => String) = if (b) Some(s) else None
+
+    private[this] def buildMessage(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int, events: Set[ProjectConfig.NotificationEvent]): String = {
 
       List(
         ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnCheck)) {
@@ -85,8 +86,13 @@ trait ChecklistServiceComponent {
     }
 
     /**
-     * checkChecklist is the most important logic
-     */
+      * Checks one item in a checklist. The most important part of the prchecklist.
+      * On successful check, it sends notification based on the prchecklist.yml configuration.
+      * @param checklist
+      * @param checkerUser
+      * @param featurePRNumber
+      * @return
+      */
     def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[ReleaseChecklist] = {
       // TODO: handle errors
       val fut = checklistRepository.createCheck(checklist, checkerUser, featurePRNumber)
@@ -95,19 +101,13 @@ trait ChecklistServiceComponent {
           projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head") andThen {
             case Success(Some(config)) =>
               val events: List[ProjectConfig.NotificationEvent] =
+                // always: "on_check" event
                 List(ProjectConfig.NotificationEvent.EventOnCheck) ++
-                  (if (updatedChecklist.allGreen) { List(ProjectConfig.NotificationEvent.EventOnComplete) } else { List() })
-
-              val channelAndEvents = events.flatMap {
-                event =>
-                  config.notification.getChannels(event) map {
-                    channel => (channel, event)
-                  }
-              } .groupBy { case (channel, event) => channel }
-                .mapValues { _.map { case (channel, event) => event } }
+                // only when all are checked: "on_complete" event
+                ifOption (updatedChecklist.allGreen) { ProjectConfig.NotificationEvent.EventOnComplete }
 
               Future.sequence {
-                channelAndEvents.map {
+                config.notification.getChannelsWithAssociatedEvents(events).map {
                   case (channel, eventsForCh) =>
                     val message = buildMessage(checklist, checkerUser, featurePRNumber, eventsForCh)
                     if (message.isEmpty) {

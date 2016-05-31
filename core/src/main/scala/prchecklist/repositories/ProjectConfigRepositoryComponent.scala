@@ -45,13 +45,33 @@ object ProjectConfig {
       names.flatMap { name => channels.get(name).toList }
     }
 
-    def getChannelsAndEvents(events: Traversable[NotificationEvent]): Traversable[(Channel, List[NotificationEvent])] =
+    /**
+      * Returns channel names with thier associated event names.
+      * e.g. For prchecklist.yml such:
+      *
+      *   notification:
+      *     events:
+      *       on_check:
+      *         - default
+      *       on_complete:
+      *         - default
+      *         - ch_completion
+      *
+      * Returns "(default, (on_check, on_complete)), (ch_completion, (on_complete))".
+      *
+      * If "notification" section is not given, the default channel is always returned.
+      * @param events Event names that channels wanted are associated with.
+      * @return The list of (channel name, event names associated)
+      */
+    def getChannelsWithAssociatedEvents(events: Traversable[NotificationEvent]): Map[Channel, Set[NotificationEvent]] =
       events.flatMap {
         event =>
           getChannels(event) map {
             channel => (channel, event)
           }
-      }.groupBy { case (channel, event) => channel }.values
+      }
+        .groupBy { case (channel, event) => channel }
+        .mapValues { _.map(_._2).toSet }
   }
 
   case class Channel(url: String)
