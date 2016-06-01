@@ -85,6 +85,7 @@ trait HttpComponent {
   }
 
   case class FailedHttpResponseException(code: Int, request: HttpRequest) extends Exception {
-    override def toString = s"${request.method} ${request.url} failed: ${code}"
+    override def toString = s"[${request.method} ${request.url}] failed: ${code}"
+    override def getMessage = toString
   }
 }

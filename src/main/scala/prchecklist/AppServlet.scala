@@ -3,8 +3,9 @@ package prchecklist
 import org.scalatra._
 import org.json4s
 import org.json4s.native.{ Serialization => JsonSerialization }
-import scala.concurrent.Future
+import org.slf4j.LoggerFactory
 
+import scala.concurrent.Future
 import prchecklist.infrastructure.{ DatabaseComponent, GitHubHttpClientComponent, PostgresDatabaseComponent, RedisComponent }
 import prchecklist.models._
 import prchecklist.repositories._
@@ -54,9 +55,17 @@ trait AppServletBase extends ScalatraServlet with FutureSupport {
   import scala.language.implicitConversions
   implicit override def string2RouteMatcher(path: String): RouteMatcher = RailsPathPatternParser(path)
 
+  def logger = LoggerFactory.getLogger(getClass)
+
   notFound {
     contentType = null
     serveStaticResource() getOrElse resourceNotFound()
+  }
+
+  error {
+    case e: Throwable =>
+      logger.error(s"While processing [${request.getMethod} ${request.getRequestURI}]:", e)
+      throw e
   }
 
   implicit override def executor = scala.concurrent.ExecutionContext.Implicits.global

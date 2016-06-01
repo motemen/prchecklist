@@ -48,6 +48,8 @@ export interface News {
   [n: number]: PullRequestRef[];
 }
 
+export const ERROR_REPO_NOT_REGISTERED = 'repo_not_registered';
+
 export module API {
   function updateChecklist(mode: string, checklist: Checklist, featureNumber: number): Promise<Checklist> {
     const [repoOwner, repoName] = checklist.repo.fullName.split('/');
@@ -73,7 +75,20 @@ export module API {
 
   export function fetchChecklist(repoOwner: string, repoName: string, pullRequestNumber: number, stage: string): Promise<Checklist> {
     return fetch(`/-/checklist?repoOwner=${repoOwner}&repoName=${repoName}&pullRequestNumber=${pullRequestNumber}&stage=${stage}`, { credentials: 'same-origin' }).then(
-      res => res.json<Checklist>()
+      res => {
+        if (res.status === 404) {
+          throw ERROR_REPO_NOT_REGISTERED;
+        }
+        if (res.status === 500) {
+          // FIXME ad-hoc fix for presenting server error
+          return res.text().then<any>(
+            text => {
+              throw text;
+            }
+          );
+        }
+        return res.json<Checklist>()
+      }
     );
   }
 
