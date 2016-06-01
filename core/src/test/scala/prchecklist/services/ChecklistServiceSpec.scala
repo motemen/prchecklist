@@ -1,5 +1,7 @@
 package prchecklist.services
 
+import java.net.URI
+
 import prchecklist.infrastructure._
 import prchecklist.models._
 import prchecklist.repositories._
@@ -21,6 +23,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     with WithTestDatabase
     with TestAppConfig
     with ChecklistServiceComponent
+    with ReverseRouterComponent
     with PostgresDatabaseComponent
     with SlackNotificationServiceComponent
     with RepoRepositoryComponent
@@ -32,6 +35,10 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     with GitHubConfig
     with ChecklistRepositoryComponent
     {
+
+  override val reverseRouter: ReverseRouter = new ReverseRouter {
+    override def origin: URI = new URI("http://localhost:3000/")
+  }
 
   val githubAccessor = Visitor(login = "test", accessToken = "")
 
