@@ -36,7 +36,6 @@ lazy val core = (project in file("core")).
       "org.postgresql" % "postgresql" % "9.4.1207",
       "com.github.tarao" %% "slick-jdbc-extension" % "0.0.3",
       "net.debasishg" %% "redisclient" % "3.1",
-      "org.pegdown" % "pegdown" % "1.6.0",
       "org.mockito" % "mockito-core" % "2.0.36-beta" % "test",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test",
       "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.5.4",

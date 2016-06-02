@@ -1,9 +1,6 @@
-package prchecklist.services
+package prchecklist
+package services
 
-import prchecklist.infrastructure
-import prchecklist.services
-import prchecklist.repositories
-import prchecklist.models
 import prchecklist.models.GitHubTypes
 import org.slf4j.LoggerFactory
 import com.github.tarao.nonempty.NonEmpty
@@ -19,6 +16,7 @@ trait ChecklistServiceComponent {
   self: infrastructure.DatabaseComponent
     with models.ModelsComponent
     with services.SlackNotificationServiceComponent
+    with services.ReverseRouterComponent
     with repositories.RepoRepositoryComponent
     with repositories.GitHubRepositoryComponent
     with repositories.ProjectConfigRepositoryComponent
@@ -28,7 +26,7 @@ trait ChecklistServiceComponent {
   class ChecklistService(githubAccessor: GitHubAccessible) {
     def logger = LoggerFactory.getLogger(getClass)
 
-    val githubRepository = self.githubRepository(githubAccessor)
+    val githubRepository = self.newGitHubRepository(githubAccessor)
     val projectConfigRepository = self.projectConfigRepository(githubRepository)
 
     val rxMergedPullRequestCommitMessage = """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r
@@ -81,6 +79,7 @@ trait ChecklistServiceComponent {
      */
     def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[ReleaseChecklist] = {
       // TODO: handle errors
+      val checklistUri = reverseRouter.checklistUri(checklist) // XXX this must be outside of Future
       val fut = checklistRepository.createCheck(checklist, checkerUser, featurePRNumber)
       fut.onSuccess {
         case newChecklist =>
@@ -90,7 +89,7 @@ trait ChecklistServiceComponent {
                 case (name, ch) =>
                   val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
                   val additionalMssage = if (newChecklist.allChecked) { "\n:tada::tada:All ckecks are done:tada::tada:" } else { "" }
-                  slackNotificationService.send(ch.url, s"""[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>] <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login} ${additionalMssage}""")
+                  slackNotificationService.send(ch.url, s"""[<$checklistUri|${checklist.repo.fullName} #${checklist.pullRequest.number}>] #$featurePRNumber "$title" checked by ${checkerUser.login} ${additionalMssage}""")
               }
           } onFailure {
             case e =>
