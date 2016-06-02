@@ -1,15 +1,12 @@
-package prchecklist.services
+package prchecklist
+package services
 
-import prchecklist.infrastructure
-import prchecklist.services
-import prchecklist.repositories
-import prchecklist.repositories.ProjectConfig
-import prchecklist.models
+import prchecklist.models.ProjectConfig
+import prchecklist.models.ProjectConfig.NotificationEvent
 import prchecklist.models.GitHubTypes
 import org.slf4j.LoggerFactory
 import com.github.tarao.nonempty.NonEmpty
 import com.sun.org.apache.xalan.internal.utils.FeatureManager.Feature
-import prchecklist.repositories.ProjectConfig.NotificationEvent
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,6 +19,7 @@ trait ChecklistServiceComponent {
   self: infrastructure.DatabaseComponent
     with models.ModelsComponent
     with services.SlackNotificationServiceComponent
+    with services.ReverseRouterComponent
     with repositories.RepoRepositoryComponent
     with repositories.GitHubRepositoryComponent
     with repositories.ProjectConfigRepositoryComponent
@@ -31,7 +29,7 @@ trait ChecklistServiceComponent {
   class ChecklistService(githubAccessor: GitHubAccessible) {
     def logger = LoggerFactory.getLogger(getClass)
 
-    val githubRepository = self.githubRepository(githubAccessor)
+    val githubRepository = self.newGitHubRepository(githubAccessor)
     val projectConfigRepository = self.projectConfigRepository(githubRepository)
 
     val rxMergedPullRequestCommitMessage = """^Merge pull request #(\d+) from [^\n]+\s+(.+)""".r
@@ -51,6 +49,16 @@ trait ChecklistServiceComponent {
       }
     }
 
+    // def getReleaseChecklist(repoOwner: String, repoName: String, number: Int, stage: Option[String]): Future[ReleaseChecklist] = {
+    //   for {
+    //     repo           <- repoRepository.get(repoOwner, repoName).map(_.getOrElse { throw new Exception("Could not load repo") }) // TODO: throw reasonable excep
+    //     prWithCommits  <- githubRepository.getPullRequestWithCommits(repo, number)
+    //     (checklist, _) <- getChecklist(repo, prWithCommits, stage getOrElse "")
+    //     projectConfig  <- projectConfigRepository.loadProjectConfig(repo, prWithCommits.pullRequest.head.sha)
+    //   } yield ReleaseChecklist(checklist, projectConfig)
+    // }
+
+    // TODO: make stage Option[String]
     def getChecklist(repo: Repo, prWithCommits: GitHubTypes.PullRequestWithCommits, stage: String): Future[(ReleaseChecklist, Boolean)] = {
       val db = getDatabase
 
@@ -62,10 +70,10 @@ trait ChecklistServiceComponent {
           Future.failed(new IllegalStateException("No merged pull requests"))
 
         case Some(prs) =>
-          checklistRepository.getChecks(repo, prWithCommits.pullRequest.number, stage, prs).map {
-            case (checklistId, checks, created) =>
-              (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, stage, prs.toList, checks), created)
-          }
+          for {
+            (checklistId, checks, created) <- checklistRepository.getChecklist(repo, prWithCommits.pullRequest.number, stage, prs)
+            projectConfig <- projectConfigRepository.loadProjectConfig(repo, prWithCommits.pullRequest.head.sha)
+          } yield (ReleaseChecklist(checklistId, repo, prWithCommits.pullRequest, stage, prs.toList, checks, projectConfig), created)
       }
     }
 
@@ -95,6 +103,7 @@ trait ChecklistServiceComponent {
       */
     def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[ReleaseChecklist] = {
       // TODO: handle errors
+      val checklistUri = reverseRouter.checklistUri(checklist) // XXX this must be outside of Future
       val fut = checklistRepository.createCheck(checklist, checkerUser, featurePRNumber)
       fut.onSuccess {
         case updatedChecklist =>
@@ -104,7 +113,7 @@ trait ChecklistServiceComponent {
                 // always: "on_check" event
                 List(ProjectConfig.NotificationEvent.EventOnCheck) ++
                 // only when all are checked: "on_complete" event
-                ifOption (updatedChecklist.allGreen) { ProjectConfig.NotificationEvent.EventOnComplete }
+                ifOption (updatedChecklist.allChecked) { ProjectConfig.NotificationEvent.EventOnComplete }
 
               Future.sequence {
                 config.notification.getChannelsWithAssociatedEvents(events).map {

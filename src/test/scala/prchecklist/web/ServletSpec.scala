@@ -9,9 +9,8 @@ import org.scalatra.test.ClientResponse
 import org.scalatra.test.scalatest._
 import prchecklist.infrastructure.PostgresDatabaseComponent
 import prchecklist.models._
-import prchecklist.services._
 import prchecklist.test._
-import prchecklist.{ AppServletBase, Domain, views }
+import prchecklist.{ AppServletBase, views }
 import prchecklist.utils.RunnableFuture
 
 import scala.concurrent.Future
@@ -22,7 +21,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
     withClue(s"$body\n") { f }
   }
 
-  object TestDomain extends Domain with TestAppConfig with PostgresDatabaseComponent {
+  val testServlet = new AppServletBase with TestAppConfig with PostgresDatabaseComponent {
     override val repoRepository = new RepoRepository
 
     override val checklistRepository = new ChecklistRepository
@@ -33,7 +32,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
     override val http = new Http
 
-    override def githubRepository(accessible: GitHubAccessible): GitHubRepository = {
+    override def newGitHubRepository(accessible: GitHubAccessible): GitHubRepository = {
       val repository = mock[GitHubRepository]
 
       when(repository.getRepo("test-owner", "test-name"))
@@ -104,7 +103,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
       when {
         repository.getFileContent(any(), any(), any())
       } thenReturn {
-        Future.failed(new Exception("getFileContent: mock"))
+        Future.successful(None)
       }
 
       when {
@@ -192,22 +191,18 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
 
       client
     }
-  }
 
-  val testServlet = new AppServletBase {
     put("/@user") {
       session += "userLogin" -> params("login")
       session += "accessToken" -> ""
     }
-
-    override val domain = TestDomain
   }
 
   addServlet(testServlet, "/*")
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    TestDomain.repoRepository.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
+    testServlet.repoRepository.create(GitHubTypes.Repo("motemen/test-repository", false), "<no token>").run
   }
 
   test("index") {

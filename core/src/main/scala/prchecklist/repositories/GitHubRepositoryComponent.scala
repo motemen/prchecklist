@@ -1,23 +1,27 @@
 package prchecklist.repositories
 
-import prchecklist.infrastructure.{RedisComponent, GitHubHttpClientComponent}
-import prchecklist.models.{GitHubTypes, ModelsComponent}
+import prchecklist.infrastructure.{GitHubHttpClientComponent, RedisComponent}
+import prchecklist.models.GitHubTypes
+import prchecklist.models.ModelsComponent
+
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-
 import scala.language.postfixOps
 
 trait GitHubRepositoryComponent {
   self: GitHubHttpClientComponent with RedisComponent with ModelsComponent =>
 
-  def githubRepository(accessible: GitHubAccessible): GitHubRepository = new GitHubRepository {
+  def newGitHubRepository(accessible: GitHubAccessible): GitHubRepository = new GitHubRepository {
     override val client = githubHttpClient(accessible.accessToken)
   }
 
   trait GitHubRepository {
     def client: GitHubHttpClient
+
+    def logger = LoggerFactory.getLogger(getClass)
 
     // https://developer.github.com/v3/repos/#get
     def getRepo(owner: String, name: String): Future[GitHubTypes.Repo] = {
@@ -52,31 +56,94 @@ trait GitHubRepositoryComponent {
       redis.getOrUpdate(s"pull:${repo.fullName}:$number", 30 seconds) {
         for {
           pr <- client.getJson[GitHubTypes.PullRequest](s"/repos/${repo.fullName}/pulls/$number")
-          commits <- getPullRequestCommitsPaged(repo, pr)
+          commits <- if (pr.commits <= 250) { getPullRequestCommits(repo, pr) } else { getPullRequestCommitsByLog(repo, pr) }
         } yield (GitHubTypes.PullRequestWithCommits(pr, commits), true)
       }
     }
 
-    // https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
-    // https://developer.github.com/v3/repos/commits/#list-commits-on-a-repository
-    def getPullRequestCommitsPaged(repo: Repo, pullRequest: GitHubTypes.PullRequest, allCommits: List[GitHubTypes.Commit] = List(), page: Int = 1): Future[List[GitHubTypes.Commit]] = {
-      // The document says "Note: The response includes a maximum of 250 commits"
-      // but apparently it returns only 100 commits at maximum
-      val commitsPerPage = 100
+    /**
+      * Retrieves all commits from the pullRequest.
+      *
+      * @param repo
+      * @param pullRequest
+      * @return
+      * @see https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
+      */
+    def getPullRequestCommits(repo: Repo, pullRequest: GitHubTypes.PullRequest): Future[List[GitHubTypes.Commit]] = {
+      require(pullRequest.commits <= 250)
 
-      if (page > 10) {
-        throw new IllegalArgumentException(s"page too far: $page")
+      val maxPerPage = 100
+
+      def getPullRequestCommitsPage(page: Int, perPage: Int): Future[List[GitHubTypes.Commit]] = {
+        client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/pulls/${pullRequest.number}/commits?per_page=$perPage&page=$page")
       }
 
-      client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/commits?sha=${pullRequest.head.sha}&per_page=${commitsPerPage}&page=${page}").flatMap {
-        pageCommits =>
-          val commits = (allCommits ++ pageCommits).take(pullRequest.commits)
-          if (commits.length < pullRequest.commits) {
-            getPullRequestCommitsPaged(repo, pullRequest, commits, page + 1)
-          } else {
-            Future { commits }
-          }
+      // per_page param for each pages.
+      // For a PR of 150 commits, return (100, 50).
+      // For a PR of 200 commits, return (100, 100, 0).
+      val perPages: List[Int] = {
+        val lastPage = pullRequest.commits / maxPerPage
+        (1 to lastPage).map { _ => maxPerPage } :+ (pullRequest.commits % maxPerPage)
+      }.filter(_ != 0).toList
+
+      Future.sequence {
+        perPages.zipWithIndex.map {
+          case (perPage, page0) =>
+            getPullRequestCommitsPage(page0+1, perPage)
+        }
+      }.map(_.flatten)
+    }
+
+    /**
+      * Due to the GitHub API restriction, commits of pull requests with more than 250 commits
+      * cannot be obtained directly, so we must elaborate to build the commits list using
+      * commit list API.
+      * @param repo
+      * @param pullRequest
+      * @return
+      * @see https://developer.github.com/v3/repos/commits/#list-commits-on-a-repository
+      */
+    def getPullRequestCommitsByLog(repo: Repo, pullRequest: GitHubTypes.PullRequest): Future[List[GitHubTypes.Commit]] = {
+      val maxPerPage = 100
+
+      def getCommitsReachableFrom(startPoint: GitHubTypes.CommitRef, page: Int) =
+        client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/commits?sha=${startPoint.sha}&per_page=$maxPerPage&page=$page")
+
+      /*
+       * The strategy is:
+       * - Go down the history of the head of the PR
+       * - While filtering out the commits that are reachable from the base of the PR
+       */
+      def getCommitsUntilCommonAncestor(pages: (Int, Int) = (1, 1), allHeadCommits: List[GitHubTypes.Commit] = List(), allBaseCommits: List[GitHubTypes.Commit] = List()): Future[List[GitHubTypes.Commit]] = {
+        val (pageHead, pageBase) = pages
+
+        require(pageHead <= 20)
+
+        val futGetReachableFromBase = if (allBaseCommits.length >= allHeadCommits.length + maxPerPage) {
+          // The commit is reverse chronogically ordered.
+          // We have retrieved enough commits reachable from base if
+          // they are more than maxPerPage (=100) commits than commits reachable from head.
+          Future.successful { (List(), 0) }
+        } else {
+          getCommitsReachableFrom(pullRequest.base, pageBase).map { (_, 1) }
+        }
+
+        (getCommitsReachableFrom(pullRequest.head, pageHead) zip futGetReachableFromBase).flatMap {
+          case (headCommits, (baseCommits, deltaPageBase)) =>
+            val commits = allHeadCommits ++ headCommits.filterNot {
+              commit =>
+                (allBaseCommits ++ baseCommits).exists { _.sha == commit.sha }
+            }
+
+            if (commits.length < pullRequest.commits) {
+              getCommitsUntilCommonAncestor((pageHead+1, pageBase+deltaPageBase), commits, allBaseCommits ++ baseCommits)
+            } else {
+              Future.successful { commits }
+            }
+        }
       }
+
+      getCommitsUntilCommonAncestor()
     }
 
     def listReleasePullRequests(repo: Repo): Future[List[GitHubTypes.PullRequestRef]] = listReleasePullRequests(repo.owner, repo.name)

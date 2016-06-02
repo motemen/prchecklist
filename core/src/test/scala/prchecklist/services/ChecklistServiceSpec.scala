@@ -1,5 +1,7 @@
 package prchecklist.services
 
+import java.net.URI
+
 import prchecklist.infrastructure._
 import prchecklist.models._
 import prchecklist.repositories._
@@ -20,6 +22,7 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     with WithTestDatabase
     with TestAppConfig
     with ChecklistServiceComponent
+    with ReverseRouterComponent
     with PostgresDatabaseComponent
     with SlackNotificationServiceComponent
     with RepoRepositoryComponent
@@ -31,6 +34,11 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     with GitHubConfig
     with ChecklistRepositoryComponent
     {
+
+  override val reverseRouter: ReverseRouter = new ReverseRouter {
+    override def authority = "localhost:3000"
+    override def scheme = "http"
+  }
 
   val githubAccessor = Visitor(login = "test", accessToken = "")
 
@@ -55,8 +63,14 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     override val github = githubRepos
   }
 
-  override def githubRepository(githubAccessor: GitHubAccessible) = {
+  override def newGitHubRepository(githubAccessor: GitHubAccessible) = {
     val githubRepository = mock[GitHubRepository]
+
+    when {
+      githubRepository.getFileContent(any(), any(), any())
+    } thenReturn {
+      Future.successful(None)
+    }
 
     when {
       githubRepository.getPullRequest(any(), any())
@@ -154,7 +168,8 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
           channels = Map(
             "default" -> ProjectConfig.Channel(url = "http://test/default")
           )
-        )
+        ),
+        stages = None
       )
     )
 
@@ -203,7 +218,8 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
             "default" -> ProjectConfig.Channel(url = "http://test/default"),
             "complete" -> ProjectConfig.Channel(url = "http://test/complete")
           )
-        )
+        ),
+        stages = None
       )
     )
 
