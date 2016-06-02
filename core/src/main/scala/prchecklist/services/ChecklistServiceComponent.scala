@@ -79,13 +79,12 @@ trait ChecklistServiceComponent {
 
     private[this] def ifOption(b: Boolean)(s: => String) = if (b) Some(s) else None
 
-    private[this] def buildMessage(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int, events: Set[ProjectConfig.NotificationEvent]): String = {
+    private[this] def buildMessage(checklist: ReleaseChecklist, checklistUri: java.net.URI, checkerUser: Visitor, featurePRNumber: Int, events: Set[ProjectConfig.NotificationEvent]): String = {
 
       List(
         ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnCheck)) {
           val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
-          s"[<${checklist.pullRequestUrl}|${checklist.repo.fullName} #${checklist.pullRequest.number}>]" +
-            s""" <${checklist.featurePullRequestUrl(featurePRNumber)}|#$featurePRNumber "$title"> checked by ${checkerUser.login}"""
+          s"""[<$checklistUri|${checklist.repo.fullName} #${checklist.pullRequest.number}>] #$featurePRNumber "$title" checked by ${checkerUser.login}"""
         },
         ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnComplete)) {
           ":tada: All checked"
@@ -118,7 +117,7 @@ trait ChecklistServiceComponent {
               Future.sequence {
                 config.notification.getChannelsWithAssociatedEvents(events).map {
                   case (channel, eventsForCh) =>
-                    val message = buildMessage(checklist, checkerUser, featurePRNumber, eventsForCh)
+                    val message = buildMessage(checklist, checklistUri, checkerUser, featurePRNumber, eventsForCh)
                     if (message.isEmpty) {
                       Future.successful(())
                     } else {
