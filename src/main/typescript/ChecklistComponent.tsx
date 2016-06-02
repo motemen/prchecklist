@@ -214,7 +214,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           }
           </List>
         </Paper>
-        <pre style={{ padding: 16, backgroundColor: '#F3F3F3' }}>{state.checklist.pullRequest.body}</pre>
+        <pre style={{ padding: 16, backgroundColor: '#F3F3F3', overflowX: 'scroll' }}>{state.checklist.pullRequest.body}</pre>
       </section>
     );
   }
