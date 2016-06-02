@@ -37,7 +37,8 @@ class ChecklistServiceSpec extends FunSuite with Matchers with OptionValues with
     {
 
   override val reverseRouter: ReverseRouter = new ReverseRouter {
-    override def origin: URI = new URI("http://localhost:3000/")
+    override def authority = "localhost:3000"
+    override def scheme = "http"
   }
 
   val githubAccessor = Visitor(login = "test", accessToken = "")
