@@ -2,7 +2,7 @@ import * as React from 'react';
 import {Checkbox,Paper,List,ListItem,CircularProgress,Avatar,RaisedButton,FlatButton,Styles,LinearProgress,DropDownMenu,MenuItem} from 'material-ui';
 import {ActionThumbUp} from 'material-ui/lib/svg-icons';
 
-import {API,Checklist,Check} from './api'
+import {API,Checklist,Check,ERROR_REPO_NOT_REGISTERED} from './api'
 
 interface ChecklistComponentProps {
   repoOwner:         string;
@@ -14,6 +14,7 @@ interface ChecklistComponentProps {
 interface ChecklistComponentState {
   checklist:  Checklist;
   loadFailed: boolean;
+  error:      String;
   loading:    boolean;
   muiTheme:   Styles.MuiTheme;
 }
@@ -103,7 +104,11 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
       })
       .catch((e) => {
         console.error(e);
-        this.setState({ loading: false, loadFailed: true });
+        this.setState({
+          loading: false,
+          loadFailed: true,
+          error: e
+        });
       });
   },
 
@@ -112,6 +117,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
       checklist: null,
       loadFailed: false,
       loading: false,
+      error: null,
       muiTheme: this.context.muiTheme
     };
   },
@@ -123,7 +129,8 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
   render() {
     let theme = this.state.muiTheme;
 
-    let stages = this.state.checklist && this.state.checklist.stages || [];
+    let state: ChecklistComponentState = this.state;
+    let stages = state.checklist && state.checklist.stages || [];
 
     const header = (
       <h2 style={{color: theme.baseTheme.palette.disabledColor, lineHeight: '56px'}}>
@@ -145,19 +152,28 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
       </h2>
     )
 
-    if (this.state.loadFailed) {
+    if (state.loadFailed) {
       return (
         <section>
           {header}
           <div style={{ marginTop: 64 }}>
-            <p>Repository {this.props.repoOwner}/{this.props.repoName} has not been registered yet.</p>
-            <RaisedButton onTouchTap={this._handleRegisterTap} label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using
+          {
+            state.error === ERROR_REPO_NOT_REGISTERED ? <div>
+              <p>Repository {this.props.repoOwner}/{this.props.repoName} has not been registered yet.</p>
+              <p><RaisedButton onTouchTap={this._handleRegisterTap} label={`Register ${this.props.repoOwner}/${this.props.repoName}`} secondary={true} /> and start using</p>
+            </div> : (
+              <Paper style={{padding: 24}}>
+                <h3>Error</h3>
+                <pre>{''+state.error}</pre>
+              </Paper>
+            )
+          }
           </div>
         </section>
       );
     }
 
-    if (!this.state.checklist) {
+    if (!state.checklist) {
       return (
         <section>
           {header}
@@ -170,14 +186,14 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
       <section>
         {header}
         <h1>
-          <ActionThumbUp style={{height: 48, width: 48, verticalAlign: 'middle', marginRight: 16}} color={this.state.checklist.allChecked ? theme.baseTheme.palette.primary1Color : theme.baseTheme.palette.accent2Color} />
-          {this.state.checklist.pullRequest.title}
+          <ActionThumbUp style={{height: 48, width: 48, verticalAlign: 'middle', marginRight: 16}} color={state.checklist.allChecked ? theme.baseTheme.palette.primary1Color : theme.baseTheme.palette.accent2Color} />
+          {state.checklist.pullRequest.title}
         </h1>
-        <LinearProgress mode="determinate" color={theme.baseTheme.palette.accent1Color} value={this.state.checklist.checks.filter(c => c.users.length > 0).length} max={this.state.checklist.checks.length}></LinearProgress>
+        <LinearProgress mode="determinate" color={theme.baseTheme.palette.accent1Color} value={state.checklist.checks.filter(c => c.users.length > 0).length} max={state.checklist.checks.length}></LinearProgress>
         <Paper>
           <List>
           {
-            this.state.checklist.checks.map((check: Check) => (
+            state.checklist.checks.map((check: Check) => (
               <ListItem secondaryText={<div style={{paddingLeft: 48}}>@{check.assignee.name}</div>}>
                 <Checkbox
                   style={{position: 'absolute', left: 20, top: 24, width: 24}}
@@ -185,7 +201,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
                   onCheck={this._handleCheck(check)}
                   checkedIcon={<ActionThumbUp />}
                   unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.disabledColor}/>}
-                  disabled={!!this.state.loading}
+                  disabled={!!state.loading}
                   />
                 <div style={{paddingLeft: 48}}>
                   <a href={check.url} target="_blank" style={{display: 'block'}}>#{check.number} {check.title}</a>
@@ -198,7 +214,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           }
           </List>
         </Paper>
-        <pre style={{ padding: 16, backgroundColor: '#F3F3F3' }}>{this.state.checklist.pullRequest.body}</pre>
+        <pre style={{ padding: 16, backgroundColor: '#F3F3F3' }}>{state.checklist.pullRequest.body}</pre>
       </section>
     );
   }
