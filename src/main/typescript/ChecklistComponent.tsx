@@ -203,7 +203,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
                   unCheckedIcon={<ActionThumbUp color={theme.baseTheme.palette.disabledColor}/>}
                   disabled={!!state.loading}
                   />
-                <div style={{paddingLeft: 48}}>
+                <div style={{paddingLeft: 48, paddingRight: 48}}>
                   <a href={check.url} target="_blank" style={{display: 'block'}}>#{check.number} {check.title}</a>
                   <div style={{ position: 'absolute', right: 32, top: 20 }}>
                     {check.users.map(user => <Avatar src={user.avatarUrl} size={32} />)}
