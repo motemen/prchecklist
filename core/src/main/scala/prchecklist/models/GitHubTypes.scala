@@ -18,7 +18,7 @@ object GitHubTypes {
     def isOpen = state == "open"
     def isClosed = state == "closed"
 
-    def usersInCharge = if (assignees.length > 0) assignees else List(user)
+    def usersInCharge = if (assignees.nonEmpty) assignees else List(user)
   }
 
   case class PullRequestWithCommits(pullRequest: PullRequest, commits: List[Commit])
