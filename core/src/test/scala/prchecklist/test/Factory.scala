@@ -12,7 +12,7 @@ object Factory {
       head = createGitHubCommitRef.copy(ref = "feature-1"),
       base = createGitHubCommitRef.copy(ref = "master"),
       commits = 1,
-      assignee = None,
+      assignees = List(),
       user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
     )
 

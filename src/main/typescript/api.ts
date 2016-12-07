@@ -36,7 +36,7 @@ export interface Check {
   title:    string;
   users:    User[];
   checked:  boolean;
-  assignee: User;
+  assignees: User[];
 }
 
 export interface User {

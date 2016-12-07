@@ -12,13 +12,13 @@ object GitHubTypes {
       head: CommitRef,
       base: CommitRef,
       commits: Int,
-      assignee: Option[User],
+      assignees: List[User],
       user: User) {
 
     def isOpen = state == "open"
     def isClosed = state == "closed"
 
-    def userInCharge = assignee getOrElse user
+    def usersInCharge = if (assignees.nonEmpty) assignees else List(user)
   }
 
   case class PullRequestWithCommits(pullRequest: PullRequest, commits: List[Commit])

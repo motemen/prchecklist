@@ -194,7 +194,7 @@ export const ChecklistComponent = React.createClass<ChecklistComponentProps, Che
           <List>
           {
             state.checklist.checks.map((check: Check) => (
-              <ListItem secondaryText={<div style={{paddingLeft: 48}}>@{check.assignee.name}</div>}>
+              <ListItem secondaryText={<div style={{paddingLeft: 48}}>{check.assignees.map(assignee => <span style={{paddingLeft: 6}}>@{assignee.name}</span>)}</div>}>
                 <Checkbox
                   style={{position: 'absolute', left: 20, top: 24, width: 24}}
                   defaultChecked={check.checked}

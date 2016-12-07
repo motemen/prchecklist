@@ -7,7 +7,7 @@ package object views {
 
   case class PullRequest(url: String, number: Int, title: String, body: String)
 
-  case class Check(url: String, number: Int, title: String, users: List[User], checked: Boolean, assignee: User)
+  case class Check(url: String, number: Int, title: String, users: List[User], checked: Boolean, assignees: List[User])
 
   case class User(name: String, avatarUrl: String)
 
@@ -51,7 +51,7 @@ package object views {
               title = check.pullRequest.title,
               users = check.checkedUsers.map(u => User(name = u.login, avatarUrl = u.avatarUrl)),
               checked = visitor.exists(check.isCheckedBy(_)),
-              assignee = User(name = check.pullRequest.userInCharge.login, avatarUrl = check.pullRequest.userInCharge.avatarUrl)
+              assignees = check.pullRequest.usersInCharge.map(u => User(name = u.login, avatarUrl = u.avatarUrl))
             )
         }.toList,
         allChecked = checklist.allChecked
