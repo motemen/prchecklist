@@ -54,7 +54,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
               head = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "feature-1"),
               base = GitHubTypes.CommitRef(GitHubTypes.Repo("a/b", false), "", "master"),
               commits = 1,
-              assignee = None,
+              assignees = List(),
               user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
             ),
             commits = List(
@@ -120,7 +120,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
                 head = GitHubTypes.CommitRef(GitHubTypes.Repo("", false), "xxx", "xxx"),
                 base = GitHubTypes.CommitRef(GitHubTypes.Repo("", false), "xxx", "xxx"),
                 commits = 1,
-                assignee = None,
+                assignees = List(),
                 user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
               )
             }
@@ -165,7 +165,7 @@ class ServletSpec extends ScalatraFunSuite with Matchers with OptionValues with 
             ref = "master"
           ),
           commits = 1,
-          assignee = None,
+          assignees = List(),
           user = GitHubTypes.User(login = "motemen", avatarUrl = "https://github.com/motemen.png")
         )
       )

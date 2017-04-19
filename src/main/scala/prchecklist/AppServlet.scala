@@ -4,11 +4,12 @@ import java.net.URI
 import javax.servlet.http.HttpUtils
 
 import org.scalatra._
-import org.json4s
 import org.json4s.native.{ Serialization => JsonSerialization }
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+
 import prchecklist.infrastructure.{ DatabaseComponent, GitHubHttpClientComponent, PostgresDatabaseComponent, RedisComponent }
 import prchecklist.models._
 import prchecklist.repositories._
@@ -48,7 +49,7 @@ trait AppServletBase extends ScalatraServlet
     with SlackNotificationServiceComponent
     with ReverseRouterComponent {
 
-  implicit val jsonFormats = JsonSerialization.formats(json4s.NoTypeHints)
+  import prchecklist.jsonFormats
 
   override def reverseRouter = new ReverseRouter {
     private val uri = new URI(request.getRequestURL.toString)
@@ -56,9 +57,17 @@ trait AppServletBase extends ScalatraServlet
     override def authority: String = request.header("X-Forwarded-Host") getOrElse uri.getAuthority
   }
 
+  def logger = LoggerFactory.getLogger(getClass)
+
   notFound {
     contentType = null
     serveStaticResource() getOrElse resourceNotFound()
+  }
+
+  error {
+    case e: Throwable =>
+      logger.error(s"While processing [${request.getMethod} ${request.getRequestURI}]:", e)
+      throw e
   }
 
   def getVisitor: Option[Visitor] = {

@@ -75,9 +75,10 @@ trait GitHubRepositoryComponent {
       val maxPerPage = 100
 
       def getPullRequestCommitsPage(page: Int, perPage: Int): Future[List[GitHubTypes.Commit]] = {
-        client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/pulls/${pullRequest.number}/commits?per_page=$perPage&page=$page")
+        client.getJson[List[GitHubTypes.Commit]](s"/repos/${repo.fullName}/pulls/${pullRequest.number}/commits?per_page=$maxPerPage&page=$page")
       }
 
+      // TODO: quick fix. cleanup later
       // per_page param for each pages.
       // For a PR of 150 commits, return (100, 50).
       // For a PR of 200 commits, return (100, 100, 0).
@@ -91,7 +92,7 @@ trait GitHubRepositoryComponent {
           case (perPage, page0) =>
             getPullRequestCommitsPage(page0+1, perPage)
         }
-      }.map(_.flatten)
+      }.map(_.flatten.take(pullRequest.commits))
     }
 
     /**

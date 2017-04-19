@@ -41,7 +41,7 @@ class GitHubServiceSpec extends FunSuite with Matchers with MockitoSugar
     }
 
     when {
-      mockedClient.getJson[List[GitHubTypes.Commit]](MockitoMatchers.eq("/repos/test-owner/test-name/pulls/47/commits?per_page=1&page=1"))(any(), any(), any())
+      mockedClient.getJson[List[GitHubTypes.Commit]](MockitoMatchers.eq("/repos/test-owner/test-name/pulls/47/commits?per_page=100&page=1"))(any(), any(), any())
     } thenReturn {
       Future.successful { List(Factory.createGitHubCommit) }
     }
