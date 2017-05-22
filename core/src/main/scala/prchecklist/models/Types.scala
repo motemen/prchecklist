@@ -1,26 +1,82 @@
 package prchecklist.models
 
 /**
-  * Represents project.yml
-  *
-  *   stages:
-  *     - staging
-  *     - production
-  *   notification:
-  *     channels:
-  *       default:
-  *         url: https://slack.com/xxxxx
-  */
+ * Represents project.yml
+ *
+ *   stages:
+ *     - staging
+ *     - production
+ *   notification:
+ *     events:
+ *       on_check:
+ *         - default
+ *         - check
+ *       on_complete:
+ *         - default
+ *     channels:
+ *       default:
+ *         url: https://slack.com/xxxxx
+ *       check:
+ *         url: https://slack.com/xxxxx
+ */
 object ProjectConfig {
-  case class Notification(channels: Map[String, Channel])
+  object NotificationEvent {
+    val EventOnCheck: NotificationEvent    = "on_check"
+    val EventOnComplete: NotificationEvent = "on_complete"
+  }
+
+  type NotificationEvent = String
+  type ChannelName = String
+
+  case class Notification(
+      events: Option[Map[NotificationEvent, List[ChannelName]]],
+      channels: Map[ChannelName, Channel]) {
+
+    def getChannels(event: NotificationEvent): List[Channel] = {
+      val names = events match {
+        case None      => List("default")
+        case Some(map) => map.getOrElse(event, List())
+      }
+      names.flatMap { name => channels.get(name).toList }
+    }
+
+    /**
+      * Returns channel names with thier associated event names.
+      * e.g. For prchecklist.yml such:
+      *
+      *   notification:
+      *     events:
+      *       on_check:
+      *         - default
+      *       on_complete:
+      *         - default
+      *         - ch_completion
+      *
+      * Returns { default => {on_check, on_complete}, ch_completion => {on_complete} }
+      * for parameter events = {on_check, on_complete}.
+      *
+      * If "notification" section is not given, the default channel is always returned.
+      * @param events Event names used for retrieving channels
+      * @return The list of (channel name, event names associated)
+      */
+    def getChannelsWithAssociatedEvents(events: Traversable[NotificationEvent]): Map[Channel, Set[NotificationEvent]] =
+      events.flatMap {
+        event =>
+          getChannels(event) map {
+            channel => (channel, event)
+          }
+      }
+        .groupBy { case (channel, event) => channel }
+        .mapValues { _.map(_._2).toSet }
+  }
 
   case class Channel(url: String)
 }
 
 case class ProjectConfig(
-                          stages: Option[List[String]],
-                          notification: ProjectConfig.Notification
-                        ) {
+  stages: Option[List[String]],
+  notification: ProjectConfig.Notification
+) {
   def defaultStage: Option[String] = stages.flatMap(_.headOption)
 }
 

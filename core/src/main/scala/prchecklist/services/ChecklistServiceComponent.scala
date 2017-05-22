@@ -1,9 +1,12 @@
 package prchecklist
 package services
 
+import prchecklist.models.ProjectConfig
+import prchecklist.models.ProjectConfig.NotificationEvent
 import prchecklist.models.GitHubTypes
 import org.slf4j.LoggerFactory
 import com.github.tarao.nonempty.NonEmpty
+import com.sun.org.apache.xalan.internal.utils.FeatureManager.Feature
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -74,22 +77,53 @@ trait ChecklistServiceComponent {
       }
     }
 
+    private[this] def ifOption(b: Boolean)(s: => String) = if (b) Some(s) else None
+
+    private[this] def buildMessage(checklist: ReleaseChecklist, checklistUri: java.net.URI, checkerUser: Visitor, featurePRNumber: Int, events: Set[ProjectConfig.NotificationEvent]): String = {
+
+      List(
+        ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnCheck)) {
+          val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
+          s"""[<$checklistUri|${checklist.repo.fullName} #${checklist.pullRequest.number}>] #$featurePRNumber "$title" checked by ${checkerUser.login}"""
+        },
+        ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnComplete)) {
+          "Checklist completed! :tada:"
+        }
+      ).flatten.mkString("\n")
+    }
+
     /**
-     * checkChecklist is the most important logic
-     */
+      * Checks one item in a checklist. The most important part of the prchecklist.
+      * On successful check, it sends notification based on the prchecklist.yml configuration.
+      * @param checklist
+      * @param checkerUser
+      * @param featurePRNumber
+      * @return
+      */
     def checkChecklist(checklist: ReleaseChecklist, checkerUser: Visitor, featurePRNumber: Int): Future[ReleaseChecklist] = {
       // TODO: handle errors
       val checklistUri = reverseRouter.checklistUri(checklist) // XXX this must be outside of Future
       val fut = checklistRepository.createCheck(checklist, checkerUser, featurePRNumber)
       fut.onSuccess {
-        case newChecklist =>
+        case updatedChecklist =>
           projectConfigRepository.loadProjectConfig(checklist.repo, s"pull/${checklist.pullRequest.number}/head") andThen {
             case Success(Some(config)) =>
-              Future.traverse(config.notification.channels) {
-                case (name, ch) =>
-                  val title = checklist.featurePullRequest(featurePRNumber).map(_.title) getOrElse "(unknown)"
-                  val additionalMssage = if (newChecklist.allChecked) { "\n:tada::tada:All ckecks are done:tada::tada:" } else { "" }
-                  slackNotificationService.send(ch.url, s"""[<$checklistUri|${checklist.repo.fullName} #${checklist.pullRequest.number}>] #$featurePRNumber "$title" checked by ${checkerUser.login} ${additionalMssage}""")
+              val events: List[ProjectConfig.NotificationEvent] =
+                // always: "on_check" event
+                List(ProjectConfig.NotificationEvent.EventOnCheck) ++
+                // only when all are checked: "on_complete" event
+                ifOption (updatedChecklist.allChecked) { ProjectConfig.NotificationEvent.EventOnComplete }
+
+              Future.sequence {
+                config.notification.getChannelsWithAssociatedEvents(events).map {
+                  case (channel, eventsForCh) =>
+                    val message = buildMessage(checklist, checklistUri, checkerUser, featurePRNumber, eventsForCh)
+                    if (message.isEmpty) {
+                      Future.successful(())
+                    } else {
+                      slackNotificationService.send(channel.url, message)
+                    }
+                }
               }
           } onFailure {
             case e =>
