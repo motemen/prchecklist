@@ -3,14 +3,20 @@ package prchecklist.models
 /**
  * Represents project.yml
  *
+ *   stages:
+ *     - staging
+ *     - production
  *   notification:
  *     events:
  *       on_check:
  *         - default
+ *         - check
  *       on_complete:
  *         - default
  *     channels:
  *       default:
+ *         url: https://slack.com/xxxxx
+ *       check:
  *         url: https://slack.com/xxxxx
  */
 object ProjectConfig {
@@ -46,10 +52,11 @@ object ProjectConfig {
       *         - default
       *         - ch_completion
       *
-      * Returns "(default, (on_check, on_complete)), (ch_completion, (on_complete))".
+      * Returns { default => {on_check, on_complete}, ch_completion => {on_complete} }
+      * for parameter events = {on_check, on_complete}.
       *
       * If "notification" section is not given, the default channel is always returned.
-      * @param events Event names that channels wanted are associated with.
+      * @param events Event names used for retrieving channels
       * @return The list of (channel name, event names associated)
       */
     def getChannelsWithAssociatedEvents(events: Traversable[NotificationEvent]): Map[Channel, Set[NotificationEvent]] =
