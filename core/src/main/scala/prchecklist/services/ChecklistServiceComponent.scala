@@ -87,7 +87,7 @@ trait ChecklistServiceComponent {
           s"""[<$checklistUri|${checklist.repo.fullName} #${checklist.pullRequest.number}>] #$featurePRNumber "$title" checked by ${checkerUser.login}"""
         },
         ifOption (events.contains(ProjectConfig.NotificationEvent.EventOnComplete)) {
-          "Checklist completed! :tada:"
+          s"""[<$checklistUri|${checklist.repo.fullName} #${checklist.pullRequest.number}>] Checklist completed! :tada:"""
         }
       ).flatten.mkString("\n")
     }
