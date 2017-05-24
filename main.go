@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -18,7 +19,6 @@ import (
 )
 
 func init() {
-	gob.Register(&oauth2.Token{})
 	gob.Register(&githubUser{})
 }
 
@@ -26,13 +26,13 @@ const sessionName = "s"
 
 const (
 	sessionKeyOAuthState = "oauthState"
-	sessionKeyOAuthToken = "oauthToken"
 	sessionKeyGitHubUser = "githubUser"
 )
 
 type githubUser struct {
 	Login     string
 	AvatarURL string
+	Token     *oauth2.Token
 }
 
 var (
@@ -53,6 +53,7 @@ func main() {
 	mux.Handle("/", httpHandler(handleIndex))
 	mux.Handle("/auth", httpHandler(handleAuth))
 	mux.Handle("/auth/callback", httpHandler(handleAuthCallback))
+	mux.Handle("/auth/clear", httpHandler(handleAuthClear))
 	mux.Handle("/api/checklist", httpHandler(handleAPIChecklist))
 	err := http.ListenAndServe("localhost:7888", mux)
 	log.Fatal(err)
@@ -125,7 +126,7 @@ func makeRandomString() (string, error) {
 }
 
 func handleIndex(w http.ResponseWriter, req *http.Request) error {
-	u, _, err := getAuthInfo(w, req)
+	u, err := getAuthInfo(w, req)
 	if err != nil {
 		return err
 	}
@@ -159,7 +160,6 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	sess.Values[sessionKeyOAuthToken] = token
 	log.Printf("received token: %#v", token)
 
 	client := github.NewClient(
@@ -173,6 +173,7 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 	user := &githubUser{
 		Login:     u.GetLogin(),
 		AvatarURL: u.GetAvatarURL(),
+		Token:     token,
 	}
 	sess.Values[sessionKeyGitHubUser] = user
 
@@ -188,39 +189,45 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 	return nil
 }
 
-func getAuthInfo(w http.ResponseWriter, req *http.Request) (*githubUser, *oauth2.Token, error) {
+func handleAuthClear(w http.ResponseWriter, req *http.Request) error {
 	sess, err := sessionStore.Get(req, sessionName)
 	if err != nil {
-		// return nil, nil, err
-		return nil, nil, nil
+		return err
+	}
+
+	delete(sess.Values, sessionKeyGitHubUser)
+
+	return sess.Save(req, w)
+}
+
+func getAuthInfo(w http.ResponseWriter, req *http.Request) (*githubUser, error) {
+	sess, err := sessionStore.Get(req, sessionName)
+	if err != nil {
+		// return nil, err
+		return nil, nil
 	}
 
 	v, ok := sess.Values[sessionKeyGitHubUser]
 	if !ok {
-		return nil, nil, nil
+		return nil, nil
 	}
 
 	user, ok := v.(*githubUser)
-	if !ok {
+	if !ok || user.Token == nil {
 		delete(sess.Values, sessionKeyGitHubUser)
-		delete(sess.Values, sessionKeyOAuthToken)
-		return nil, nil, sess.Save(req, w)
+		return nil, sess.Save(req, w)
 	}
 
-	token, ok := sess.Values[sessionKeyOAuthToken].(*oauth2.Token)
-	if !ok {
-		delete(sess.Values, sessionKeyGitHubUser)
-		delete(sess.Values, sessionKeyOAuthToken)
-		return nil, nil, sess.Save(req, w)
-	}
-
-	return user, token, nil
+	return user, nil
 }
 
 func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
-	_, token, err := getAuthInfo(w, req)
+	u, err := getAuthInfo(w, req)
 	if err != nil {
 		return err
+	}
+	if u == nil {
+		return httpError(http.StatusForbidden)
 	}
 
 	type inQuery struct {
@@ -268,15 +275,15 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 		}
 	}
 
-	query := `query {
-  repository(owner: "motemen", name: "test-repository") {
-    pullRequest(number: 2) {
+	query := fmt.Sprintf(`query {
+  repository(owner: %q, name: %q) {
+    pullRequest(number: %d) {
       title
       number
       repository {
         nameWithOwner
       }
-      commits(first: 1) {
+      commits(first: 100) {
         edges {
           node {
             commit {
@@ -295,7 +302,7 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
   rateLimit {
     remaining
   }
-}`
+}`, in.Owner, in.Repo, in.Number)
 
 	var buf bytes.Buffer
 	err = json.NewEncoder(&buf).Encode(map[string]string{"query": query})
@@ -308,7 +315,7 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	httpReq.Header.Set("Authorization", "token "+token.AccessToken)
+	httpReq.Header.Set("Authorization", "token "+u.Token.AccessToken)
 
 	client := http.Client{}
 	resp, err := client.Do(httpReq)
