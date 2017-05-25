@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,25 +13,30 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
+	_ "github.com/motemen/go-loghttp/global"
 	"golang.org/x/oauth2"
+
+	"github.com/motemen/go-prchecklist"
+	"github.com/motemen/go-prchecklist/lib/repository"
+	"github.com/motemen/go-prchecklist/lib/usecase"
 )
 
+var app *usecase.Usecase
+
 func init() {
-	gob.Register(&githubUser{})
+	gob.Register(&prchecklist.GitHubUser{})
+
+	app = usecase.New(
+		repository.NewGitHub(),
+	)
 }
 
 const sessionName = "s"
 
 const (
 	sessionKeyOAuthState = "oauthState"
-	sessionKeyGitHubUser = "githubUser"
+	sessionKeyGitHubUser = "prchecklist.GitHubUser"
 )
-
-type githubUser struct {
-	Login     string
-	AvatarURL string
-	Token     *oauth2.Token
-}
 
 var (
 	githubClientID     = os.Getenv("GITHUB_CLIENT_ID")
@@ -59,16 +62,6 @@ func main() {
 	log.Fatal(err)
 }
 
-type Checklist struct {
-	PullRequest PullRequest
-	Features    []PullRequest
-}
-
-type PullRequest struct {
-	Title  string
-	Number int
-}
-
 type httpError int
 
 func (he httpError) Error() string {
@@ -86,8 +79,20 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if he, ok := err.(httpError); ok {
 			status = int(he)
 		}
+
 		http.Error(w, http.StatusText(status), status)
 	}
+}
+
+func renderJSON(w http.ResponseWriter, v interface{}) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(b)
+	return nil
 }
 
 func handleAuth(w http.ResponseWriter, req *http.Request) error {
@@ -137,10 +142,8 @@ func handleIndex(w http.ResponseWriter, req *http.Request) error {
 func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 	sess, err := sessionStore.Get(req, sessionName)
 	if err != nil {
-		// return err
+		return err
 	}
-
-	code := req.URL.Query().Get("code")
 
 	state := req.URL.Query().Get("state")
 	if state != sess.Values[sessionKeyOAuthState] {
@@ -149,12 +152,15 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 
 	delete(sess.Values, sessionKeyOAuthState)
 
-	ctx := context.Background()
+	ctx := req.Context()
+
 	conf := &oauth2.Config{
 		ClientID:     githubClientID,
 		ClientSecret: githubClientSecret,
 		Endpoint:     githubEndpoint,
 	}
+
+	code := req.URL.Query().Get("code")
 	token, err := conf.Exchange(ctx, code)
 	if err != nil {
 		return err
@@ -165,12 +171,14 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 	client := github.NewClient(
 		oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)),
 	)
+
 	u, _, err := client.Users.Get(ctx, "")
 	if err != nil {
 		return err
 	}
 
-	user := &githubUser{
+	user := &prchecklist.GitHubUser{
+		ID:        u.GetID(),
 		Login:     u.GetLogin(),
 		AvatarURL: u.GetAvatarURL(),
 		Token:     token,
@@ -200,7 +208,7 @@ func handleAuthClear(w http.ResponseWriter, req *http.Request) error {
 	return sess.Save(req, w)
 }
 
-func getAuthInfo(w http.ResponseWriter, req *http.Request) (*githubUser, error) {
+func getAuthInfo(w http.ResponseWriter, req *http.Request) (*prchecklist.GitHubUser, error) {
 	sess, err := sessionStore.Get(req, sessionName)
 	if err != nil {
 		// return nil, err
@@ -212,7 +220,7 @@ func getAuthInfo(w http.ResponseWriter, req *http.Request) (*githubUser, error) 
 		return nil, nil
 	}
 
-	user, ok := v.(*githubUser)
+	user, ok := v.(*prchecklist.GitHubUser)
 	if !ok || user.Token == nil {
 		delete(sess.Values, sessionKeyGitHubUser)
 		return nil, sess.Save(req, w)
@@ -242,95 +250,17 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	log.Printf("%v", in)
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
 
-	type queryResult struct {
-		Data struct {
-			Repository struct {
-				PullRequest struct {
-					Title      string
-					Number     int
-					Repository struct {
-						NameWithOwner string
-					}
-					Commits struct {
-						Edges []struct {
-							Node struct {
-								Commit struct {
-									Message string
-								}
-							}
-						}
-						PageInfo struct {
-							HasNextPage bool
-							EndCursor   string
-						}
-						TotalCount int
-					}
-				}
-			}
-			RateLimit struct {
-				Remaining int
-			}
-		}
-	}
-
-	query := fmt.Sprintf(`query {
-  repository(owner: %q, name: %q) {
-    pullRequest(number: %d) {
-      title
-      number
-      repository {
-        nameWithOwner
-      }
-      commits(first: 100) {
-        edges {
-          node {
-            commit {
-              message
-            }
-          }
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-        totalCount
-      }
-    }
-  }
-  rateLimit {
-    remaining
-  }
-}`, in.Owner, in.Repo, in.Number)
-
-	var buf bytes.Buffer
-	err = json.NewEncoder(&buf).Encode(map[string]string{"query": query})
+	cl, err := app.GetChecklist(ctx, prchecklist.ChecklistRef{
+		Owner:  in.Owner,
+		Repo:   in.Repo,
+		Number: in.Number,
+	})
 	if err != nil {
 		return err
 	}
 
-	httpReq, err := http.NewRequest("POST", "https://api.github.com/graphql", &buf)
-	if err != nil {
-		return err
-	}
-
-	httpReq.Header.Set("Authorization", "token "+u.Token.AccessToken)
-
-	client := http.Client{}
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		return err
-	}
-
-	var result queryResult
-	defer resp.Body.Close()
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("%+v", result)
-
-	return nil
+	return renderJSON(w, cl)
 }
