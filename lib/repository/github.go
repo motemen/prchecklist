@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/motemen/go-graphql-query"
 	"github.com/motemen/go-prchecklist"
 )
 
@@ -17,22 +18,32 @@ func NewGitHub() *githubRepository {
 type githubRepository struct {
 }
 
-type graphqlResult struct {
+type githubPullRequest struct {
+	GraphQLArguments struct {
+		WithCommits bool `graphql:"$withCommits,notnull"`
+	}
 	Repository struct {
-		GraphQLParams struct {
-			Owner string
-			Repo  string
+		GraphQLArguments struct {
+			Owner string `graphql:"$owner,notnull"`
+			Name  string `graphql:"$repo,notnull"`
 		}
 		DefaultBranchRef struct {
 			Name string
 		}
 		PullRequest struct {
+			GraphQLArguments struct {
+				Number int `graphql:"$number,notnull"`
+			}
 			Title   string
 			Number  int
 			BaseRef struct {
 				Name string
 			}
 			Commits struct {
+				GraphQLArguments struct {
+					First int    `graphql:"100"`
+					After string `graphql:"$commitsAfter"`
+				}
 				Edges []struct {
 					Node struct {
 						Commit struct {
@@ -45,7 +56,7 @@ type graphqlResult struct {
 					EndCursor   string
 				}
 				TotalCount int
-			}
+			} `graphql:"@include(if: $withCommits)"`
 		}
 	}
 	RateLimit struct {
@@ -53,38 +64,13 @@ type graphqlResult struct {
 	}
 }
 
-const pullRequestQuery = `query ($owner: String!, $repo: String!, $number: Int!, $commitsAfter: String) {
-  repository(owner: $owner, name: $repo) {
-    defaultBranchRef {
-      name
-    }
-    pullRequest(number: $number) {
-      title
-      number
-      baseRef {
-        name
-      }
-      commits(first: 100, after: $commitsAfter) {
-        edges {
-          node {
-            commit {
-              message
-            }
-          }
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-        totalCount
-      }
-    }
-  }
-  rateLimit {
-    remaining
-  }
+type githubPullRequsetVars struct {
+	Owner        string `json:"owner"`
+	Repo         string `json:"repo"`
+	Number       int    `json:"number"`
+	WithCommits  bool   `json:"withCommits"`
+	CommitsAfter string `json:"commitsAfter,omitempty"`
 }
-`
 
 type graphQLResult struct {
 	Data   interface{}
@@ -93,18 +79,28 @@ type graphQLResult struct {
 	}
 }
 
-func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef) (*prchecklist.PullRequest, error) {
-	var qr graphqlResult
-	err := queryGraphQL(ctx, pullRequestQuery, map[string]interface{}{
-		"owner":  ref.Owner,
-		"repo":   ref.Repo,
-		"number": ref.Number,
+var pullRequestQuery string
+
+func init() {
+	b, err := graphqlquery.Build(&githubPullRequest{})
+	if err != nil {
+		panic(err)
+	}
+	pullRequestQuery = string(b)
+}
+func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, error) {
+	var qr githubPullRequest
+	err := queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
+		Owner:       ref.Owner,
+		Repo:        ref.Repo,
+		Number:      ref.Number,
+		WithCommits: withCommits,
 	}, &qr)
 	if err != nil {
 		return nil, err
 	}
 
-	graphqlResultToCommits := func(qr graphqlResult) []prchecklist.Commit {
+	graphqlResultToCommits := func(qr githubPullRequest) []prchecklist.Commit {
 		commits := make([]prchecklist.Commit, len(qr.Repository.PullRequest.Commits.Edges))
 		for i, e := range qr.Repository.PullRequest.Commits.Edges {
 			commits[i] = prchecklist.Commit{Message: e.Node.Commit.Message}
@@ -126,11 +122,12 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 			break
 		}
 
-		err := queryGraphQL(ctx, pullRequestQuery, map[string]interface{}{
-			"owner":        ref.Owner,
-			"repo":         ref.Repo,
-			"number":       ref.Number,
-			"commitsAfter": pageInfo.EndCursor,
+		err := queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
+			Owner:        ref.Owner,
+			Repo:         ref.Repo,
+			Number:       ref.Number,
+			WithCommits:  true,
+			CommitsAfter: pageInfo.EndCursor,
 		}, &qr)
 		if err != nil {
 			return nil, err
