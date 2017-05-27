@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -23,12 +25,12 @@ import (
 
 var app *usecase.Usecase
 
+var db string
+
 func init() {
 	gob.Register(&prchecklist.GitHubUser{})
 
-	app = usecase.New(
-		repository.NewGitHub(),
-	)
+	flag.StringVar(&db, "db", "bolt:./prchecklist.db", "database source name")
 }
 
 const sessionName = "s"
@@ -52,13 +54,27 @@ var githubEndpoint = oauth2.Endpoint{
 }
 
 func main() {
+	flag.Parse()
+
+	coreRepo, err := repository.NewBoltCore(db[len("bolt:"):])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app = usecase.New(
+		repository.NewGitHub(),
+		coreRepo,
+	)
+
 	mux := http.NewServeMux()
 	mux.Handle("/", httpHandler(handleIndex))
 	mux.Handle("/auth", httpHandler(handleAuth))
 	mux.Handle("/auth/callback", httpHandler(handleAuthCallback))
 	mux.Handle("/auth/clear", httpHandler(handleAuthClear))
 	mux.Handle("/api/checklist", httpHandler(handleAPIChecklist))
-	err := http.ListenAndServe("localhost:7888", mux)
+	mux.Handle("/api/check", httpHandler(handleAPICheck))
+
+	err = http.ListenAndServe("localhost:7888", mux)
 	log.Fatal(err)
 }
 
@@ -73,7 +89,7 @@ type httpHandler func(w http.ResponseWriter, req *http.Request) error
 func (h httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	err := h(w, req)
 	if err != nil {
-		log.Printf("ServeHTTP: %s (%#v)", err, err)
+		log.Printf("ServeHTTP: %s (%+v)", err, err)
 
 		status := http.StatusInternalServerError
 		if he, ok := err.(httpError); ok {
@@ -136,7 +152,17 @@ func handleIndex(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	return json.NewEncoder(w).Encode(u)
+	fmt.Fprintf(w, `<!DOCTYPE html>
+<pre>%#v</pre>
+<form action="/api/check" method="post">
+<input name="owner" value="motemen">
+<input name="repo" value="test-repository">
+<input name="number" value="2">
+<input name="featureNumber" value="1">
+<input type="submit">
+</form>
+`, u)
+	return nil
 }
 
 func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
@@ -177,7 +203,7 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	user := &prchecklist.GitHubUser{
+	user := prchecklist.GitHubUser{
 		ID:        u.GetID(),
 		Login:     u.GetLogin(),
 		AvatarURL: u.GetAvatarURL(),
@@ -186,6 +212,11 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 	sess.Values[sessionKeyGitHubUser] = user
 
 	log.Printf("user: %#v", user)
+
+	err = app.AddUser(ctx, user)
+	if err != nil {
+		return err
+	}
 
 	err = sess.Save(req, w)
 	if err != nil {
@@ -211,6 +242,7 @@ func handleAuthClear(w http.ResponseWriter, req *http.Request) error {
 func getAuthInfo(w http.ResponseWriter, req *http.Request) (*prchecklist.GitHubUser, error) {
 	sess, err := sessionStore.Get(req, sessionName)
 	if err != nil {
+		// FIXME
 		// return nil, err
 		return nil, nil
 	}
@@ -263,4 +295,49 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	return renderJSON(w, cl)
+}
+
+func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
+	// TODO: POST / DELETE
+	u, err := getAuthInfo(w, req)
+	if err != nil {
+		return err
+	}
+	if u == nil {
+		return httpError(http.StatusForbidden)
+	}
+
+	type inQuery struct {
+		Owner         string
+		Repo          string
+		Number        int
+		FeatureNumber int
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return err
+	}
+
+	var in inQuery
+	err = schema.NewDecoder().Decode(&in, req.Form)
+	if err != nil {
+		return err
+	}
+
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
+
+	log.Printf("%+v", in)
+
+	err = app.AddCheck(ctx, prchecklist.ChecklistRef{
+		Owner:  in.Owner,
+		Repo:   in.Repo,
+		Number: in.Number,
+	}, in.FeatureNumber, *u)
+	if err != nil {
+		return err
+	}
+
+	// TODO
+	return renderJSON(w, nil)
 }

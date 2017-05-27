@@ -36,6 +36,7 @@ type githubPullRequest struct {
 			}
 			Title   string
 			Number  int
+			Body    string
 			BaseRef struct {
 				Name string
 			}
@@ -110,6 +111,7 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 
 	result := &prchecklist.PullRequest{
 		Title:   qr.Repository.PullRequest.Title,
+		Body:    qr.Repository.PullRequest.Body,
 		Owner:   ref.Owner,
 		Repo:    ref.Repo,
 		Number:  ref.Number,
