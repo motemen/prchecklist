@@ -59,7 +59,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 
 			checklist.Items[i] = &prchecklist.ChecklistItem{
 				PullRequest: featurePullReq,
-				CheckedBy:   []prchecklist.GitHubUser{},
+				CheckedBy:   []prchecklist.GitHubUser{}, // filled up later
 			}
 			return nil
 		})
@@ -110,6 +110,7 @@ func (u Usecase) AddUser(ctx context.Context, user prchecklist.GitHubUser) error
 func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) error {
 	// TODO: check visibilities
 	// TODO: check featNum existence
+	// NOTE: could receive only token (from ctx) and check visiblities & get user info
 	return u.coreRepo.AddCheck(ctx, clRef, featNum, user)
 }
 

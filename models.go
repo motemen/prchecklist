@@ -11,6 +11,8 @@ import (
 type Checklist struct {
 	*PullRequest
 	Items []*ChecklistItem
+	// Stage  string
+	// Stages []string
 }
 
 type ChecklistItem struct {
@@ -31,12 +33,14 @@ func (clRef ChecklistRef) String() string {
 }
 
 type PullRequest struct {
+	// URL     string
 	Title   string
 	Body    string
 	Owner   string
 	Repo    string
 	Number  int
 	Commits []Commit
+	// Assignees []GitHubUser
 }
 
 type Commit struct {
