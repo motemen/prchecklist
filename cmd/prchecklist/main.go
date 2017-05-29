@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
 	_ "github.com/motemen/go-loghttp/global"
+	"github.com/urfave/negroni"
 	"golang.org/x/oauth2"
 
 	"github.com/motemen/go-prchecklist"
@@ -68,13 +69,18 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", httpHandler(handleIndex))
+	mux.Handle("/motemen/test-repository/pull/2", httpHandler(handleChecklist))
+	mux.Handle("/motemen/test-repository/pull/3", httpHandler(handleChecklist))
 	mux.Handle("/auth", httpHandler(handleAuth))
 	mux.Handle("/auth/callback", httpHandler(handleAuthCallback))
 	mux.Handle("/auth/clear", httpHandler(handleAuthClear))
 	mux.Handle("/api/checklist", httpHandler(handleAPIChecklist))
 	mux.Handle("/api/check", httpHandler(handleAPICheck))
 
-	err = http.ListenAndServe("localhost:7888", mux)
+	n := negroni.New(negroni.NewStatic(http.Dir("./static")))
+	n.UseHandler(mux)
+
+	err = http.ListenAndServe("localhost:7888", n)
 	log.Fatal(err)
 }
 
@@ -340,4 +346,11 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 
 	// TODO
 	return renderJSON(w, nil)
+}
+
+func handleChecklist(w http.ResponseWriter, req *http.Request) error {
+	fmt.Fprint(w, `<!DOCTYPE html>
+<div id="main"></div>
+<script src="/js/bundle.js"></script>`)
+	return nil
 }

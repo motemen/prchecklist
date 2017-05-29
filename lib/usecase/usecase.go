@@ -41,7 +41,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 		return nil, err
 	}
 
-	refs := mergedPullRequestRefs(pr)
+	refs := u.mergedPullRequestRefs(pr)
 
 	checklist := &prchecklist.Checklist{
 		PullRequest: pr,
@@ -116,7 +116,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 
 var rxMergeCommitMessage = regexp.MustCompile(`\AMerge pull request #(?P<number>\d+) `)
 
-func mergedPullRequestRefs(pr *prchecklist.PullRequest) []prchecklist.ChecklistRef {
+func (u Usecase) mergedPullRequestRefs(pr *prchecklist.PullRequest) []prchecklist.ChecklistRef {
 	refs := []prchecklist.ChecklistRef{}
 	for _, commit := range pr.Commits {
 		m := rxMergeCommitMessage.FindStringSubmatch(commit.Message)
