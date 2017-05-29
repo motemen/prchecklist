@@ -40,12 +40,13 @@ func (clRef ChecklistRef) String() string {
 
 type PullRequest struct {
 	// URL     string
-	Title   string
-	Body    string
-	Owner   string
-	Repo    string
-	Number  int
-	Commits []Commit
+	Title     string
+	Body      string
+	Owner     string
+	Repo      string
+	Number    int
+	Commits   []Commit
+	IsPrivate bool
 	// Assignees []GitHubUser
 }
 

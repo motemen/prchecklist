@@ -5,17 +5,29 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
+	"github.com/coocood/freecache"
 	"github.com/motemen/go-graphql-query"
+
 	"github.com/motemen/go-prchecklist"
 )
 
+const (
+	cacheSize                         = 10 * 1024 * 1024
+	cacheSecondsPullReqWithCommits    = 30
+	cacheSecondsPullReqWithoutCommits = 300
+)
+
 func NewGitHub() *githubRepository {
-	return &githubRepository{}
+	return &githubRepository{
+		cache: freecache.NewCache(cacheSize),
+	}
 }
 
 type githubRepository struct {
+	cache *freecache.Cache
 }
 
 type githubPullRequest struct {
@@ -27,6 +39,7 @@ type githubPullRequest struct {
 			Owner string `graphql:"$owner,notnull"`
 			Name  string `graphql:"$repo,notnull"`
 		}
+		IsPrivate        bool
 		DefaultBranchRef struct {
 			Name string
 		}
@@ -89,7 +102,47 @@ func init() {
 	}
 	pullRequestQuery = string(b)
 }
+
 func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, error) {
+	cacheKey := []byte(fmt.Sprintf("%s\000%v", ref.String(), withCommits))
+
+	data, err := r.cache.Get(cacheKey)
+	if data != nil {
+		var pullReq prchecklist.PullRequest
+		err := json.Unmarshal(data, &pullReq)
+		if err == nil {
+			return &pullReq, nil
+		}
+
+		log.Println("githubRepository.GetPullRequest(%q, %v): json.Unmarshal: %s", ref.String(), withCommits, err)
+	}
+
+	pullReq, err := r.getPullRequest(ctx, ref, withCommits)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err = json.Marshal(&pullReq)
+	if err != nil {
+		log.Println("githubRepository.GetPullRequest(%q, %v): json.Marshal: %s", ref.String(), withCommits, err)
+	} else {
+		var cacheSeconds int
+		if withCommits {
+			cacheSeconds = cacheSecondsPullReqWithCommits
+		} else {
+			cacheSeconds = cacheSecondsPullReqWithoutCommits
+		}
+
+		err := r.cache.Set(cacheKey, data, cacheSeconds)
+		if err != nil {
+			log.Println("githubRepository.GetPullRequest(%q, %v): cache.Set: %s", ref.String(), withCommits, err)
+		}
+	}
+
+	return pullReq, nil
+}
+
+func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, error) {
 	var qr githubPullRequest
 	err := queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
 		Owner:       ref.Owner,
@@ -109,13 +162,14 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 		return commits
 	}
 
-	result := &prchecklist.PullRequest{
-		Title:   qr.Repository.PullRequest.Title,
-		Body:    qr.Repository.PullRequest.Body,
-		Owner:   ref.Owner,
-		Repo:    ref.Repo,
-		Number:  ref.Number,
-		Commits: graphqlResultToCommits(qr),
+	pullReq := &prchecklist.PullRequest{
+		Title:     qr.Repository.PullRequest.Title,
+		Body:      qr.Repository.PullRequest.Body,
+		IsPrivate: qr.Repository.IsPrivate,
+		Owner:     ref.Owner,
+		Repo:      ref.Repo,
+		Number:    ref.Number,
+		Commits:   graphqlResultToCommits(qr),
 	}
 
 	for {
@@ -135,10 +189,10 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 			return nil, err
 		}
 
-		result.Commits = append(result.Commits, graphqlResultToCommits(qr)...)
+		pullReq.Commits = append(pullReq.Commits, graphqlResultToCommits(qr)...)
 	}
 
-	return result, nil
+	return pullReq, nil
 }
 
 func queryGraphQL(ctx context.Context, query string, variables interface{}, value interface{}) error {
