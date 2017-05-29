@@ -27,12 +27,31 @@ import (
 
 var app *usecase.Usecase
 
-var db string
+var (
+	githubClientID     = os.Getenv("GITHUB_CLIENT_ID")
+	githubClientSecret = os.Getenv("GITHUB_CLIENT_SECRET")
+	sessionSecret      = os.Getenv("PRCHECKLIST_SESSION_SECRET")
+	datasource         = getenv("PRCHECKLIST_DATASOURCE", "bolt:./prchecklist.db")
+	addr               string
+)
+
+func getenv(key, def string) string {
+	v := os.Getenv(key)
+	if v != "" {
+		return v
+	}
+
+	return def
+}
 
 func init() {
 	gob.Register(&prchecklist.GitHubUser{})
 
-	flag.StringVar(&db, "db", "bolt:./prchecklist.db", "database source name")
+	flag.StringVar(&githubClientID, "github-client-id", os.Getenv("GITHUB_CLIENT_ID"), "GitHub client ID")
+	flag.StringVar(&githubClientSecret, "github-client-secret", os.Getenv("GITHUB_CLIENT_SECRET"), "GitHub client secret")
+	flag.StringVar(&sessionSecret, "session-secret", os.Getenv("PRCHECKLIST_SESSION_SECRET"), "session secret")
+	flag.StringVar(&datasource, "datasource", datasource, "database source name")
+	flag.StringVar(&addr, "listen", "localhost:7888", "`address` to listen")
 }
 
 const sessionName = "s"
@@ -40,12 +59,6 @@ const sessionName = "s"
 const (
 	sessionKeyOAuthState = "oauthState"
 	sessionKeyGitHubUser = "prchecklist.GitHubUser"
-)
-
-var (
-	githubClientID     = os.Getenv("GITHUB_CLIENT_ID")
-	githubClientSecret = os.Getenv("GITHUB_CLIENT_SECRET")
-	sessionSecret      = os.Getenv("PRCHECKLIST_SESSION_SECRET")
 )
 
 var sessionStore sessions.Store
@@ -58,7 +71,7 @@ var githubEndpoint = oauth2.Endpoint{
 func main() {
 	flag.Parse()
 
-	coreRepo, err := repository.NewBoltCore(db[len("bolt:"):])
+	coreRepo, err := repository.NewBoltCore(datasource[len("bolt:"):])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -86,7 +99,8 @@ func main() {
 	n := negroni.New(negroni.NewStatic(http.Dir("./static")))
 	n.UseHandler(router)
 
-	err = http.ListenAndServe("localhost:7888", n)
+	log.Printf("prchecklist starting at %s", addr)
+	err = http.ListenAndServe(addr, n)
 	log.Fatal(err)
 }
 
