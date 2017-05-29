@@ -16,8 +16,9 @@ type GitHubRepository interface {
 }
 
 type CoreRepository interface {
-	AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, number int, user prchecklist.GitHubUser) error
 	GetChecks(ctx context.Context, clRef prchecklist.ChecklistRef) (prchecklist.Checks, error)
+	AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, number int, user prchecklist.GitHubUser) error
+	RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, number int, user prchecklist.GitHubUser) error
 
 	AddUser(ctx context.Context, user prchecklist.GitHubUser) error
 	GetUsers(ctx context.Context, userIDs []int) (map[int]prchecklist.GitHubUser, error)
@@ -115,6 +116,13 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
 	return u.coreRepo.AddCheck(ctx, clRef, featNum, user)
+}
+
+func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) error {
+	// TODO: check visibilities
+	// TODO: check featNum existence
+	// NOTE: could receive only token (from ctx) and check visiblities & get user info
+	return u.coreRepo.RemoveCheck(ctx, clRef, featNum, user)
 }
 
 var rxMergeCommitMessage = regexp.MustCompile(`\AMerge pull request #(?P<number>\d+) `)

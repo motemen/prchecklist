@@ -80,8 +80,7 @@ func main() {
 	router.Handle("/auth/callback", httpHandler(handleAuthCallback))
 	router.Handle("/auth/clear", httpHandler(handleAuthClear))
 	router.Handle("/api/checklist", httpHandler(handleAPIChecklist))
-	router.Handle("/api/check", httpHandler(handleAPICheck))
-	router.Handle("/api/check", httpHandler(handleAPICheck))
+	router.Handle("/api/check", httpHandler(handleAPICheck)).Methods("PUT", "DELETE")
 	router.Handle("/{owner}/{repo}/pull/{number}", httpHandler(handleChecklist))
 
 	n := negroni.New(negroni.NewStatic(http.Dir("./static")))
@@ -311,7 +310,6 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 }
 
 func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
-	// TODO: POST / DELETE
 	u, err := getAuthInfo(w, req)
 	if err != nil {
 		return err
@@ -342,17 +340,41 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 
 	log.Printf("%+v", in)
 
-	err = app.AddCheck(ctx, prchecklist.ChecklistRef{
+	switch req.Method {
+	case "PUT":
+		err = app.AddCheck(ctx, prchecklist.ChecklistRef{
+			Owner:  in.Owner,
+			Repo:   in.Repo,
+			Number: in.Number,
+		}, in.FeatureNumber, *u)
+		if err != nil {
+			return err
+		}
+
+	case "DELETE":
+		err = app.RemoveCheck(ctx, prchecklist.ChecklistRef{
+			Owner:  in.Owner,
+			Repo:   in.Repo,
+			Number: in.Number,
+		}, in.FeatureNumber, *u)
+		if err != nil {
+			return err
+		}
+
+	default:
+		return httpError(http.StatusMethodNotAllowed)
+	}
+
+	cl, err := app.GetChecklist(ctx, prchecklist.ChecklistRef{
 		Owner:  in.Owner,
 		Repo:   in.Repo,
 		Number: in.Number,
-	}, in.FeatureNumber, *u)
+	})
 	if err != nil {
 		return err
 	}
 
-	// TODO
-	return renderJSON(w, nil)
+	return renderJSON(w, cl)
 }
 
 func handleChecklist(w http.ResponseWriter, req *http.Request) error {

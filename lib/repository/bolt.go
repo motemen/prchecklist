@@ -138,3 +138,38 @@ func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.Checklis
 		return checksBucket.Put(key, data)
 	})
 }
+
+func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, number int, user prchecklist.GitHubUser) error {
+	return r.db.Update(func(tx *bolt.Tx) error {
+		var checks prchecklist.Checks
+
+		checksBucket := tx.Bucket([]byte(bucketNameChecks))
+
+		key := []byte(clRef.String())
+		data := checksBucket.Get(key)
+		if data != nil {
+			err := json.Unmarshal(data, &checks)
+			if err != nil {
+				return err
+			}
+		}
+
+		if checks == nil {
+			checks = prchecklist.Checks{}
+		}
+
+		for i, userID := range checks[number] {
+			if user.ID == userID {
+				checks[number] = append(checks[number][0:i], checks[number][i+1:]...)
+				break
+			}
+		}
+
+		data, err := json.Marshal(&checks)
+		if err != nil {
+			return err
+		}
+
+		return checksBucket.Put(key, data)
+	})
+}
