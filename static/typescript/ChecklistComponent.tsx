@@ -33,6 +33,7 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
   handleOnClickChecklistItem = (item: API.ChecklistItem): React.ChangeEventHandler<HTMLInputElement> => {
     return (ev: React.ChangeEvent<HTMLInputElement>) => {
       const checked = ev.target.checked;
+
       this.setState((prevState: ChecklistState, props) => {
         prevState.checklist.Items.forEach((it) => {
           if (it.Number == item.Number) {
@@ -40,21 +41,22 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
             if (checked) {
               it.CheckedBy = it.CheckedBy.concat(this.state.me);
             } else {
-              it.CheckedBy = it.CheckedBy.filter((user) => user.ID != this.state.me.ID);
+              it.CheckedBy = it.CheckedBy.filter((user) => user.ID !== this.state.me.ID);
             }
           }
         });
-        return { ...prevState, loading: true }
-      }, () => {
-        API.setCheck(this.props.checklistRef, item.Number, checked)
-          .then((data) => {
-            this.setState({
-              checklist: data.Checklist,
-              me: data.Me,
-              loading: false
-            });
-          });
+        console.log(prevState);
+        return { ...prevState, loading: true };
       });
+
+      API.setCheck(this.props.checklistRef, item.Number, checked)
+        .then((data) => {
+          this.setState({
+            checklist: data.Checklist,
+            me: data.Me,
+            loading: false
+          });
+        });
     }
   }
 
@@ -84,7 +86,7 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
           {
             checklist.Items.map((item) => {
               return <li key={`item-${item.Number}`}>
-                <input type="checkbox" onChange={this.handleOnClickChecklistItem(item)} checked={this.itemIsCheckedByMe(item)} disabled={this.state.loading} />
+                <input type="checkbox" onChange={this.handleOnClickChecklistItem(item)} checked={this.itemIsCheckedByMe(item)} />
                 <span className="number">#{item.Number}</span>
                 {' '}
                 <span className="title">{item.Title}</span>
