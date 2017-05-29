@@ -1,0 +1,32 @@
+* {
+    font-family: monospace;
+    line-height: 1.7;
+}
+
+body {
+    font-size: 20px;
+    margin: 5% 10%;
+}
+
+pre {
+    font-size: 75%;
+    background-color: #F3F3F3;
+    padding: 1.5em;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+input[type="checkbox"] {
+    transform: scale(1.5);
+    margin-right: 1em;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.user img {
+    height: 20px;
+}

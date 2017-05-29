@@ -306,7 +306,10 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	return renderJSON(w, cl)
+	return renderJSON(w, &prchecklist.ChecklistResponse{
+		Checklist: cl,
+		Me:        u,
+	})
 }
 
 func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
@@ -338,7 +341,7 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
 
-	log.Printf("%+v", in)
+	log.Printf("handleAPICheck: %s %+v", req.Method, in)
 
 	switch req.Method {
 	case "PUT":
@@ -374,7 +377,10 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	return renderJSON(w, cl)
+	return renderJSON(w, &prchecklist.ChecklistResponse{
+		Checklist: cl,
+		Me:        u,
+	})
 }
 
 func handleChecklist(w http.ResponseWriter, req *http.Request) error {

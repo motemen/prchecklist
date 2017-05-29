@@ -63,9 +63,6 @@ type githubPullRequest struct {
 	RateLimit struct {
 		Remaining int
 	}
-	Viewer struct {
-		Login string
-	}
 }
 
 type githubPullRequsetVars struct {
@@ -92,7 +89,7 @@ func init() {
 	}
 	pullRequestQuery = string(b)
 }
-func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, string, error) {
+func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, error) {
 	var qr githubPullRequest
 	err := queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
 		Owner:       ref.Owner,
@@ -101,7 +98,7 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 		WithCommits: withCommits,
 	}, &qr)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	graphqlResultToCommits := func(qr githubPullRequest) []prchecklist.Commit {
@@ -135,13 +132,13 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 			CommitsAfter: pageInfo.EndCursor,
 		}, &qr)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
 		result.Commits = append(result.Commits, graphqlResultToCommits(qr)...)
 	}
 
-	return result, qr.Viewer.Login, nil
+	return result, nil
 }
 
 func queryGraphQL(ctx context.Context, query string, variables interface{}, value interface{}) error {

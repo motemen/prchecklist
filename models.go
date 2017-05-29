@@ -8,6 +8,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type ChecklistResponse struct {
+	Checklist *Checklist
+	Me        *GitHubUser
+}
+
 type Checklist struct {
 	*PullRequest
 	Items []*ChecklistItem

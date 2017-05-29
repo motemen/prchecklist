@@ -12,7 +12,7 @@ import (
 )
 
 type GitHubRepository interface {
-	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, string, error)
+	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, error)
 }
 
 type CoreRepository interface {
@@ -37,7 +37,7 @@ func New(githubRepo GitHubRepository, coreRepo CoreRepository) *Usecase {
 }
 
 func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRef) (*prchecklist.Checklist, error) {
-	pr, username, err := u.githubRepo.GetPullRequest(ctx, clRef, true)
+	pr, err := u.githubRepo.GetPullRequest(ctx, clRef, true)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 	for i, ref := range refs {
 		i, ref := i, ref
 		g.Go(func() error {
-			featurePullReq, _, err := u.githubRepo.GetPullRequest(ctx, ref, false)
+			featurePullReq, err := u.githubRepo.GetPullRequest(ctx, ref, false)
 			if err != nil {
 				return err
 			}
@@ -97,9 +97,6 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 
 			for _, id := range userIDs {
 				item.CheckedBy = append(item.CheckedBy, users[id])
-				if users[id].Login == username {
-					item.CheckedByMe = true
-				}
 			}
 		}
 	}
