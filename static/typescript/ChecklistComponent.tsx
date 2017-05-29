@@ -21,8 +21,6 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
 
   handleOnClickChecklistItem = (item: API.ChecklistItem): React.ChangeEventHandler<HTMLInputElement> => {
     return (ev: React.ChangeEvent<HTMLInputElement>) => {
-      console.log(ev);
-      alert(ev);
       API.setCheck(this.props.checklistRef, item.Number, ev.target.checked)
         .then((checklist) => {
           this.setState({ checklist });
@@ -46,14 +44,17 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
         <ul>
           {
             checklist.Items.map((item) => {
+              console.log(item);
               return <li key={`item-${item.Number}`}>
-                <input type="checkbox" onChange={this.handleOnClickChecklistItem(item)}/>
+                <input type="checkbox" onChange={this.handleOnClickChecklistItem(item)} checked={item.CheckedByMe} />
                 <span className="number">#{item.Number}</span>
+                {' '}
                 <span className="title">{item.Title}</span>
+                {' '}
                 <span className="checkedby">
                 {
                   item.CheckedBy.map((user) => {
-                    return <span className="user"><img width="32" src={user.AvatarURL}/></span>;
+                    return <span className="user" key={`item-${item.Number}-checkedby-${user.ID}`}><img width="16" src={user.AvatarURL}/></span>;
                   })
                 }
                 </span>

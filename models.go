@@ -17,8 +17,8 @@ type Checklist struct {
 
 type ChecklistItem struct {
 	*PullRequest
-	CheckedBy []GitHubUser
-	// CheckedByMe bool
+	CheckedBy   []GitHubUser
+	CheckedByMe bool
 }
 
 type Checks map[int][]int // PullReqNumber -> []UserID

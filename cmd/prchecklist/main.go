@@ -13,6 +13,7 @@ import (
 	"os"
 
 	"github.com/google/go-github/github"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
 	_ "github.com/motemen/go-loghttp/global"
@@ -47,7 +48,7 @@ var (
 	sessionSecret      = os.Getenv("PRCHECKLIST_SESSION_SECRET")
 )
 
-var sessionStore = sessions.NewCookieStore([]byte(sessionSecret))
+var sessionStore sessions.Store
 
 var githubEndpoint = oauth2.Endpoint{
 	AuthURL:  "https://github.com/login/oauth/authorize",
@@ -67,18 +68,24 @@ func main() {
 		coreRepo,
 	)
 
-	mux := http.NewServeMux()
-	mux.Handle("/", httpHandler(handleIndex))
-	mux.Handle("/motemen/test-repository/pull/2", httpHandler(handleChecklist))
-	mux.Handle("/motemen/test-repository/pull/3", httpHandler(handleChecklist))
-	mux.Handle("/auth", httpHandler(handleAuth))
-	mux.Handle("/auth/callback", httpHandler(handleAuthCallback))
-	mux.Handle("/auth/clear", httpHandler(handleAuthClear))
-	mux.Handle("/api/checklist", httpHandler(handleAPIChecklist))
-	mux.Handle("/api/check", httpHandler(handleAPICheck))
+	cookieStore := sessions.NewCookieStore([]byte(sessionSecret))
+	cookieStore.Options = &sessions.Options{
+		HttpOnly: true,
+	}
+	sessionStore = cookieStore
+
+	router := mux.NewRouter()
+	router.Handle("/", httpHandler(handleIndex))
+	router.Handle("/auth", httpHandler(handleAuth))
+	router.Handle("/auth/callback", httpHandler(handleAuthCallback))
+	router.Handle("/auth/clear", httpHandler(handleAuthClear))
+	router.Handle("/api/checklist", httpHandler(handleAPIChecklist))
+	router.Handle("/api/check", httpHandler(handleAPICheck))
+	router.Handle("/api/check", httpHandler(handleAPICheck))
+	router.Handle("/{owner}/{repo}/pull/{number}", httpHandler(handleChecklist))
 
 	n := negroni.New(negroni.NewStatic(http.Dir("./static")))
-	n.UseHandler(mux)
+	n.UseHandler(router)
 
 	err = http.ListenAndServe("localhost:7888", n)
 	log.Fatal(err)

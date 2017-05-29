@@ -9527,8 +9527,6 @@ class ChecklistComponent extends React.PureComponent {
         super(props);
         this.handleOnClickChecklistItem = (item) => {
             return (ev) => {
-                console.log(ev);
-                alert(ev);
                 API.setCheck(this.props.checklistRef, item.Number, ev.target.checked)
                     .then((checklist) => {
                     this.setState({ checklist });
@@ -9554,15 +9552,18 @@ class ChecklistComponent extends React.PureComponent {
                 React.createElement("span", { className: "title" }, checklist.Title)),
             React.createElement("div", { className: "items" },
                 React.createElement("ul", null, checklist.Items.map((item) => {
+                    console.log(item);
                     return React.createElement("li", { key: `item-${item.Number}` },
-                        React.createElement("input", { type: "checkbox", onChange: this.handleOnClickChecklistItem(item) }),
+                        React.createElement("input", { type: "checkbox", onChange: this.handleOnClickChecklistItem(item), checked: item.CheckedByMe }),
                         React.createElement("span", { className: "number" },
                             "#",
                             item.Number),
+                        ' ',
                         React.createElement("span", { className: "title" }, item.Title),
+                        ' ',
                         React.createElement("span", { className: "checkedby" }, item.CheckedBy.map((user) => {
-                            return React.createElement("span", { className: "user" },
-                                React.createElement("img", { width: "32", src: user.AvatarURL }));
+                            return React.createElement("span", { className: "user", key: `item-${item.Number}-checkedby-${user.ID}` },
+                                React.createElement("img", { width: "16", src: user.AvatarURL }));
                         })));
                 }))));
     }
@@ -9595,7 +9596,7 @@ function getChecklist(ref) {
 }
 exports.getChecklist = getChecklist;
 function setCheck(ref, featNum, checked) {
-    return fetch(`/api/check?owner=${ref.Owner}&repo=${ref.Repo}&number=${ref.Number}`, {
+    return fetch(`/api/check?owner=${ref.Owner}&repo=${ref.Repo}&number=${ref.Number}&featureNumber=${featNum}`, {
         credentials: 'same-origin',
         method: checked ? 'PUT' : 'DELETE'
     })

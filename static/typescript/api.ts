@@ -10,6 +10,7 @@ export interface Checklist {
 export interface ChecklistItem {
     Body: string;
     CheckedBy: GitHubUser[];
+    CheckedByMe: boolean;
     Commits: Commit[];
     Number: number;
     Owner: string;
@@ -38,7 +39,7 @@ export function getChecklist(ref: ChecklistRef): Promise<Checklist> {
 }
 
 export function setCheck(ref: ChecklistRef, featNum: number, checked: Boolean): Promise<Checklist> {
-  return fetch(`/api/check?owner=${ref.Owner}&repo=${ref.Repo}&number=${ref.Number}`, {
+  return fetch(`/api/check?owner=${ref.Owner}&repo=${ref.Repo}&number=${ref.Number}&featureNumber=${featNum}`, {
       credentials: 'same-origin',
       method: checked ? 'PUT' : 'DELETE'
     })
