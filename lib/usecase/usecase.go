@@ -6,11 +6,11 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v2"
 
 	"github.com/motemen/go-prchecklist"
-	"github.com/pkg/errors"
 )
 
 type GitHubRepository interface {
@@ -39,6 +39,7 @@ func New(githubRepo GitHubRepository, coreRepo CoreRepository) *Usecase {
 	}
 }
 
+// Only this method can create prchecklist.Checklist.
 func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRef) (*prchecklist.Checklist, error) {
 	pr, err := u.githubRepo.GetPullRequest(ctx, clRef, true)
 	if err != nil {
@@ -49,6 +50,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 
 	checklist := &prchecklist.Checklist{
 		PullRequest: pr,
+		Stage:       clRef.Stage,
 		Items:       make([]*prchecklist.ChecklistItem, len(refs)),
 		Config:      nil,
 	}
@@ -77,14 +79,8 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 				return errors.Wrap(err, "githubRepo.GetBlob")
 			}
 
-			var config prchecklist.ChecklistConfig
-			err = yaml.Unmarshal(buf, &config)
-			if err != nil {
-				return errors.Wrap(err, "yaml.Unmarshal")
-			}
-			checklist.Config = &config
-
-			return nil
+			checklist.Config, err = u.loadConfig(buf)
+			return err
 		})
 	}
 
@@ -126,22 +122,69 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 	return checklist, nil
 }
 
+func (u Usecase) loadConfig(buf []byte) (*prchecklist.ChecklistConfig, error) {
+	var config prchecklist.ChecklistConfig
+	err := yaml.Unmarshal(buf, &config)
+	if err != nil {
+		return nil, errors.Wrap(err, "yaml.Unmarshal")
+	}
+
+	if config.Notification.Events.OnCheck == nil && config.Notification.Events.OnComplete == nil {
+		config.Notification.Events.OnCheck = []string{"default"}
+		config.Notification.Events.OnComplete = []string{"default"}
+	}
+
+	return &config, nil
+}
+
 func (u Usecase) AddUser(ctx context.Context, user prchecklist.GitHubUser) error {
 	return u.coreRepo.AddUser(ctx, user)
 }
 
-func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) error {
+func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) (*prchecklist.Checklist, error) {
 	// TODO: check visibilities
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
-	return u.coreRepo.AddCheck(ctx, clRef, featNum, user)
+	err := u.coreRepo.AddCheck(ctx, clRef, featNum, user)
+	if err != nil {
+		return nil, err
+	}
+
+	checklist, err := u.GetChecklist(ctx, clRef)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: check item existence?
+	go func() {
+		// notify in sequence
+		events := []notificationEvent{
+			addCheckEvent{checklist: checklist, item: checklist.Item(featNum), user: user},
+		}
+		if checklist.Completed() {
+			events = append(events, completeEvent{checklist: checklist})
+		}
+		for _, event := range events {
+			err := u.notifyEvent(ctx, checklist, event)
+			if err != nil {
+				log.Printf("notifyEvent(%v): %s", event, err)
+			}
+		}
+	}()
+
+	return checklist, nil
 }
 
-func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) error {
+func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) (*prchecklist.Checklist, error) {
 	// TODO: check visibilities
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
-	return u.coreRepo.RemoveCheck(ctx, clRef, featNum, user)
+	err := u.coreRepo.RemoveCheck(ctx, clRef, featNum, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return u.GetChecklist(ctx, clRef)
 }
 
 var rxMergeCommitMessage = regexp.MustCompile(`\AMerge pull request #(?P<number>\d+) `)

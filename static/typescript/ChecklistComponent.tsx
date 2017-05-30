@@ -139,7 +139,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
         <span className="user-signedin">{this.state.me.Login}</span>
       </nav>
       <h1>
-        <span className="title">{checklist.Title}</span>
+        <span className="title"><a href={checklist.URL}>#{checklist.Number}</a> {checklist.Title}</span>
       </h1>
       <pre>{checklist.Body}</pre>
       <div className="items">
@@ -148,7 +148,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
             checklist.Items.map((item) => {
               return <li key={`item-${item.Number}`}>
                 <input type="checkbox" onChange={this.handleOnClickChecklistItem(item)} checked={this.itemIsCheckedByMe(item)} />
-                <span className="number">#{item.Number}</span>
+                <span className="number"><a href={item.URL}>#{item.Number}</a></span>
                 {' '}
                 <span className="title">{item.Title}</span>
                 {' '}

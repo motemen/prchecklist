@@ -6,12 +6,13 @@ export interface ChecklistResponse {
 export interface Checklist {
   Body: string;
   Commits: Commit[];
+  Config: ChecklistConfig;
   Items: ChecklistItem[];
   Number: number;
   Owner: string;
   Repo: string;
   Title: string;
-  Config: ChecklistConfig;
+  URL: string;
 }
 
 export interface ChecklistConfig {
@@ -26,6 +27,7 @@ export interface ChecklistItem {
   Owner: string;
   Repo: string;
   Title: string;
+  URL: string;
 }
 
 export interface Commit {

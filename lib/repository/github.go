@@ -54,6 +54,7 @@ type githubPullRequest struct {
 			Title   string
 			Number  int
 			Body    string
+			URL     string
 			BaseRef struct {
 				Name string
 			}
@@ -123,8 +124,8 @@ func (r githubRepository) GetBlob(ctx context.Context, ref prchecklist.Checklist
 
 	if data, err := r.cache.Get(cacheKey); data != nil {
 		return data, nil
-	} else if err != nil {
-		log.Println("githubRepository.GetBlob: cache.Get: %s", err)
+	} else if err != nil && err != freecache.ErrNotFound {
+		log.Printf("githubRepository.GetBlob: cache.Get: %s", err)
 	}
 
 	blob, err := r.getBlob(ctx, ref, sha)
@@ -134,7 +135,7 @@ func (r githubRepository) GetBlob(ctx context.Context, ref prchecklist.Checklist
 
 	err = r.cache.Set(cacheKey, blob, cacheSecondsBlob)
 	if err != nil {
-		log.Println("githubRepository.GetBlob: cache.Set: %s", err)
+		log.Printf("githubRepository.GetBlob: cache.Set: %s", err)
 	}
 
 	return blob, nil
@@ -216,6 +217,7 @@ func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.Ch
 	}
 
 	pullReq := &prchecklist.PullRequest{
+		URL:       qr.Repository.PullRequest.URL,
 		Title:     qr.Repository.PullRequest.Title,
 		Body:      qr.Repository.PullRequest.Body,
 		IsPrivate: qr.Repository.IsPrivate,

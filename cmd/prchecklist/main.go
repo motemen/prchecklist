@@ -205,7 +205,7 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 
 	delete(sess.Values, sessionKeyOAuthState)
 
-	ctx := req.Context()
+	ctx := prchecklist.RequestContext(req)
 
 	conf := &oauth2.Config{
 		ClientID:     githubClientID,
@@ -313,7 +313,7 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 		in.Stage = "default"
 	}
 
-	ctx := req.Context()
+	ctx := prchecklist.RequestContext(req)
 	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
 
 	cl, err := app.GetChecklist(ctx, prchecklist.ChecklistRef{
@@ -362,14 +362,14 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 		in.Stage = "default"
 	}
 
-	ctx := req.Context()
+	ctx := prchecklist.RequestContext(req)
 	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
 
 	log.Printf("handleAPICheck: %s %+v", req.Method, in)
 
 	switch req.Method {
 	case "PUT":
-		err = app.AddCheck(ctx, prchecklist.ChecklistRef{
+		checklist, err := app.AddCheck(ctx, prchecklist.ChecklistRef{
 			Owner:  in.Owner,
 			Repo:   in.Repo,
 			Number: in.Number,
@@ -378,9 +378,13 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 		if err != nil {
 			return err
 		}
+		return renderJSON(w, &prchecklist.ChecklistResponse{
+			Checklist: checklist,
+			Me:        u,
+		})
 
 	case "DELETE":
-		err = app.RemoveCheck(ctx, prchecklist.ChecklistRef{
+		checklist, err := app.RemoveCheck(ctx, prchecklist.ChecklistRef{
 			Owner:  in.Owner,
 			Repo:   in.Repo,
 			Number: in.Number,
@@ -389,25 +393,14 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 		if err != nil {
 			return err
 		}
+		return renderJSON(w, &prchecklist.ChecklistResponse{
+			Checklist: checklist,
+			Me:        u,
+		})
 
 	default:
 		return httpError(http.StatusMethodNotAllowed)
 	}
-
-	cl, err := app.GetChecklist(ctx, prchecklist.ChecklistRef{
-		Owner:  in.Owner,
-		Repo:   in.Repo,
-		Number: in.Number,
-		Stage:  in.Stage,
-	})
-	if err != nil {
-		return err
-	}
-
-	return renderJSON(w, &prchecklist.ChecklistResponse{
-		Checklist: cl,
-		Me:        u,
-	})
 }
 
 func handleChecklist(w http.ResponseWriter, req *http.Request) error {

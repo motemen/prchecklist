@@ -16,17 +16,52 @@ type ChecklistResponse struct {
 
 type Checklist struct {
 	*PullRequest
+	Stage string
 	Items []*ChecklistItem
 	// Stage  string
 	// Stages []string
 	Config *ChecklistConfig
 }
 
+func (c Checklist) Completed() bool {
+	for _, item := range c.Items {
+		if len(item.CheckedBy) == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func (c Checklist) Item(featNum int) *ChecklistItem {
+	for _, item := range c.Items {
+		if item.Number == featNum {
+			return item
+		}
+	}
+	return nil
+}
+
+func (c Checklist) Path() string {
+	path := fmt.Sprintf("%s/%s/pull/%d", c.Owner, c.Repo, c.Number)
+	if c.Stage != "" {
+		path = path + "/" + c.Stage
+	}
+	return path
+}
+
+func (c Checklist) String() string {
+	s := fmt.Sprintf("%s/%s#%d", c.Owner, c.Repo, c.Number)
+	if c.Stage != "default" {
+		s = s + "::" + c.Stage
+	}
+	return s
+}
+
 type ChecklistConfig struct {
 	Stages       []string
 	Notification struct {
 		Events struct {
-			OnComplete []string `yaml:"on_complete"`
+			OnComplete []string `yaml:"on_complete"` // channel names
 			OnCheck    []string `yaml:"on_check"`
 		}
 		Channels map[string]struct{ URL string }
@@ -60,7 +95,7 @@ func (clRef ChecklistRef) Validate() error {
 }
 
 type PullRequest struct {
-	// URL     string
+	URL       string
 	Title     string
 	Body      string
 	Owner     string
