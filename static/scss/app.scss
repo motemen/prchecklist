@@ -1,3 +1,7 @@
+@import 'node_modules/uikit/src/scss/variables.scss';
+@import 'node_modules/uikit/src/scss/mixins-theme.scss';
+@import 'node_modules/uikit/src/scss/uikit-theme.scss';
+
 * {
     font-family: monospace;
     line-height: 2;
@@ -5,11 +9,12 @@
 
 body {
     font-size: 18px;
-    margin: 5% 15%;
+    margin: 5% 20%;
     color: #333;
 }
 
 h1 {
+    font-size: 1.5rem;
     border-bottom: 2px dashed;
 }
 
@@ -26,21 +31,33 @@ ul {
     margin: 0;
 }
 
+li {
+    margin-bottom: 0.75em;
+}
+
 input[type="checkbox"] {
-    transform: scale(1.5);
-    margin-right: 1.5em;
+    @extend .uk-checkbox;
+    margin-right: 1em;
     vertical-align: middle;
     cursor: pointer;
+    width: 24px;
+    height: 24px;
 }
 
 .user img {
-    height: 20px;
+    @extend .uk-border-circle;
+    height: 28px;
+    float: right;
 }
 
 nav strong {
     background-color: #333;
     color: #FFF;
-    padding: 0.5em;
+    padding: 0 0.75em;
+    height: 40px;
+    display: inline-block;
+    line-height: 40px;
+    vertical-align: middle;
 }
 
 nav .user-signedin {
@@ -56,8 +73,9 @@ nav .user-signedin:before {
 }
 
 nav .stages {
+    @extend .uk-select;
+    @extend .uk-form-width-medium;
     font-size: inherit;
     border: 2px solid;
-    margin-left: 2em;
-    transform: scale(1.2);
+    margin-left: 1em;
 }

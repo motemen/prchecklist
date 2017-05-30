@@ -82,6 +82,10 @@ func (r boltRepository) GetUsers(ctx context.Context, userIDs []int) (map[int]pr
 }
 
 func (r boltRepository) GetChecks(ctx context.Context, clRef prchecklist.ChecklistRef) (prchecklist.Checks, error) {
+	if err := clRef.Validate(); err != nil {
+		return nil, err
+	}
+
 	var checks prchecklist.Checks
 
 	err := r.db.View(func(tx *bolt.Tx) error {
@@ -102,7 +106,11 @@ func (r boltRepository) GetChecks(ctx context.Context, clRef prchecklist.Checkli
 	return checks, errors.Wrap(err, "GetChecks")
 }
 
-func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, number int, user prchecklist.GitHubUser) error {
+func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) error {
+	if err := clRef.Validate(); err != nil {
+		return err
+	}
+
 	return r.db.Update(func(tx *bolt.Tx) error {
 		var checks prchecklist.Checks
 
@@ -121,14 +129,14 @@ func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.Checklis
 			checks = prchecklist.Checks{}
 		}
 
-		for _, userID := range checks[number] {
+		for _, userID := range checks[featNum] {
 			if user.ID == userID {
 				// already checked
 				return nil
 			}
 		}
 
-		checks[number] = append(checks[number], user.ID)
+		checks[featNum] = append(checks[featNum], user.ID)
 
 		data, err := json.Marshal(&checks)
 		if err != nil {
@@ -139,7 +147,11 @@ func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.Checklis
 	})
 }
 
-func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, number int, user prchecklist.GitHubUser) error {
+func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) error {
+	if err := clRef.Validate(); err != nil {
+		return err
+	}
+
 	return r.db.Update(func(tx *bolt.Tx) error {
 		var checks prchecklist.Checks
 
@@ -158,9 +170,9 @@ func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.Check
 			checks = prchecklist.Checks{}
 		}
 
-		for i, userID := range checks[number] {
+		for i, userID := range checks[featNum] {
 			if user.ID == userID {
-				checks[number] = append(checks[number][0:i], checks[number][i+1:]...)
+				checks[featNum] = append(checks[featNum][0:i], checks[featNum][i+1:]...)
 				break
 			}
 		}

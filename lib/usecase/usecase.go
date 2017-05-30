@@ -77,8 +77,6 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 				return errors.Wrap(err, "githubRepo.GetBlob")
 			}
 
-			log.Printf("prchecklist.yml: %s", string(buf))
-
 			var config prchecklist.ChecklistConfig
 			err = yaml.Unmarshal(buf, &config)
 			if err != nil {
@@ -102,7 +100,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 		return nil, err
 	}
 
-	log.Printf("checks: %+v", checks)
+	log.Printf("%s: checks: %+v", clRef, checks)
 
 	for featNum, userIDs := range checks {
 		if len(userIDs) == 0 {

@@ -3,6 +3,7 @@ package prchecklist
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -43,10 +44,19 @@ type ChecklistRef struct {
 	Owner  string
 	Repo   string
 	Number int
+	Stage  string
 }
 
 func (clRef ChecklistRef) String() string {
-	return fmt.Sprintf("%s/%s#%d", clRef.Owner, clRef.Repo, clRef.Number)
+	return fmt.Sprintf("%s/%s#%d::%s", clRef.Owner, clRef.Repo, clRef.Number, clRef.Stage)
+}
+
+func (clRef ChecklistRef) Validate() error {
+	if clRef.Number == 0 || clRef.Stage == "" {
+		return errors.Errorf("not a valid checklist reference: %q", clRef)
+	}
+
+	return nil
 }
 
 type PullRequest struct {

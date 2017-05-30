@@ -309,6 +309,9 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 	if err != nil {
 		return err
 	}
+	if in.Stage == "" {
+		in.Stage = "default"
+	}
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
@@ -317,6 +320,7 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 		Owner:  in.Owner,
 		Repo:   in.Repo,
 		Number: in.Number,
+		Stage:  in.Stage,
 	})
 	if err != nil {
 		return err
@@ -354,6 +358,9 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 	if err != nil {
 		return err
 	}
+	if in.Stage == "" {
+		in.Stage = "default"
+	}
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
@@ -366,6 +373,7 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 			Owner:  in.Owner,
 			Repo:   in.Repo,
 			Number: in.Number,
+			Stage:  in.Stage,
 		}, in.FeatureNumber, *u)
 		if err != nil {
 			return err
@@ -376,6 +384,7 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 			Owner:  in.Owner,
 			Repo:   in.Repo,
 			Number: in.Number,
+			Stage:  in.Stage,
 		}, in.FeatureNumber, *u)
 		if err != nil {
 			return err
@@ -389,6 +398,7 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 		Owner:  in.Owner,
 		Repo:   in.Repo,
 		Number: in.Number,
+		Stage:  in.Stage,
 	})
 	if err != nil {
 		return err
