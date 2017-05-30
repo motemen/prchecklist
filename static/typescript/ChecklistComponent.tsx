@@ -12,7 +12,7 @@ interface ChecklistState {
   error?: any;
 }
 
-export class ChecklistComponent extends React.PureComponent<ChecklistProps, ChecklistState> {
+export class ChecklistComponent extends React.Component<ChecklistProps, ChecklistState> {
   constructor(props: ChecklistProps) {
     super(props);
 
@@ -23,12 +23,39 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
         this.setState({
           checklist: data.Checklist,
           me: data.Me,
-        });
+        }, () => this.ensureCorrectStage());
       })
       .catch((err) => {
         console.log(err);
         this.setState({ error: `${err}` });
       });
+  }
+
+  ensureCorrectStage() {
+    if (!this.state.checklist) {
+      return;
+    }
+
+    const stages = this.checklistStages();
+    const checklistRef = this.props.checklistRef;
+    if (stages.length) {
+      if (stages.findIndex((s) => s === checklistRef.Stage) === -1) {
+        this.navigateToStage(stages[0]);
+      }
+    } else {
+      if (checklistRef.Stage !== '') {
+        this.navigateToStage('');
+      }
+    }
+  }
+
+  navigateToStage(stage: string) {
+    const checklistRef = this.props.checklistRef;
+    if (stage === '') {
+      location.pathname = `/${checklistRef.Owner}/${checklistRef.Repo}/pull/${checklistRef.Number}`;
+    } else {
+      location.pathname = `/${checklistRef.Owner}/${checklistRef.Repo}/pull/${checklistRef.Number}/${stage}`;
+    }
   }
 
   handleOnClickChecklistItem = (item: API.ChecklistItem): React.ChangeEventHandler<HTMLInputElement> => {
@@ -61,6 +88,10 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
     }
   }
 
+  handleOnSelectStage = (ev: React.ChangeEvent<HTMLSelectElement>) => {
+    this.navigateToStage(ev.target.value);
+  }
+
   itemIsCheckedByMe(item: API.ChecklistItem): boolean {
     return item.CheckedBy.findIndex((user) => user.ID == this.state.me.ID) !== -1;
   }
@@ -71,6 +102,13 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
     }
 
     return [];
+  }
+
+  completed(): boolean {
+    let checklist = this.state.checklist;
+    if (!checklist) return false;
+
+    return checklist.Items.every((item) => item.CheckedBy.length > 0);
   }
 
   render() {
@@ -85,12 +123,12 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
 
     const stages = this.checklistStages();
 
-    return <section>
+    return <section className={this.completed() ? 'completed' : ''}>
       <nav>
         <strong>{checklist.Owner}/{checklist.Repo}#{checklist.Number}</strong>
         {
           stages.length ?
-            <select className="stages">
+            <select className="stages" value={this.props.checklistRef.Stage} onChange={this.handleOnSelectStage}>
               {
                 stages.map((stage) =>
                   <option key={`stage-${stage}`}>{stage}</option>
@@ -117,7 +155,9 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
                 <span className="checkedby">
                 {
                   item.CheckedBy.map((user) => {
-                    return <span className="user" key={`item-${item.Number}-checkedby-${user.ID}`}><img src={user.AvatarURL}/></span>;
+                    return <span className="user" key={`item-${item.Number}-checkedby-${user.ID}`}>
+                      <img src={user.AvatarURL} alt={user.Login} />
+                    </span>;
                   })
                 }
                 </span>

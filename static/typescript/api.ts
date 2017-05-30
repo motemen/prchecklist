@@ -42,7 +42,7 @@ export interface ChecklistRef {
   Owner: string;
   Repo: string;
   Number: number;
-  Stage?: string;
+  Stage: string;
 }
 
 export function getChecklist(ref: ChecklistRef): Promise<ChecklistResponse> {

@@ -7,7 +7,7 @@ import '../scss/app.scss';
 
 if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/.test(location.pathname)) {
   ReactDOM.render(
-    <ChecklistComponent checklistRef={{Owner: RegExp.$1, Repo: RegExp.$2, Number: parseInt(RegExp.$3)}} />,
+    <ChecklistComponent checklistRef={{Owner: RegExp.$1, Repo: RegExp.$2, Number: parseInt(RegExp.$3), Stage: ''}} />,
     document.querySelector('#main')
   );
 } else if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)\/([^\/]+)$/.test(location.pathname)) {

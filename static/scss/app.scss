@@ -58,6 +58,9 @@ nav strong {
     display: inline-block;
     line-height: 40px;
     vertical-align: middle;
+    .completed & {
+        background-color: limegreen;
+    }
 }
 
 nav .user-signedin {
