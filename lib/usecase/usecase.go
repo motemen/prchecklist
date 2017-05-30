@@ -7,12 +7,15 @@ import (
 	"strconv"
 
 	"golang.org/x/sync/errgroup"
+	"gopkg.in/yaml.v2"
 
 	"github.com/motemen/go-prchecklist"
+	"github.com/pkg/errors"
 )
 
 type GitHubRepository interface {
-	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, error)
+	GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error)
+	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, error)
 }
 
 type CoreRepository interface {
@@ -47,6 +50,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 	checklist := &prchecklist.Checklist{
 		PullRequest: pr,
 		Items:       make([]*prchecklist.ChecklistItem, len(refs)),
+		Config:      nil,
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -62,6 +66,26 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 				PullRequest: featurePullReq,
 				CheckedBy:   []prchecklist.GitHubUser{}, // filled up later
 			}
+			return nil
+		})
+	}
+
+	if pr.ConfigBlobID != "" {
+		g.Go(func() error {
+			buf, err := u.githubRepo.GetBlob(ctx, clRef, pr.ConfigBlobID)
+			if err != nil {
+				return errors.Wrap(err, "githubRepo.GetBlob")
+			}
+
+			log.Printf("prchecklist.yml: %s", string(buf))
+
+			var config prchecklist.ChecklistConfig
+			err = yaml.Unmarshal(buf, &config)
+			if err != nil {
+				return errors.Wrap(err, "yaml.Unmarshal")
+			}
+			checklist.Config = &config
+
 			return nil
 		})
 	}

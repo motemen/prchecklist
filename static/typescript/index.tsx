@@ -9,5 +9,10 @@ if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/.test(location.pathname)) {
   ReactDOM.render(
     <ChecklistComponent checklistRef={{Owner: RegExp.$1, Repo: RegExp.$2, Number: parseInt(RegExp.$3)}} />,
     document.querySelector('#main')
-  )
+  );
+} else if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)\/([^\/]+)$/.test(location.pathname)) {
+  ReactDOM.render(
+    <ChecklistComponent checklistRef={{Owner: RegExp.$1, Repo: RegExp.$2, Number: parseInt(RegExp.$3), Stage: RegExp.$4}} />,
+    document.querySelector('#main')
+  );
 }

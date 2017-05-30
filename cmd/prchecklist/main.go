@@ -95,6 +95,7 @@ func main() {
 	router.Handle("/api/checklist", httpHandler(handleAPIChecklist))
 	router.Handle("/api/check", httpHandler(handleAPICheck)).Methods("PUT", "DELETE")
 	router.Handle("/{owner}/{repo}/pull/{number}", httpHandler(handleChecklist))
+	router.Handle("/{owner}/{repo}/pull/{number}/{stage}", httpHandler(handleChecklist))
 
 	n := negroni.New(negroni.NewStatic(http.Dir("./static")))
 	n.UseHandler(router)
@@ -122,7 +123,7 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			status = int(he)
 		}
 
-		http.Error(w, http.StatusText(status), status)
+		http.Error(w, fmt.Sprintf("%+v", err), status)
 	}
 }
 
@@ -300,6 +301,7 @@ func handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
 		Owner  string
 		Repo   string
 		Number int
+		Stage  string
 	}
 
 	var in inQuery
@@ -339,6 +341,7 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 		Owner         string
 		Repo          string
 		Number        int
+		Stage         string
 		FeatureNumber int
 	}
 

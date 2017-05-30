@@ -18,6 +18,18 @@ type Checklist struct {
 	Items []*ChecklistItem
 	// Stage  string
 	// Stages []string
+	Config *ChecklistConfig
+}
+
+type ChecklistConfig struct {
+	Stages       []string
+	Notification struct {
+		Events struct {
+			OnComplete []string `yaml:"on_complete"`
+			OnCheck    []string `yaml:"on_check"`
+		}
+		Channels map[string]struct{ URL string }
+	}
 }
 
 type ChecklistItem struct {
@@ -44,9 +56,12 @@ type PullRequest struct {
 	Owner     string
 	Repo      string
 	Number    int
-	Commits   []Commit
 	IsPrivate bool
 	// Assignees []GitHubUser
+
+	// Filled for "main" pull reqs
+	Commits      []Commit
+	ConfigBlobID string
 }
 
 type Commit struct {

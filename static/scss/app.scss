@@ -1,17 +1,23 @@
 * {
     font-family: monospace;
-    line-height: 1.7;
+    line-height: 2;
 }
 
 body {
     font-size: 18px;
     margin: 5% 15%;
+    color: #333;
+}
+
+h1 {
+    border-bottom: 2px dashed;
 }
 
 pre {
     font-size: 75%;
     background-color: #F3F3F3;
     padding: 1.5em;
+    margin: 1.5em 0;
 }
 
 ul {
@@ -29,4 +35,29 @@ input[type="checkbox"] {
 
 .user img {
     height: 20px;
+}
+
+nav strong {
+    background-color: #333;
+    color: #FFF;
+    padding: 0.5em;
+}
+
+nav .user-signedin {
+    float: right;
+    font-size: 80%;
+}
+
+nav .user-signedin:before {
+    content: "|";
+    font-size: 125%;
+    margin-right: 0.5em;
+    color: #444;
+}
+
+nav .stages {
+    font-size: inherit;
+    border: 2px solid;
+    margin-left: 2em;
+    transform: scale(1.2);
 }

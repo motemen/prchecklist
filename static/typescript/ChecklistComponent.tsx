@@ -26,7 +26,8 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
         });
       })
       .catch((err) => {
-        this.setState({ error: err });
+        console.log(err);
+        this.setState({ error: `${err}` });
       });
   }
 
@@ -64,9 +65,17 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
     return item.CheckedBy.findIndex((user) => user.ID == this.state.me.ID) !== -1;
   }
 
+  checklistStages(): string[] {
+    if (this.state.checklist && this.state.checklist.Config) {
+      return this.state.checklist.Config.Stages || [];
+    }
+
+    return [];
+  }
+
   render() {
     if (this.state.error) {
-      return <div className="error">{this.state.error}</div>;
+      return <pre className="error">{this.state.error}</pre>;
     }
 
     const checklist = this.state.checklist;
@@ -74,10 +83,24 @@ export class ChecklistComponent extends React.PureComponent<ChecklistProps, Chec
       return <section>Loading...</section>;
     }
 
+    const stages = this.checklistStages();
+
     return <section>
+      <nav>
+        <strong>{checklist.Owner}/{checklist.Repo}#{checklist.Number}</strong>
+        {
+          stages.length ?
+            <select className="stages">
+              {
+                stages.map((stage) =>
+                  <option key={`stage-${stage}`}>{stage}</option>
+                )
+              }
+            </select> : []
+        }
+        <span className="user-signedin">{this.state.me.Login}</span>
+      </nav>
       <h1>
-        <span className="number">#{checklist.Number}</span>
-        {' '}
         <span className="title">{checklist.Title}</span>
       </h1>
       <pre>{checklist.Body}</pre>

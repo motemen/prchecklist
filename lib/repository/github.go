@@ -3,21 +3,25 @@ package repository
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/coocood/freecache"
+	"github.com/google/go-github/github"
 	"github.com/motemen/go-graphql-query"
 
 	"github.com/motemen/go-prchecklist"
+	"github.com/pkg/errors"
 )
 
 const (
-	cacheSize                         = 10 * 1024 * 1024
-	cacheSecondsPullReqWithCommits    = 30
-	cacheSecondsPullReqWithoutCommits = 300
+	cacheSize               = 10 * 1024 * 1024
+	cacheSecondsPullReqMain = 30
+	cacheSecondsPullReqFeat = 300
+	cacheSecondsBlob        = 7 * 24 * 60 * 60 // infinity
 )
 
 func NewGitHub() *githubRepository {
@@ -32,7 +36,7 @@ type githubRepository struct {
 
 type githubPullRequest struct {
 	GraphQLArguments struct {
-		WithCommits bool `graphql:"$withCommits,notnull"`
+		IsMain bool `graphql:"$isMain,notnull"`
 	}
 	Repository struct {
 		GraphQLArguments struct {
@@ -53,6 +57,17 @@ type githubPullRequest struct {
 			BaseRef struct {
 				Name string
 			}
+			HeadRef struct {
+				Target struct {
+					Tree struct {
+						Entries []struct {
+							Name string
+							Oid  string
+							Type string
+						}
+					} `graphql:"... on Commit"`
+				}
+			} `graphql:"@include(if: $isMain)"`
 			Commits struct {
 				GraphQLArguments struct {
 					First int    `graphql:"100"`
@@ -70,7 +85,7 @@ type githubPullRequest struct {
 					EndCursor   string
 				}
 				TotalCount int
-			} `graphql:"@include(if: $withCommits)"`
+			} `graphql:"@include(if: $isMain)"`
 		}
 	}
 	RateLimit struct {
@@ -82,7 +97,7 @@ type githubPullRequsetVars struct {
 	Owner        string `json:"owner"`
 	Repo         string `json:"repo"`
 	Number       int    `json:"number"`
-	WithCommits  bool   `json:"withCommits"`
+	IsMain       bool   `json:"isMain"`
 	CommitsAfter string `json:"commitsAfter,omitempty"`
 }
 
@@ -103,8 +118,46 @@ func init() {
 	pullRequestQuery = string(b)
 }
 
-func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, error) {
-	cacheKey := []byte(fmt.Sprintf("%s\000%v", ref.String(), withCommits))
+func (r githubRepository) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
+	cacheKey := []byte(fmt.Sprintf("blob\000%s\000%s", ref.String(), sha))
+
+	if data, err := r.cache.Get(cacheKey); data != nil {
+		return data, nil
+	} else if err != nil {
+		log.Println("githubRepository.GetBlob: cache.Get: %s", err)
+	}
+
+	blob, err := r.getBlob(ctx, ref, sha)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.cache.Set(cacheKey, blob, cacheSecondsBlob)
+	if err != nil {
+		log.Println("githubRepository.GetBlob: cache.Set: %s", err)
+	}
+
+	return blob, nil
+}
+
+func (r githubRepository) getBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
+	gh := github.NewClient(prchecklist.ContextClient(ctx))
+	blob, _, err := gh.Git.GetBlob(ctx, ref.Owner, ref.Repo, sha)
+	if err != nil {
+		return nil, err
+	}
+
+	content := blob.GetContent()
+	if enc := blob.GetEncoding(); enc != "base64" {
+		return nil, errors.Errorf("unknown encoding: %q", enc)
+	}
+
+	buf, err := base64.StdEncoding.DecodeString(content)
+	return buf, errors.Wrap(err, "base64")
+}
+
+func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, error) {
+	cacheKey := []byte(fmt.Sprintf("pullRequest\000%s\000%v", ref.String(), isMain))
 
 	data, err := r.cache.Get(cacheKey)
 	if data != nil {
@@ -114,41 +167,41 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 			return &pullReq, nil
 		}
 
-		log.Println("githubRepository.GetPullRequest(%q, %v): json.Unmarshal: %s", ref.String(), withCommits, err)
+		log.Println("githubRepository.GetPullRequest(%q, %v): json.Unmarshal: %s", ref.String(), isMain, err)
 	}
 
-	pullReq, err := r.getPullRequest(ctx, ref, withCommits)
+	pullReq, err := r.getPullRequest(ctx, ref, isMain)
 	if err != nil {
 		return nil, err
 	}
 
 	data, err = json.Marshal(&pullReq)
 	if err != nil {
-		log.Println("githubRepository.GetPullRequest(%q, %v): json.Marshal: %s", ref.String(), withCommits, err)
+		log.Println("githubRepository.GetPullRequest(%q, %v): json.Marshal: %s", ref.String(), isMain, err)
 	} else {
 		var cacheSeconds int
-		if withCommits {
-			cacheSeconds = cacheSecondsPullReqWithCommits
+		if isMain {
+			cacheSeconds = cacheSecondsPullReqMain
 		} else {
-			cacheSeconds = cacheSecondsPullReqWithoutCommits
+			cacheSeconds = cacheSecondsPullReqFeat
 		}
 
 		err := r.cache.Set(cacheKey, data, cacheSeconds)
 		if err != nil {
-			log.Println("githubRepository.GetPullRequest(%q, %v): cache.Set: %s", ref.String(), withCommits, err)
+			log.Println("githubRepository.GetPullRequest(%q, %v): cache.Set: %s", ref.String(), isMain, err)
 		}
 	}
 
 	return pullReq, nil
 }
 
-func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, withCommits bool) (*prchecklist.PullRequest, error) {
+func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, error) {
 	var qr githubPullRequest
 	err := queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
-		Owner:       ref.Owner,
-		Repo:        ref.Repo,
-		Number:      ref.Number,
-		WithCommits: withCommits,
+		Owner:  ref.Owner,
+		Repo:   ref.Repo,
+		Number: ref.Number,
+		IsMain: isMain,
 	}, &qr)
 	if err != nil {
 		return nil, err
@@ -172,6 +225,13 @@ func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.Ch
 		Commits:   graphqlResultToCommits(qr),
 	}
 
+	for _, e := range qr.Repository.PullRequest.HeadRef.Target.Tree.Entries {
+		if e.Name == "prchecklist.yml" && e.Type == "blob" {
+			pullReq.ConfigBlobID = e.Oid
+			break
+		}
+	}
+
 	for {
 		pageInfo := qr.Repository.PullRequest.Commits.PageInfo
 		if !pageInfo.HasNextPage {
@@ -182,7 +242,7 @@ func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.Ch
 			Owner:        ref.Owner,
 			Repo:         ref.Repo,
 			Number:       ref.Number,
-			WithCommits:  true,
+			IsMain:       isMain,
 			CommitsAfter: pageInfo.EndCursor,
 		}, &qr)
 		if err != nil {
