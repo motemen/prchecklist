@@ -11,12 +11,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/go-github/github"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
 	_ "github.com/motemen/go-loghttp/global"
+	"github.com/pkg/errors"
 	"github.com/urfave/negroni"
 	"golang.org/x/oauth2"
 
@@ -146,10 +148,7 @@ func handleAuth(w http.ResponseWriter, req *http.Request) error {
 		Scopes:       []string{"repo"},
 	}
 
-	sess, err := sessionStore.Get(req, sessionName)
-	if err != nil {
-		// return err
-	}
+	sess, _ := sessionStore.Get(req, sessionName)
 
 	state, err := makeRandomString()
 	if err != nil {
@@ -157,7 +156,10 @@ func handleAuth(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	sess.Values[sessionKeyOAuthState] = state
-	sessionStore.Save(req, w, sess)
+	err = sessionStore.Save(req, w, sess)
+	if err != nil {
+		return err
+	}
 
 	http.Redirect(w, req, conf.AuthCodeURL(state), http.StatusFound)
 
@@ -174,32 +176,20 @@ func makeRandomString() (string, error) {
 }
 
 func handleIndex(w http.ResponseWriter, req *http.Request) error {
-	u, err := getAuthInfo(w, req)
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintf(w, `<!DOCTYPE html>
-<pre>%#v</pre>
-<form action="/api/check" method="post">
-<input name="owner" value="motemen">
-<input name="repo" value="test-repository">
-<input name="number" value="2">
-<input name="featureNumber" value="1">
-<input type="submit">
-</form>
-`, u)
+	fmt.Fprintf(w, "prchecklist")
 	return nil
 }
 
 func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 	sess, err := sessionStore.Get(req, sessionName)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "sessionStore.Get")
 	}
 
 	state := req.URL.Query().Get("state")
+	log.Printf("%#v", sess.Values)
 	if state != sess.Values[sessionKeyOAuthState] {
+		log.Printf("%v != %v", state, sess.Values[sessionKeyOAuthState])
 		return httpError(http.StatusBadRequest)
 	}
 
@@ -256,14 +246,15 @@ func handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
 }
 
 func handleAuthClear(w http.ResponseWriter, req *http.Request) error {
-	sess, err := sessionStore.Get(req, sessionName)
-	if err != nil {
-		return err
-	}
+	http.SetCookie(w, &http.Cookie{
+		Name:    sessionName,
+		Path:    "/",
+		Expires: time.Now().Add(-1 * time.Hour),
+	})
 
-	delete(sess.Values, sessionKeyGitHubUser)
+	http.Redirect(w, req, "/", http.StatusFound)
 
-	return sess.Save(req, w)
+	return nil
 }
 
 func getAuthInfo(w http.ResponseWriter, req *http.Request) (*prchecklist.GitHubUser, error) {
