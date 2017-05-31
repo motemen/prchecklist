@@ -6,32 +6,31 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+	"time"
 
-	"github.com/coocood/freecache"
 	"github.com/google/go-github/github"
 	"github.com/motemen/go-graphql-query"
+	"github.com/patrickmn/go-cache"
 
 	"github.com/motemen/go-prchecklist"
 	"github.com/pkg/errors"
 )
 
 const (
-	cacheSize               = 10 * 1024 * 1024
-	cacheSecondsPullReqMain = 30
-	cacheSecondsPullReqFeat = 300
-	cacheSecondsBlob        = 7 * 24 * 60 * 60 // infinity
+	cacheDurationPullReqMain = 30 * time.Second
+	cacheDurationPullReqFeat = 5 * time.Minute
+	cacheDurationBlob        = cache.NoExpiration
 )
 
 func NewGitHub() *githubRepository {
 	return &githubRepository{
-		cache: freecache.NewCache(cacheSize),
+		cache: cache.New(30*time.Second, 10*time.Minute),
 	}
 }
 
 type githubRepository struct {
-	cache *freecache.Cache
+	cache *cache.Cache
 }
 
 type githubPullRequest struct {
@@ -120,12 +119,12 @@ func init() {
 }
 
 func (r githubRepository) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
-	cacheKey := []byte(fmt.Sprintf("blob\000%s\000%s", ref.String(), sha))
+	cacheKey := fmt.Sprintf("blob\000%s\000%s", ref.String(), sha)
 
-	if data, err := r.cache.Get(cacheKey); data != nil {
-		return data, nil
-	} else if err != nil && err != freecache.ErrNotFound {
-		log.Printf("githubRepository.GetBlob: cache.Get: %s", err)
+	if data, ok := r.cache.Get(cacheKey); ok {
+		if blob, ok := data.([]byte); ok {
+			return blob, nil
+		}
 	}
 
 	blob, err := r.getBlob(ctx, ref, sha)
@@ -133,10 +132,7 @@ func (r githubRepository) GetBlob(ctx context.Context, ref prchecklist.Checklist
 		return nil, err
 	}
 
-	err = r.cache.Set(cacheKey, blob, cacheSecondsBlob)
-	if err != nil {
-		log.Printf("githubRepository.GetBlob: cache.Set: %s", err)
-	}
+	r.cache.Set(cacheKey, blob, cacheDurationBlob)
 
 	return blob, nil
 }
@@ -158,17 +154,12 @@ func (r githubRepository) getBlob(ctx context.Context, ref prchecklist.Checklist
 }
 
 func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, error) {
-	cacheKey := []byte(fmt.Sprintf("pullRequest\000%s\000%v", ref.String(), isMain))
+	cacheKey := fmt.Sprintf("pullRequest\000%s\000%v", ref.String(), isMain)
 
-	data, err := r.cache.Get(cacheKey)
-	if data != nil {
-		var pullReq prchecklist.PullRequest
-		err := json.Unmarshal(data, &pullReq)
-		if err == nil {
-			return &pullReq, nil
+	if data, ok := r.cache.Get(cacheKey); ok {
+		if pullReq, ok := data.(*prchecklist.PullRequest); ok {
+			return pullReq, nil
 		}
-
-		log.Println("githubRepository.GetPullRequest(%q, %v): json.Unmarshal: %s", ref.String(), isMain, err)
 	}
 
 	pullReq, err := r.getPullRequest(ctx, ref, isMain)
@@ -176,22 +167,14 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 		return nil, err
 	}
 
-	data, err = json.Marshal(&pullReq)
-	if err != nil {
-		log.Println("githubRepository.GetPullRequest(%q, %v): json.Marshal: %s", ref.String(), isMain, err)
+	var cacheDuration time.Duration
+	if isMain {
+		cacheDuration = cacheDurationPullReqMain
 	} else {
-		var cacheSeconds int
-		if isMain {
-			cacheSeconds = cacheSecondsPullReqMain
-		} else {
-			cacheSeconds = cacheSecondsPullReqFeat
-		}
-
-		err := r.cache.Set(cacheKey, data, cacheSeconds)
-		if err != nil {
-			log.Println("githubRepository.GetPullRequest(%q, %v): cache.Set: %s", ref.String(), isMain, err)
-		}
+		cacheDuration = cacheDurationPullReqFeat
 	}
+
+	r.cache.Set(cacheKey, pullReq, cacheDuration)
 
 	return pullReq, nil
 }
