@@ -60,6 +60,7 @@ func New(app *usecase.Usecase, oauth2Config *oauth2.Config) *Web {
 func (web *Web) Handler() http.Handler {
 	cookieStore := sessions.NewCookieStore([]byte(sessionSecret))
 	cookieStore.Options = &sessions.Options{
+		Path:     "/",
 		HttpOnly: true,
 	}
 	sessionStore = cookieStore
@@ -142,7 +143,22 @@ func makeRandomString() (string, error) {
 }
 
 func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
-	fmt.Fprintf(w, "prchecklist")
+	u, _ := web.getAuthInfo(w, req)
+	// TODO: check err
+
+	if u == nil {
+		fmt.Fprint(w, `<!DOCTYPE html>
+<div id="main">
+  <nav><strong>prchecklist</strong><a class="user-signedin" href="/auth">Login</a></nav>
+</div>
+<script src="/js/bundle.js"></script>`)
+	} else {
+		fmt.Fprintf(w, `<!DOCTYPE html>
+<div id="main">
+  <nav><strong>prchecklist</strong><span class="user-signedin">%s</span></nav>
+</div>
+<script src="/js/bundle.js"></script>`, u.Login)
+	}
 	return nil
 }
 

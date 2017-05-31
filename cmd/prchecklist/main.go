@@ -39,7 +39,7 @@ func init() {
 	flag.StringVar(&githubClientID, "github-client-id", os.Getenv("GITHUB_CLIENT_ID"), "GitHub client ID")
 	flag.StringVar(&githubClientSecret, "github-client-secret", os.Getenv("GITHUB_CLIENT_SECRET"), "GitHub client secret")
 	flag.StringVar(&datasource, "datasource", datasource, "database source name")
-	flag.StringVar(&addr, "listen", "localhost:7888", "`address` to listen")
+	flag.StringVar(&addr, "listen", "localhost:8080", "`address` to listen")
 }
 
 func main() {
