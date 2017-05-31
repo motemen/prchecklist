@@ -353,6 +353,12 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 		in.Stage = "default"
 	}
 
+	clRef := prchecklist.ChecklistRef{
+		Owner:  in.Owner,
+		Repo:   in.Repo,
+		Number: in.Number,
+		Stage:  in.Stage,
+	}
 	ctx := prchecklist.RequestContext(req)
 	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
 
@@ -360,12 +366,7 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 
 	switch req.Method {
 	case "PUT":
-		checklist, err := app.AddCheck(ctx, prchecklist.ChecklistRef{
-			Owner:  in.Owner,
-			Repo:   in.Repo,
-			Number: in.Number,
-			Stage:  in.Stage,
-		}, in.FeatureNumber, *u)
+		checklist, err := app.AddCheck(ctx, clRef, in.FeatureNumber, *u)
 		if err != nil {
 			return err
 		}
@@ -375,12 +376,7 @@ func handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 		})
 
 	case "DELETE":
-		checklist, err := app.RemoveCheck(ctx, prchecklist.ChecklistRef{
-			Owner:  in.Owner,
-			Repo:   in.Repo,
-			Number: in.Number,
-			Stage:  in.Stage,
-		}, in.FeatureNumber, *u)
+		checklist, err := app.RemoveCheck(ctx, clRef, in.FeatureNumber, *u)
 		if err != nil {
 			return err
 		}
