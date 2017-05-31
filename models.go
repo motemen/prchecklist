@@ -75,6 +75,29 @@ type ChecklistItem struct {
 
 type Checks map[int][]int // PullReqNumber -> []UserID
 
+func (c Checks) Add(featNum int, user GitHubUser) bool {
+	for _, userID := range c[featNum] {
+		if user.ID == userID {
+			// already checked
+			return false
+		}
+	}
+
+	c[featNum] = append(c[featNum], user.ID)
+	return true
+}
+
+func (c Checks) Remove(featNum int, user GitHubUser) bool {
+	for i, userID := range c[featNum] {
+		if user.ID == userID {
+			c[featNum] = append(c[featNum][0:i], c[featNum][i+1:]...)
+			return true
+		}
+	}
+
+	return false
+}
+
 type ChecklistRef struct {
 	Owner  string
 	Repo   string

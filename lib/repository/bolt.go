@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/pkg/errors"
 
 	"github.com/motemen/go-prchecklist"
-	"github.com/pkg/errors"
 )
 
 type boltRepository struct {
@@ -18,8 +18,8 @@ type boltRepository struct {
 }
 
 const (
-	bucketNameUsers  = "users"
-	bucketNameChecks = "checks"
+	boltBucketNameUsers  = "users"
+	boltBucketNameChecks = "checks"
 )
 
 func NewBoltCore(path string) (*boltRepository, error) {
@@ -29,10 +29,10 @@ func NewBoltCore(path string) (*boltRepository, error) {
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		if _, err := tx.CreateBucketIfNotExists([]byte(bucketNameUsers)); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte(boltBucketNameUsers)); err != nil {
 			return err
 		}
-		if _, err := tx.CreateBucketIfNotExists([]byte(bucketNameChecks)); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte(boltBucketNameChecks)); err != nil {
 			return err
 		}
 		return nil
@@ -46,7 +46,7 @@ func NewBoltCore(path string) (*boltRepository, error) {
 
 func (r boltRepository) AddUser(ctx context.Context, user prchecklist.GitHubUser) error {
 	return r.db.Update(func(tx *bolt.Tx) error {
-		usersBucket := tx.Bucket([]byte(bucketNameUsers))
+		usersBucket := tx.Bucket([]byte(boltBucketNameUsers))
 
 		buf, err := json.Marshal(user)
 		if err != nil {
@@ -60,7 +60,7 @@ func (r boltRepository) AddUser(ctx context.Context, user prchecklist.GitHubUser
 func (r boltRepository) GetUsers(ctx context.Context, userIDs []int) (map[int]prchecklist.GitHubUser, error) {
 	users := make(map[int]prchecklist.GitHubUser, len(userIDs))
 	err := r.db.View(func(tx *bolt.Tx) error {
-		usersBucket := tx.Bucket([]byte(bucketNameUsers))
+		usersBucket := tx.Bucket([]byte(boltBucketNameUsers))
 
 		for _, id := range userIDs {
 			buf := usersBucket.Get([]byte(strconv.FormatInt(int64(id), 10)))
@@ -89,7 +89,7 @@ func (r boltRepository) GetChecks(ctx context.Context, clRef prchecklist.Checkli
 	var checks prchecklist.Checks
 
 	err := r.db.View(func(tx *bolt.Tx) error {
-		checksBucket := tx.Bucket([]byte(bucketNameChecks))
+		checksBucket := tx.Bucket([]byte(boltBucketNameChecks))
 
 		key := []byte(clRef.String())
 		data := checksBucket.Get(key)
@@ -114,7 +114,7 @@ func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.Checklis
 	return r.db.Update(func(tx *bolt.Tx) error {
 		var checks prchecklist.Checks
 
-		checksBucket := tx.Bucket([]byte(bucketNameChecks))
+		checksBucket := tx.Bucket([]byte(boltBucketNameChecks))
 
 		key := []byte(clRef.String())
 		data := checksBucket.Get(key)
@@ -129,14 +129,9 @@ func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.Checklis
 			checks = prchecklist.Checks{}
 		}
 
-		for _, userID := range checks[featNum] {
-			if user.ID == userID {
-				// already checked
-				return nil
-			}
+		if checks.Add(featNum, user) == false {
+			return nil
 		}
-
-		checks[featNum] = append(checks[featNum], user.ID)
 
 		data, err := json.Marshal(&checks)
 		if err != nil {
@@ -155,7 +150,7 @@ func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.Check
 	return r.db.Update(func(tx *bolt.Tx) error {
 		var checks prchecklist.Checks
 
-		checksBucket := tx.Bucket([]byte(bucketNameChecks))
+		checksBucket := tx.Bucket([]byte(boltBucketNameChecks))
 
 		key := []byte(clRef.String())
 		data := checksBucket.Get(key)
@@ -170,11 +165,8 @@ func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.Check
 			checks = prchecklist.Checks{}
 		}
 
-		for i, userID := range checks[featNum] {
-			if user.ID == userID {
-				checks[featNum] = append(checks[featNum][0:i], checks[featNum][i+1:]...)
-				break
-			}
+		if checks.Remove(featNum, user) == false {
+			return nil
 		}
 
 		data, err := json.Marshal(&checks)
