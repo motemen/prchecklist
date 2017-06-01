@@ -50,10 +50,30 @@ type Web struct {
 	oauth2Config *oauth2.Config // TODO move to usecase or gateway layer
 }
 
-func New(app *usecase.Usecase, oauth2Config *oauth2.Config) *Web {
+var githubEndpoint = oauth2.Endpoint{
+	AuthURL:  "https://github.com/login/oauth/authorize",
+	TokenURL: "https://github.com/login/oauth/access_token",
+}
+
+var (
+	githubClientID     string
+	githubClientSecret string
+)
+
+func init() {
+	flag.StringVar(&githubClientID, "github-client-id", os.Getenv("GITHUB_CLIENT_ID"), "GitHub client ID")
+	flag.StringVar(&githubClientSecret, "github-client-secret", os.Getenv("GITHUB_CLIENT_SECRET"), "GitHub client secret")
+}
+
+func New(app *usecase.Usecase) *Web {
 	return &Web{
-		app:          app,
-		oauth2Config: oauth2Config,
+		app: app,
+		oauth2Config: &oauth2.Config{
+			ClientID:     githubClientID,
+			ClientSecret: githubClientSecret,
+			Endpoint:     githubEndpoint,
+			Scopes:       []string{"repo"},
+		},
 	}
 }
 
@@ -148,12 +168,14 @@ func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
 
 	if u == nil {
 		fmt.Fprint(w, `<!DOCTYPE html>
+<meta name=viewport content="width=device-width">
 <div id="main">
   <nav><strong>prchecklist</strong><a class="user-signedin" href="/auth">Login</a></nav>
 </div>
 <script src="/js/bundle.js"></script>`)
 	} else {
 		fmt.Fprintf(w, `<!DOCTYPE html>
+<meta name=viewport content="width=device-width">
 <div id="main">
   <nav><strong>prchecklist</strong><span class="user-signedin">%s</span></nav>
 </div>
@@ -368,6 +390,7 @@ func (web *Web) handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 
 func (web *Web) handleChecklist(w http.ResponseWriter, req *http.Request) error {
 	fmt.Fprint(w, `<!DOCTYPE html>
+<meta name=viewport content="width=device-width">
 <div id="main"></div>
 <script src="/js/bundle.js"></script>`)
 	return nil

@@ -55,38 +55,40 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 		Config:      nil,
 	}
 
-	g, ctx := errgroup.WithContext(ctx)
-	for i, ref := range refs {
-		i, ref := i, ref
-		g.Go(func() error {
-			featurePullReq, err := u.githubRepo.GetPullRequest(ctx, ref, false)
-			if err != nil {
+	{
+		g, ctx := errgroup.WithContext(ctx)
+		for i, ref := range refs {
+			i, ref := i, ref
+			g.Go(func() error {
+				featurePullReq, err := u.githubRepo.GetPullRequest(ctx, ref, false)
+				if err != nil {
+					return err
+				}
+
+				checklist.Items[i] = &prchecklist.ChecklistItem{
+					PullRequest: featurePullReq,
+					CheckedBy:   []prchecklist.GitHubUser{}, // filled up later
+				}
+				return nil
+			})
+		}
+
+		if pr.ConfigBlobID != "" {
+			g.Go(func() error {
+				buf, err := u.githubRepo.GetBlob(ctx, clRef, pr.ConfigBlobID)
+				if err != nil {
+					return errors.Wrap(err, "githubRepo.GetBlob")
+				}
+
+				checklist.Config, err = u.loadConfig(buf)
 				return err
-			}
+			})
+		}
 
-			checklist.Items[i] = &prchecklist.ChecklistItem{
-				PullRequest: featurePullReq,
-				CheckedBy:   []prchecklist.GitHubUser{}, // filled up later
-			}
-			return nil
-		})
-	}
-
-	if pr.ConfigBlobID != "" {
-		g.Go(func() error {
-			buf, err := u.githubRepo.GetBlob(ctx, clRef, pr.ConfigBlobID)
-			if err != nil {
-				return errors.Wrap(err, "githubRepo.GetBlob")
-			}
-
-			checklist.Config, err = u.loadConfig(buf)
-			return err
-		})
-	}
-
-	err = g.Wait()
-	if err != nil {
-		return nil, err
+		err = g.Wait()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// may move to before fetching feature pullreqs
