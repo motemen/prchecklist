@@ -73,9 +73,13 @@ type ChecklistItem struct {
 	CheckedBy []GitHubUser
 }
 
-type Checks map[int][]int // PullReqNumber -> []UserID
+type Checks map[string][]int // "PullReqNumber" -> []UserID
 
-func (c Checks) Add(featNum int, user GitHubUser) bool {
+func FeatuerPullRequestNumberKey(featNum int) string {
+	return fmt.Sprint(featNum)
+}
+
+func (c Checks) Add(featNum string, user GitHubUser) bool {
 	for _, userID := range c[featNum] {
 		if user.ID == userID {
 			// already checked
@@ -87,7 +91,7 @@ func (c Checks) Add(featNum int, user GitHubUser) bool {
 	return true
 }
 
-func (c Checks) Remove(featNum int, user GitHubUser) bool {
+func (c Checks) Remove(featNum string, user GitHubUser) bool {
 	for i, userID := range c[featNum] {
 		if user.ID == userID {
 			c[featNum] = append(c[featNum][0:i], c[featNum][i+1:]...)

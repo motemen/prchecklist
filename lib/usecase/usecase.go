@@ -20,8 +20,8 @@ type GitHubRepository interface {
 
 type CoreRepository interface {
 	GetChecks(ctx context.Context, clRef prchecklist.ChecklistRef) (prchecklist.Checks, error)
-	AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, number int, user prchecklist.GitHubUser) error
-	RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, number int, user prchecklist.GitHubUser) error
+	AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error
+	RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error
 
 	AddUser(ctx context.Context, user prchecklist.GitHubUser) error
 	GetUsers(ctx context.Context, userIDs []int) (map[int]prchecklist.GitHubUser, error)
@@ -111,7 +111,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 		}
 
 		for _, item := range checklist.Items {
-			if item.Number != featNum {
+			if prchecklist.FeatuerPullRequestNumberKey(item.Number) != featNum {
 				continue
 			}
 
@@ -147,7 +147,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 	// TODO: check visibilities
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
-	err := u.coreRepo.AddCheck(ctx, clRef, featNum, user)
+	err := u.coreRepo.AddCheck(ctx, clRef, prchecklist.FeatuerPullRequestNumberKey(featNum), user)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef
 	// TODO: check visibilities
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
-	err := u.coreRepo.RemoveCheck(ctx, clRef, featNum, user)
+	err := u.coreRepo.RemoveCheck(ctx, clRef, prchecklist.FeatuerPullRequestNumberKey(featNum), user)
 	if err != nil {
 		return nil, err
 	}

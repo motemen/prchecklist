@@ -106,7 +106,7 @@ func (r boltRepository) GetChecks(ctx context.Context, clRef prchecklist.Checkli
 	return checks, errors.Wrap(err, "GetChecks")
 }
 
-func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) error {
+func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error {
 	if err := clRef.Validate(); err != nil {
 		return err
 	}
@@ -116,8 +116,8 @@ func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.Checklis
 
 		checksBucket := tx.Bucket([]byte(boltBucketNameChecks))
 
-		key := []byte(clRef.String())
-		data := checksBucket.Get(key)
+		dbKey := []byte(clRef.String())
+		data := checksBucket.Get(dbKey)
 		if data != nil {
 			err := json.Unmarshal(data, &checks)
 			if err != nil {
@@ -129,7 +129,7 @@ func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.Checklis
 			checks = prchecklist.Checks{}
 		}
 
-		if checks.Add(featNum, user) == false {
+		if checks.Add(key, user) == false {
 			return nil
 		}
 
@@ -138,11 +138,11 @@ func (r boltRepository) AddCheck(ctx context.Context, clRef prchecklist.Checklis
 			return err
 		}
 
-		return checksBucket.Put(key, data)
+		return checksBucket.Put(dbKey, data)
 	})
 }
 
-func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) error {
+func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error {
 	if err := clRef.Validate(); err != nil {
 		return err
 	}
@@ -152,8 +152,8 @@ func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.Check
 
 		checksBucket := tx.Bucket([]byte(boltBucketNameChecks))
 
-		key := []byte(clRef.String())
-		data := checksBucket.Get(key)
+		dbKey := []byte(clRef.String())
+		data := checksBucket.Get(dbKey)
 		if data != nil {
 			err := json.Unmarshal(data, &checks)
 			if err != nil {
@@ -165,7 +165,7 @@ func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.Check
 			checks = prchecklist.Checks{}
 		}
 
-		if checks.Remove(featNum, user) == false {
+		if checks.Remove(key, user) == false {
 			return nil
 		}
 
@@ -174,6 +174,6 @@ func (r boltRepository) RemoveCheck(ctx context.Context, clRef prchecklist.Check
 			return err
 		}
 
-		return checksBucket.Put(key, data)
+		return checksBucket.Put(dbKey, data)
 	})
 }
