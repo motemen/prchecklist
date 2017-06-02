@@ -35,7 +35,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	coreRepo, err := repository.NewBoltCore(datasource[len("bolt:"):])
+	coreRepo, err := repository.NewCore(datasource)
 	if err != nil {
 		log.Fatal(err)
 	}

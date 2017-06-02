@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"log"
-	"reflect"
 
 	"cloud.google.com/go/datastore"
 	"github.com/pkg/errors"
@@ -20,7 +19,11 @@ const (
 	datastoreKindCheck = "Check"
 )
 
-func NewDatastoreCore(projectID string) (*datastoreRepository, error) {
+func init() {
+	registerCoreRepositoryBuilder("datastore", NewDatastoreCore)
+}
+
+func NewDatastoreCore(projectID string) (coreRepository, error) {
 	client, err := datastore.NewClient(context.Background(), projectID)
 	return &datastoreRepository{
 		client: client,
@@ -150,13 +153,11 @@ func intSliceToInterfaceSlice(ints []int) []interface{} {
 }
 
 func interfaceSliceToIntSlice(ifaces []interface{}) []int {
-	log.Printf("%#v", ifaces)
 	ints := make([]int, len(ifaces))
 	for i, iface := range ifaces {
-		rv := reflect.ValueOf(iface)
-		switch rv.Kind() {
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			ints[i] = int(rv.Int())
+		switch v := iface.(type) {
+		case int64:
+			ints[i] = int(v)
 		default:
 			return nil
 		}
