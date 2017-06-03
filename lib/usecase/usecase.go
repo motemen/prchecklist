@@ -8,6 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/tools/container/intsets"
 	"gopkg.in/yaml.v2"
 
 	"github.com/motemen/go-prchecklist"
@@ -100,24 +101,21 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 
 	log.Printf("%s: checks: %+v", clRef, checks)
 
-	for featNum, userIDs := range checks {
-		if len(userIDs) == 0 {
-			continue
+	var s intsets.Sparse
+	for _, userIDs := range checks {
+		for _, id := range userIDs {
+			s.Insert(id)
 		}
+	}
 
-		users, err := u.coreRepo.GetUsers(ctx, userIDs)
-		if err != nil {
-			return nil, err
-		}
+	users, err := u.coreRepo.GetUsers(ctx, s.AppendTo(nil))
+	if err != nil {
+		return nil, err
+	}
 
-		for _, item := range checklist.Items {
-			if prchecklist.FeatuerPullRequestNumberKey(item.Number) != featNum {
-				continue
-			}
-
-			for _, id := range userIDs {
-				item.CheckedBy = append(item.CheckedBy, users[id])
-			}
+	for _, item := range checklist.Items {
+		for _, id := range checks[prchecklist.ChecksKeyFeatureNum(item.Number)] {
+			item.CheckedBy = append(item.CheckedBy, users[id])
 		}
 	}
 
@@ -147,7 +145,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 	// TODO: check visibilities
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
-	err := u.coreRepo.AddCheck(ctx, clRef, prchecklist.FeatuerPullRequestNumberKey(featNum), user)
+	err := u.coreRepo.AddCheck(ctx, clRef, prchecklist.ChecksKeyFeatureNum(featNum), user)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +179,7 @@ func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef
 	// TODO: check visibilities
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
-	err := u.coreRepo.RemoveCheck(ctx, clRef, prchecklist.FeatuerPullRequestNumberKey(featNum), user)
+	err := u.coreRepo.RemoveCheck(ctx, clRef, prchecklist.ChecksKeyFeatureNum(featNum), user)
 	if err != nil {
 		return nil, err
 	}

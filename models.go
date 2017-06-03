@@ -73,9 +73,11 @@ type ChecklistItem struct {
 	CheckedBy []GitHubUser
 }
 
+// For future extension, use strings instead of ints
+// for the keys of Checks.
 type Checks map[string][]int // "PullReqNumber" -> []UserID
 
-func FeatuerPullRequestNumberKey(featNum int) string {
+func ChecksKeyFeatureNum(featNum int) string {
 	return fmt.Sprint(featNum)
 }
 

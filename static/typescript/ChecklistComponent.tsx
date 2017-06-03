@@ -20,33 +20,38 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
 
     API.getChecklist(props.checklistRef)
       .then((data) => {
+        if (data.Checklist) {
+          if (this.ensureCorrectStage(data.Checklist)) {
+            return;
+          }
+        }
         this.setState({
           checklist: data.Checklist,
           me: data.Me,
-        }, () => this.ensureCorrectStage());
+        });
       })
       .catch((err) => {
-        console.log(err);
         this.setState({ error: `${err}` });
+        console.error(err);
       });
   }
 
-  ensureCorrectStage() {
-    if (!this.state.checklist) {
-      return;
-    }
-
-    const stages = this.checklistStages();
+  ensureCorrectStage(checklist: API.Checklist): boolean {
+    const stages = checklist.Config && checklist.Config.Stages || [];
     const checklistRef = this.props.checklistRef;
     if (stages.length) {
       if (stages.findIndex((s) => s === checklistRef.Stage) === -1) {
         this.navigateToStage(stages[0]);
+        return true;
       }
     } else {
       if (checklistRef.Stage !== '') {
         this.navigateToStage('');
+        return true;
       }
     }
+
+    return false;
   }
 
   navigateToStage(stage: string) {
@@ -73,7 +78,6 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
             }
           }
         });
-        console.log(prevState);
         return { ...prevState, loading: true };
       });
 
