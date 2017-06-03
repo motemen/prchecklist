@@ -42,6 +42,7 @@ type githubPullRequest struct {
 			Owner string `graphql:"$owner,notnull"`
 			Name  string `graphql:"$repo,notnull"`
 		}
+		NameWithOwner    string
 		IsPrivate        bool
 		DefaultBranchRef struct {
 			Name string
@@ -166,6 +167,16 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 	if err != nil {
 		return nil, err
 	}
+	if isMain && pullReq.IsPrivate {
+		// Do not cache result if the pull request is private
+		// and isMain is true to check if the visitor has rights to
+		// read the repo.
+		// If isMain is false, we don't need to check vititor's rights
+		// because GetPullRequest() with truthy isMain must be called before falsy one.
+		// FIXME: The behavior noted above is based on the code of usecase package,
+		// which should not be known by this repository package.
+		return pullReq, nil
+	}
 
 	var cacheDuration time.Duration
 	if isMain {
@@ -189,6 +200,9 @@ func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.Ch
 	}, &qr)
 	if err != nil {
 		return nil, err
+	}
+	if qr.Repository.NameWithOwner == "" {
+		return nil, errors.Errorf("could not retrieve repo/pullreq")
 	}
 
 	graphqlResultToCommits := func(qr githubPullRequest) []prchecklist.Commit {
