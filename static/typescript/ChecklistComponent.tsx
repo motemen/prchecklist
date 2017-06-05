@@ -129,7 +129,8 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
 
     return <section className={this.completed() ? 'completed' : ''}>
       <nav>
-        <strong>{checklist.Owner}/{checklist.Repo}#{checklist.Number}</strong>
+        <div className="logo"><strong>{checklist.Owner}/{checklist.Repo}#{checklist.Number}</strong></div>
+      <div className="stages">
         {
           stages.length ?
             <select className="stages" value={this.props.checklistRef.Stage} onChange={this.handleOnSelectStage}>
@@ -138,9 +139,11 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
                   <option key={`stage-${stage}`}>{stage}</option>
                 )
               }
-            </select> : []
+            </select>
+            : []
         }
-        <span className="user-signedin">{this.state.me.Login}</span>
+        </div>
+        <div className="user-signedin">{this.state.me.Login}</div>
       </nav>
       <h1>
         <span className="title"><a href={checklist.URL}>#{checklist.Number}</a> {checklist.Title}</span>

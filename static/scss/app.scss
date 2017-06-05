@@ -9,8 +9,17 @@
 
 body {
     font-size: 18px;
-    margin: 5% 20%;
+    margin-top: 1em;
     color: #333;
+    @extend .uk-flex;
+    @extend .uk-flex-center;
+}
+
+#main {
+    @extend .uk-width-1-1\@s;
+    @extend .uk-width-3-5\@m;
+    @extend .uk-width-xxlarge\@l;
+    padding: 1em;
 }
 
 h1 {
@@ -50,7 +59,15 @@ input[type="checkbox"] {
     float: right;
 }
 
-nav strong {
+nav {
+    @extend .uk-grid;
+}
+
+nav .logo {
+    margin-bottom: 10px;
+}
+
+nav .logo strong {
     background-color: #333;
     color: #FFF;
     padding: 0 0.75em;
@@ -68,9 +85,9 @@ nav strong {
 }
 
 nav .user-signedin {
-    float: right;
     font-size: 80%;
     text-decoration: none;
+    line-height: 40px;
 }
 
 nav .user-signedin:before {
@@ -80,9 +97,13 @@ nav .user-signedin:before {
 }
 
 nav .stages {
-    @extend .uk-select;
-    @extend .uk-form-width-medium;
-    font-size: inherit;
-    border: 2px solid;
-    margin-left: 1em;
+    @extend .uk-width-expand;
+    min-width: 150px;
+
+    select {
+        @extend .uk-select;
+        @extend .uk-form-width-medium;
+        font-size: inherit;
+        border: 2px solid;
+    }
 }

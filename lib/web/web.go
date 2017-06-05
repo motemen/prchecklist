@@ -169,16 +169,20 @@ func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
 	if u == nil {
 		fmt.Fprint(w, `<!DOCTYPE html>
 <meta name=viewport content="width=device-width">
+<body>
 <div id="main">
   <nav><strong>prchecklist</strong><a class="user-signedin" href="/auth">Login</a></nav>
 </div>
+</body>
 <script src="/js/bundle.js"></script>`)
 	} else {
 		fmt.Fprintf(w, `<!DOCTYPE html>
 <meta name=viewport content="width=device-width">
+<body>
 <div id="main">
   <nav><strong>prchecklist</strong><span class="user-signedin">%s</span></nav>
 </div>
+</body>
 <script src="/js/bundle.js"></script>`, u.Login)
 	}
 	return nil
@@ -391,7 +395,7 @@ func (web *Web) handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 func (web *Web) handleChecklist(w http.ResponseWriter, req *http.Request) error {
 	fmt.Fprint(w, `<!DOCTYPE html>
 <meta name=viewport content="width=device-width">
-<div id="main"></div>
+<body><div id="main"></div></body>
 <script src="/js/bundle.js"></script>`)
 	return nil
 }
