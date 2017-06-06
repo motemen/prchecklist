@@ -13,6 +13,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
@@ -26,6 +27,7 @@ import (
 
 var (
 	sessionSecret = os.Getenv("PRCHECKLIST_SESSION_SECRET")
+	behindProxy   = os.Getenv("PRCHECKLIST_BEHIND_PROXY") != ""
 )
 
 const sessionName = "s"
@@ -38,7 +40,8 @@ const (
 var sessionStore sessions.Store
 
 func init() {
-	flag.StringVar(&sessionSecret, "session-secret", os.Getenv("PRCHECKLIST_SESSION_SECRET"), "session secret")
+	flag.StringVar(&sessionSecret, "session-secret", sessionSecret, "session secret (PRCHECKLIST_SESSION_SECRET)")
+	flag.BoolVar(&behindProxy, "behind-proxy", behindProxy, "prchecklist is behind a reverse proxy (PRCHECKLIST_BEHIND_PROXY)")
 
 	gob.Register(&prchecklist.GitHubUser{})
 }
@@ -80,6 +83,10 @@ func (web *Web) Handler() http.Handler {
 
 	n := negroni.New(negroni.NewStatic(http.Dir("./static")))
 	n.UseHandler(router)
+
+	if behindProxy {
+		return handlers.ProxyHeaders(n)
+	}
 
 	return n
 }
