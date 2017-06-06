@@ -1,20 +1,23 @@
-package repository
+package gateway
 
 import (
 	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/go-github/github"
 	"github.com/motemen/go-graphql-query"
 	"github.com/patrickmn/go-cache"
+	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
 
 	"github.com/motemen/go-prchecklist"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -23,14 +26,57 @@ const (
 	cacheDurationBlob        = cache.NoExpiration
 )
 
-func NewGitHub() *githubRepository {
-	return &githubRepository{
-		cache: cache.New(30*time.Second, 10*time.Minute),
+var (
+	githubClientID     string
+	githubClientSecret string
+	githubDomain       string
+)
+
+func getenv(key, def string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
 	}
+	return v
 }
 
-type githubRepository struct {
-	cache *cache.Cache
+func init() {
+	flag.StringVar(&githubClientID, "github-client-id", os.Getenv("GITHUB_CLIENT_ID"), "GitHub client ID (GITHUB_CLIENT_ID)")
+	flag.StringVar(&githubClientSecret, "github-client-secret", os.Getenv("GITHUB_CLIENT_SECRET"), "GitHub client secret (GITHUB_CLIENT_SECRET)")
+	flag.StringVar(&githubDomain, "github-domain", getenv("GITHUB_DOMAIN", "github.com"), "GitHub domain (GITHUB_DOMAIN)")
+}
+
+func NewGitHub() (*githubGateway, error) {
+	if githubClientID == "" || githubClientSecret == "" {
+		return nil, errors.New("gateway/github: both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set")
+	}
+
+	var githubEndpoint = oauth2.Endpoint{
+		AuthURL:  "https://" + githubDomain + "/login/oauth/authorize",
+		TokenURL: "https://" + githubDomain + "/login/oauth/access_token",
+	}
+
+	apiBase := "https://api.github.com"
+	if githubDomain != "github.com" {
+		apiBase = "https://" + githubDomain + "/api/v3"
+	}
+
+	return &githubGateway{
+		cache: cache.New(30*time.Second, 10*time.Minute),
+		oauth2Config: &oauth2.Config{
+			ClientID:     githubClientID,
+			ClientSecret: githubClientSecret,
+			Endpoint:     githubEndpoint,
+			Scopes:       []string{"repo"},
+		},
+		apiBase: apiBase,
+	}, nil
+}
+
+type githubGateway struct {
+	cache        *cache.Cache
+	oauth2Config *oauth2.Config
+	apiBase      string
 }
 
 type githubPullRequest struct {
@@ -115,26 +161,26 @@ func init() {
 	pullRequestQuery = string(b)
 }
 
-func (r githubRepository) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
+func (g githubGateway) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
 	cacheKey := fmt.Sprintf("blob\000%s\000%s", ref.String(), sha)
 
-	if data, ok := r.cache.Get(cacheKey); ok {
+	if data, ok := g.cache.Get(cacheKey); ok {
 		if blob, ok := data.([]byte); ok {
 			return blob, nil
 		}
 	}
 
-	blob, err := r.getBlob(ctx, ref, sha)
+	blob, err := g.getBlob(ctx, ref, sha)
 	if err != nil {
 		return nil, err
 	}
 
-	r.cache.Set(cacheKey, blob, cacheDurationBlob)
+	g.cache.Set(cacheKey, blob, cacheDurationBlob)
 
 	return blob, nil
 }
 
-func (r githubRepository) getBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
+func (g githubGateway) getBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
 	gh := github.NewClient(prchecklist.ContextClient(ctx))
 	blob, _, err := gh.Git.GetBlob(ctx, ref.Owner, ref.Repo, sha)
 	if err != nil {
@@ -158,8 +204,8 @@ type repoRight struct {
 }
 
 func contextHasRepoAccessRight(ctx context.Context, ref prchecklist.ChecklistRef) bool {
-	if r, ok := ctx.Value(contextKeyRepoAccessRight).(repoRight); ok {
-		return r.owner == ref.Owner && r.repo == ref.Repo
+	if g, ok := ctx.Value(contextKeyRepoAccessRight).(repoRight); ok {
+		return g.owner == ref.Owner && g.repo == ref.Repo
 	}
 	return false
 }
@@ -168,10 +214,10 @@ func contextWithRepoAccessRight(ctx context.Context, ref prchecklist.ChecklistRe
 	return context.WithValue(ctx, contextKeyRepoAccessRight, repoRight{owner: ref.Owner, repo: ref.Repo})
 }
 
-func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, context.Context, error) {
+func (g githubGateway) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, context.Context, error) {
 	cacheKey := fmt.Sprintf("pullRequest\000%s\000%v", ref.String(), isBase)
 
-	if data, ok := r.cache.Get(cacheKey); ok {
+	if data, ok := g.cache.Get(cacheKey); ok {
 		if pullReq, ok := data.(*prchecklist.PullRequest); ok {
 			if pullReq.IsPrivate && !contextHasRepoAccessRight(ctx, ref) {
 				// something's wrong!
@@ -181,7 +227,7 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 		}
 	}
 
-	pullReq, err := r.getPullRequest(ctx, ref, isBase)
+	pullReq, err := g.getPullRequest(ctx, ref, isBase)
 	if err != nil {
 		return nil, ctx, err
 	}
@@ -201,14 +247,14 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 		cacheDuration = cacheDurationPullReqFeat
 	}
 
-	r.cache.Set(cacheKey, pullReq, cacheDuration)
+	g.cache.Set(cacheKey, pullReq, cacheDuration)
 
 	return pullReq, contextWithRepoAccessRight(ctx, ref), nil
 }
 
-func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {
+func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {
 	var qr githubPullRequest
-	err := queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
+	err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
 		Owner:  ref.Owner,
 		Repo:   ref.Repo,
 		Number: ref.Number,
@@ -253,7 +299,7 @@ func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.Ch
 			break
 		}
 
-		err := queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
+		err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
 			Owner:        ref.Owner,
 			Repo:         ref.Repo,
 			Number:       ref.Number,
@@ -270,7 +316,7 @@ func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.Ch
 	return pullReq, nil
 }
 
-func queryGraphQL(ctx context.Context, query string, variables interface{}, value interface{}) error {
+func (g githubGateway) queryGraphQL(ctx context.Context, query string, variables interface{}, value interface{}) error {
 	client := prchecklist.ContextClient(ctx)
 
 	varBytes, err := json.Marshal(variables)
@@ -281,7 +327,7 @@ func queryGraphQL(ctx context.Context, query string, variables interface{}, valu
 		return err
 	}
 
-	req, err := http.NewRequest("POST", "https://api.github.com/graphql", &buf)
+	req, err := http.NewRequest("POST", g.apiBase+"/graphql", &buf)
 	if err != nil {
 		return err
 	}
@@ -306,4 +352,31 @@ func queryGraphQL(ctx context.Context, query string, variables interface{}, valu
 	}
 
 	return nil
+}
+
+func (g githubGateway) AuthCodeURL(code string) string {
+	return g.oauth2Config.AuthCodeURL(code)
+}
+
+func (g githubGateway) AuthenticateUser(ctx context.Context, code string) (*prchecklist.GitHubUser, error) {
+	token, err := g.oauth2Config.Exchange(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+
+	client := github.NewClient(
+		oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)),
+	)
+
+	u, _, err := client.Users.Get(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+
+	return &prchecklist.GitHubUser{
+		ID:        u.GetID(),
+		Login:     u.GetLogin(),
+		AvatarURL: u.GetAvatarURL(),
+		Token:     token,
+	}, nil
 }

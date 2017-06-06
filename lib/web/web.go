@@ -13,14 +13,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/github"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
 	_ "github.com/motemen/go-loghttp/global"
 	"github.com/pkg/errors"
 	"github.com/urfave/negroni"
-	"golang.org/x/oauth2"
 
 	"github.com/motemen/go-prchecklist"
 	"github.com/motemen/go-prchecklist/lib/usecase"
@@ -45,35 +43,20 @@ func init() {
 	gob.Register(&prchecklist.GitHubUser{})
 }
 
+type GitHubGateway interface {
+	AuthCodeURL(state string) string
+	AuthenticateUser(ctx context.Context, code string) (*prchecklist.GitHubUser, error)
+}
+
 type Web struct {
-	app          *usecase.Usecase
-	oauth2Config *oauth2.Config // TODO move to usecase or gateway layer
+	app    *usecase.Usecase
+	github GitHubGateway
 }
 
-var githubEndpoint = oauth2.Endpoint{
-	AuthURL:  "https://github.com/login/oauth/authorize",
-	TokenURL: "https://github.com/login/oauth/access_token",
-}
-
-var (
-	githubClientID     string
-	githubClientSecret string
-)
-
-func init() {
-	flag.StringVar(&githubClientID, "github-client-id", os.Getenv("GITHUB_CLIENT_ID"), "GitHub client ID")
-	flag.StringVar(&githubClientSecret, "github-client-secret", os.Getenv("GITHUB_CLIENT_SECRET"), "GitHub client secret")
-}
-
-func New(app *usecase.Usecase) *Web {
+func New(app *usecase.Usecase, github GitHubGateway) *Web {
 	return &Web{
-		app: app,
-		oauth2Config: &oauth2.Config{
-			ClientID:     githubClientID,
-			ClientSecret: githubClientSecret,
-			Endpoint:     githubEndpoint,
-			Scopes:       []string{"repo"},
-		},
+		app:    app,
+		github: github,
 	}
 }
 
@@ -148,7 +131,7 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	http.Redirect(w, req, web.oauth2Config.AuthCodeURL(state), http.StatusFound)
+	http.Redirect(w, req, web.github.AuthCodeURL(state), http.StatusFound)
 
 	return nil
 }
@@ -206,33 +189,14 @@ func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) err
 	ctx := prchecklist.RequestContext(req)
 
 	code := req.URL.Query().Get("code")
-	token, err := web.oauth2Config.Exchange(ctx, code)
+	user, err := web.github.AuthenticateUser(ctx, code)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("received token: %#v", token)
+	sess.Values[sessionKeyGitHubUser] = *user
 
-	client := github.NewClient(
-		oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)),
-	)
-
-	u, _, err := client.Users.Get(ctx, "")
-	if err != nil {
-		return err
-	}
-
-	user := prchecklist.GitHubUser{
-		ID:        u.GetID(),
-		Login:     u.GetLogin(),
-		AvatarURL: u.GetAvatarURL(),
-		Token:     token,
-	}
-	sess.Values[sessionKeyGitHubUser] = user
-
-	log.Printf("user: %#v", user)
-
-	err = web.app.AddUser(ctx, user)
+	err = web.app.AddUser(ctx, *user)
 	if err != nil {
 		return err
 	}

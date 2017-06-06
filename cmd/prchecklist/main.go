@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/motemen/go-loghttp/global"
 
+	"github.com/motemen/go-prchecklist/lib/gateway"
 	"github.com/motemen/go-prchecklist/lib/repository"
 	"github.com/motemen/go-prchecklist/lib/usecase"
 	"github.com/motemen/go-prchecklist/lib/web"
@@ -40,11 +41,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app := usecase.New(
-		repository.NewGitHub(),
-		coreRepo,
-	)
-	w := web.New(app)
+	github, err := gateway.NewGitHub()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app := usecase.New(github, coreRepo)
+	w := web.New(app, github)
 
 	log.Printf("prchecklist starting at %s", addr)
 

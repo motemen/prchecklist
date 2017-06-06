@@ -14,7 +14,7 @@ import (
 	"github.com/motemen/go-prchecklist"
 )
 
-type GitHubRepository interface {
+type GitHubGateway interface {
 	GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error)
 	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, context.Context, error)
 }
@@ -29,20 +29,20 @@ type CoreRepository interface {
 }
 
 type Usecase struct {
-	coreRepo   CoreRepository
-	githubRepo GitHubRepository
+	coreRepo CoreRepository
+	github   GitHubGateway
 }
 
-func New(githubRepo GitHubRepository, coreRepo CoreRepository) *Usecase {
+func New(github GitHubGateway, coreRepo CoreRepository) *Usecase {
 	return &Usecase{
-		coreRepo:   coreRepo,
-		githubRepo: githubRepo,
+		coreRepo: coreRepo,
+		github:   github,
 	}
 }
 
 // Only this method can create prchecklist.Checklist.
 func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRef) (*prchecklist.Checklist, error) {
-	pr, ctx, err := u.githubRepo.GetPullRequest(ctx, clRef, true)
+	pr, ctx, err := u.github.GetPullRequest(ctx, clRef, true)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 		for i, ref := range refs {
 			i, ref := i, ref
 			g.Go(func() error {
-				featurePullReq, _, err := u.githubRepo.GetPullRequest(ctx, ref, false)
+				featurePullReq, _, err := u.github.GetPullRequest(ctx, ref, false)
 				if err != nil {
 					return err
 				}
@@ -76,9 +76,9 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 
 		if pr.ConfigBlobID != "" {
 			g.Go(func() error {
-				buf, err := u.githubRepo.GetBlob(ctx, clRef, pr.ConfigBlobID)
+				buf, err := u.github.GetBlob(ctx, clRef, pr.ConfigBlobID)
 				if err != nil {
-					return errors.Wrap(err, "githubRepo.GetBlob")
+					return errors.Wrap(err, "github.GetBlob")
 				}
 
 				checklist.Config, err = u.loadConfig(buf)
