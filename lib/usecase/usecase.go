@@ -11,7 +11,7 @@ import (
 	"golang.org/x/tools/container/intsets"
 	"gopkg.in/yaml.v2"
 
-	"github.com/motemen/go-prchecklist"
+	"github.com/motemen/prchecklist"
 )
 
 type GitHubGateway interface {

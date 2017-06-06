@@ -7,7 +7,7 @@ import (
 
 	"github.com/alecthomas/jsonschema"
 
-	"github.com/motemen/go-prchecklist"
+	"github.com/motemen/prchecklist"
 )
 
 func main() {

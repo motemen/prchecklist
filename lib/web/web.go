@@ -21,8 +21,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/urfave/negroni"
 
-	"github.com/motemen/go-prchecklist"
-	"github.com/motemen/go-prchecklist/lib/usecase"
+	"github.com/motemen/prchecklist"
+	"github.com/motemen/prchecklist/lib/usecase"
 )
 
 var (

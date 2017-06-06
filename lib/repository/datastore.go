@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/datastore"
 	"github.com/pkg/errors"
 
-	"github.com/motemen/go-prchecklist"
+	"github.com/motemen/prchecklist"
 )
 
 type datastoreRepository struct {

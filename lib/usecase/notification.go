@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/motemen/go-nuts/httputil"
-	"github.com/motemen/go-prchecklist"
+	"github.com/motemen/prchecklist"
 )
 
 type eventType int

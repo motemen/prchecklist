@@ -8,10 +8,10 @@ import (
 
 	_ "github.com/motemen/go-loghttp/global"
 
-	"github.com/motemen/go-prchecklist/lib/gateway"
-	"github.com/motemen/go-prchecklist/lib/repository"
-	"github.com/motemen/go-prchecklist/lib/usecase"
-	"github.com/motemen/go-prchecklist/lib/web"
+	"github.com/motemen/prchecklist/lib/gateway"
+	"github.com/motemen/prchecklist/lib/repository"
+	"github.com/motemen/prchecklist/lib/usecase"
+	"github.com/motemen/prchecklist/lib/web"
 )
 
 var (
