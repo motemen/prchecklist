@@ -75,3 +75,10 @@ export function setCheck(ref: ChecklistRef, featNum: number, checked: Boolean): 
       return res.json();
     });
 }
+
+export function getMe(): Promise<GitHubUser> {
+  return fetch('/api/me', {
+      credentials: 'same-origin'
+    })
+  .then((res) => res.json());
+}

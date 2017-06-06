@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
 import {ChecklistComponent} from './ChecklistComponent';
+import * as API from './api';
 
 import '../scss/app.scss';
 
@@ -15,4 +16,19 @@ if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/.test(location.pathname)) {
     <ChecklistComponent checklistRef={{Owner: RegExp.$1, Repo: RegExp.$2, Number: parseInt(RegExp.$3), Stage: RegExp.$4}} />,
     document.querySelector('#main')
   );
+} else {
+  API.getMe().then((me) => {
+    ReactDOM.render(
+      <nav>
+        <div className="logo"><strong>prchecklist</strong></div>
+        <div className="stages"></div>
+        {
+          me
+            ? <div className="user-signedin">{me.Login}</div>
+            : <a className="user-signedin" href="/auth">Login</a>
+        }
+      </nav>,
+      document.querySelector('#main')
+    );
+  });
 }

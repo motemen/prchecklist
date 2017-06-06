@@ -34,8 +34,14 @@ const sessionName = "s"
 
 const (
 	sessionKeyOAuthState = "oauthState"
-	sessionKeyGitHubUser = "prchecklist.GitHubUser"
+	sessionKeyGitHubUser = "githubUser"
 )
+
+const htmlContent = `<!DOCTYPE html>
+<meta name=viewport content="width=device-width">
+<body><div id="main"></div></body>
+<script src="/js/bundle.js"></script>
+`
 
 var sessionStore sessions.Store
 
@@ -76,6 +82,7 @@ func (web *Web) Handler() http.Handler {
 	router.Handle("/auth", httpHandler(web.handleAuth))
 	router.Handle("/auth/callback", httpHandler(web.handleAuthCallback))
 	router.Handle("/auth/clear", httpHandler(web.handleAuthClear))
+	router.Handle("/api/me", httpHandler(web.handleAPIMe))
 	router.Handle("/api/checklist", httpHandler(web.handleAPIChecklist))
 	router.Handle("/api/check", httpHandler(web.handleAPICheck)).Methods("PUT", "DELETE")
 	router.Handle("/{owner}/{repo}/pull/{number}", httpHandler(web.handleChecklist))
@@ -153,28 +160,7 @@ func makeRandomString() (string, error) {
 }
 
 func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
-	u, _ := web.getAuthInfo(w, req)
-	// TODO: check err
-
-	if u == nil {
-		fmt.Fprint(w, `<!DOCTYPE html>
-<meta name=viewport content="width=device-width">
-<body>
-<div id="main">
-  <nav><strong>prchecklist</strong><a class="user-signedin" href="/auth">Login</a></nav>
-</div>
-</body>
-<script src="/js/bundle.js"></script>`)
-	} else {
-		fmt.Fprintf(w, `<!DOCTYPE html>
-<meta name=viewport content="width=device-width">
-<body>
-<div id="main">
-  <nav><strong>prchecklist</strong><span class="user-signedin">%s</span></nav>
-</div>
-</body>
-<script src="/js/bundle.js"></script>`, u.Login)
-	}
+	fmt.Fprint(w, htmlContent)
 	return nil
 }
 
@@ -250,6 +236,11 @@ func (web *Web) getAuthInfo(w http.ResponseWriter, req *http.Request) (*prcheckl
 	}
 
 	return user, nil
+}
+
+func (web *Web) handleAPIMe(w http.ResponseWriter, req *http.Request) error {
+	u, _ := web.getAuthInfo(w, req)
+	return renderJSON(w, u)
 }
 
 func (web *Web) handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {
@@ -364,9 +355,6 @@ func (web *Web) handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 }
 
 func (web *Web) handleChecklist(w http.ResponseWriter, req *http.Request) error {
-	fmt.Fprint(w, `<!DOCTYPE html>
-<meta name=viewport content="width=device-width">
-<body><div id="main"></div></body>
-<script src="/js/bundle.js"></script>`)
+	fmt.Fprint(w, htmlContent)
 	return nil
 }
