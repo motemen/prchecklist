@@ -16,5 +16,4 @@ deploy:
   on:
     repo: motemen/prchecklist
     condition: $TRAVIS_GO_VERSION =~ ^1\.8
-    # tags: true
-    branch: go1
+    tags: true
