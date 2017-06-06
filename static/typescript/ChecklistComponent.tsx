@@ -129,7 +129,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
 
     return <section className={this.completed() ? 'completed' : ''}>
       <nav>
-        <div className="logo"><strong>{checklist.Owner}/{checklist.Repo}#{checklist.Number}</strong></div>
+        <div className="logo"><strong>{checklist.Owner}/{checklist.Repo}#{checklist.Number}{checklist.IsPrivate ? <span className="lock-icon">🔒</span> : ''}</strong></div>
         <div className="stages">
         {
           stages.length ?

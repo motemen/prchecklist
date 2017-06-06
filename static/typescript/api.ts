@@ -7,6 +7,7 @@ export interface Checklist {
   Body: string;
   Commits: Commit[];
   Config: ChecklistConfig;
+  IsPrivate: boolean;
   Items: ChecklistItem[];
   Number: number;
   Owner: string;
