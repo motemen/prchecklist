@@ -113,7 +113,6 @@ func init() {
 		panic(err)
 	}
 	pullRequestQuery = string(b)
-	println(pullRequestQuery)
 }
 
 func (r githubRepository) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
@@ -151,18 +150,40 @@ func (r githubRepository) getBlob(ctx context.Context, ref prchecklist.Checklist
 	return buf, errors.Wrap(err, "base64")
 }
 
-func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {
+var contextKeyRepoAccessRight = &struct{ key string }{"repoRight"}
+
+type repoRight struct {
+	owner string
+	repo  string
+}
+
+func contextHasRepoAccessRight(ctx context.Context, ref prchecklist.ChecklistRef) bool {
+	if r, ok := ctx.Value(contextKeyRepoAccessRight).(repoRight); ok {
+		return r.owner == ref.Owner && r.repo == ref.Repo
+	}
+	return false
+}
+
+func contextWithRepoAccessRight(ctx context.Context, ref prchecklist.ChecklistRef) context.Context {
+	return context.WithValue(ctx, contextKeyRepoAccessRight, repoRight{owner: ref.Owner, repo: ref.Repo})
+}
+
+func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, context.Context, error) {
 	cacheKey := fmt.Sprintf("pullRequest\000%s\000%v", ref.String(), isBase)
 
 	if data, ok := r.cache.Get(cacheKey); ok {
 		if pullReq, ok := data.(*prchecklist.PullRequest); ok {
-			return pullReq, nil
+			if pullReq.IsPrivate && !contextHasRepoAccessRight(ctx, ref) {
+				// something's wrong!
+			} else {
+				return pullReq, ctx, nil
+			}
 		}
 	}
 
 	pullReq, err := r.getPullRequest(ctx, ref, isBase)
 	if err != nil {
-		return nil, err
+		return nil, ctx, err
 	}
 	if isBase && pullReq.IsPrivate {
 		// Do not cache result if the pull request is private
@@ -170,9 +191,7 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 		// read the repo.
 		// If isBase is false, we don't need to check vititor's rights
 		// because GetPullRequest() with truthy isBase must be called before falsy one.
-		// FIXME: The behavior noted above is based on the code of usecase package,
-		// which should not be known by this repository package.
-		return pullReq, nil
+		return pullReq, contextWithRepoAccessRight(ctx, ref), nil
 	}
 
 	var cacheDuration time.Duration
@@ -184,7 +203,7 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 
 	r.cache.Set(cacheKey, pullReq, cacheDuration)
 
-	return pullReq, nil
+	return pullReq, contextWithRepoAccessRight(ctx, ref), nil
 }
 
 func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {

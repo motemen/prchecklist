@@ -16,7 +16,7 @@ import (
 
 type GitHubRepository interface {
 	GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error)
-	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, error)
+	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, context.Context, error)
 }
 
 type CoreRepository interface {
@@ -42,7 +42,7 @@ func New(githubRepo GitHubRepository, coreRepo CoreRepository) *Usecase {
 
 // Only this method can create prchecklist.Checklist.
 func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRef) (*prchecklist.Checklist, error) {
-	pr, err := u.githubRepo.GetPullRequest(ctx, clRef, true)
+	pr, ctx, err := u.githubRepo.GetPullRequest(ctx, clRef, true)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 		for i, ref := range refs {
 			i, ref := i, ref
 			g.Go(func() error {
-				featurePullReq, err := u.githubRepo.GetPullRequest(ctx, ref, false)
+				featurePullReq, _, err := u.githubRepo.GetPullRequest(ctx, ref, false)
 				if err != nil {
 					return err
 				}
