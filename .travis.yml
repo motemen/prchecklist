@@ -11,8 +11,10 @@ deploy:
   skip_cleanup: true
   api_key:
     secure: UAzGK9nxcftoj5/iMKKcevdw/tzlNEjaKotwqR+90G5BgIzKzKjdu4fCKgFsFTccj7BWuYstRIggts+YRclp4SP1nBLUXUnHbSLVR9KNeQKUiYVrY+nhgv9p8gW2XY6Kkdj0xo6UxLjxu96p3DgIprp7geqxAWXdG+sDTeRu7MY48+Nln7XuBiXA9I+aJKr3i/eJov8QORb2wHLQwrK2YU9cBKWUFFactr71YqFydSXGmM0LRf86xQcqNeKq8k9BSXJiiunYQyV9FpF5bsQQfkKypd9U6DWTiVLxvTRFaJWFF0uETs/ZbIjzBZX4DkJ2oOR+larnHq7igpzg2uXkqPFDjv8f1MfIa5viIWz/HU0iSo33X5BXQTVyIo0BU9yKeWCDqXC7G0F4n7yHgpgOUC5Lp5HWwHlAmIh2Zb2PXRHr0OmkDtmre08NKsJnhCRp2Dt0HvgMsLdrFCMqOOOl3oJeRIXYOAd8gp7UorcC/gtYnB+escmKU6qx2tcxMFOJeVtcxNZDEz8k21C5Jrh7F95rV4fRNs1gDizJ2iCMAMlZ1lmE88jJ6qirA0fCuq6V58sEEoGKzcM5hJWy/fSktitrNtzh/ZtiVzrqRAbSwzVcxKHNDmsVKXpJoQLWUonoy58ll7A++RMobXPmIa35zpJZuyg18c/Tigk+J6VP2aY=
+  file_glob: true
   file: build/*
   on:
     repo: motemen/prchecklist
     condition: $TRAVIS_GO_VERSION =~ ^1\.8
-    tags: true
+    # tags: true
+    branch: go1
