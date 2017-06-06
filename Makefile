@@ -11,10 +11,10 @@ develop:
 	    { git ls-files lib | entr -r sh -c 'go build -i -v ./cmd/prchecklist && ./prchecklist --listen localhost:8081'; }
 
 lib/web/bindata.go: static/js/bundle.js $(GOBINDATA)
-	$(GOBINDATA) -pkg web -o $@ static/js
+	$(GOBINDATA) -nometadata -pkg web -o $@ static/js
 
 static/js/bundle.js: always
-	yarn run webpack -- -p
+	yarn run webpack -- -p --progress
 
 $(GOBINDATA):
 	which $(GOBINDATA) || GOBIN=$(abspath $(TOOLDIR)) go get -v github.com/jteeuwen/go-bindata/go-bindata
