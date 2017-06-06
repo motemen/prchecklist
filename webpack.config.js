@@ -1,7 +1,10 @@
+const path = require('path');
+
 module.exports = {
   entry: './static/typescript/index.tsx',
   output: {
-    filename: './static/js/bundle.js'
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'static/js')
   },
   devtool: 'source-map',
   resolve: {
@@ -24,5 +27,12 @@ module.exports = {
         ]
       }
     ]
+  },
+  devServer: {
+    port: 8080,
+    proxy: {
+      '/': 'http://localhost:8081'
+    },
+    publicPath: '/js/'
   }
 };
