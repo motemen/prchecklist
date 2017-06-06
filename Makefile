@@ -6,9 +6,9 @@ GOBINDATA = internal/bin/go-bindata
 $(BIN): lib/web/bindata.go
 	go build -i -v ./cmd/prchecklist
 
-develop: $(BIN)
+develop:
 	yarn run webpack-dev-server & \
-	    { git ls-files lib | entr -r sh -c 'make && ./prchecklist --listen localhost:8081'; }
+	    { git ls-files lib | entr -r sh -c 'go build -i -v ./cmd/prchecklist && ./prchecklist --listen localhost:8081'; }
 
 lib/web/bindata.go: static/js/bundle.js $(GOBINDATA)
 	$(GOBINDATA) -pkg web -o $@ static/js
