@@ -1,5 +1,10 @@
 {
 	"comment": "",
+	"heroku": {
+		"install": [
+			"./cmd/..."
+		]
+	},
 	"ignore": "test",
 	"package": [
 		{
@@ -135,10 +140,10 @@
 			"versionExact": "v1.1"
 		},
 		{
-			"checksumSHA1": "fsxKZYZsxyr/R+CMPoH9L0k8gx4=",
+			"checksumSHA1": "hcdoiWqBEW4p4CYZLsVz4Ij2Z8c=",
 			"path": "github.com/motemen/go-graphql-query",
-			"revision": "5b95a1e05d28a2b4e46fec5326704f84c064643b",
-			"revisionTime": "2017-05-30T13:47:58Z"
+			"revision": "01c39f52ab0b3fbaa6ff5d8a18fff582dcd91f7e",
+			"revisionTime": "2017-06-05T23:56:15Z"
 		},
 		{
 			"checksumSHA1": "3M9tWNMKJ1aa29RPdx5UJKSv96k=",
@@ -523,8 +528,5 @@
 			"revisionTime": "2017-02-08T14:18:51Z"
 		}
 	],
-	"rootPath": "github.com/motemen/go-prchecklist",
-        "heroku": {
-            "install": [ "./cmd/..." ]
-        }
+	"rootPath": "github.com/motemen/go-prchecklist"
 }

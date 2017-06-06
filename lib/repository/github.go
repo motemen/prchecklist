@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	cacheDurationPullReqMain = 30 * time.Second
+	cacheDurationPullReqBase = 30 * time.Second
 	cacheDurationPullReqFeat = 5 * time.Minute
 	cacheDurationBlob        = cache.NoExpiration
 )
@@ -35,18 +35,14 @@ type githubRepository struct {
 
 type githubPullRequest struct {
 	GraphQLArguments struct {
-		IsMain bool `graphql:"$isMain,notnull"`
+		IsBase bool `graphql:"$isBase,notnull"`
 	}
-	Repository struct {
+	Repository *struct {
 		GraphQLArguments struct {
 			Owner string `graphql:"$owner,notnull"`
 			Name  string `graphql:"$repo,notnull"`
 		}
-		NameWithOwner    string
-		IsPrivate        bool
-		DefaultBranchRef struct {
-			Name string
-		}
+		IsPrivate   bool
 		PullRequest struct {
 			GraphQLArguments struct {
 				Number int `graphql:"$number,notnull"`
@@ -68,7 +64,7 @@ type githubPullRequest struct {
 						}
 					} `graphql:"... on Commit"`
 				}
-			} `graphql:"@include(if: $isMain)"`
+			} `graphql:"@include(if: $isBase)"`
 			Commits struct {
 				GraphQLArguments struct {
 					First int    `graphql:"100"`
@@ -86,7 +82,7 @@ type githubPullRequest struct {
 					EndCursor   string
 				}
 				TotalCount int
-			} `graphql:"@include(if: $isMain)"`
+			} `graphql:"@include(if: $isBase)"`
 		}
 	}
 	RateLimit struct {
@@ -98,7 +94,7 @@ type githubPullRequsetVars struct {
 	Owner        string `json:"owner"`
 	Repo         string `json:"repo"`
 	Number       int    `json:"number"`
-	IsMain       bool   `json:"isMain"`
+	IsBase       bool   `json:"isBase"`
 	CommitsAfter string `json:"commitsAfter,omitempty"`
 }
 
@@ -117,6 +113,7 @@ func init() {
 		panic(err)
 	}
 	pullRequestQuery = string(b)
+	println(pullRequestQuery)
 }
 
 func (r githubRepository) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
@@ -154,8 +151,8 @@ func (r githubRepository) getBlob(ctx context.Context, ref prchecklist.Checklist
 	return buf, errors.Wrap(err, "base64")
 }
 
-func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, error) {
-	cacheKey := fmt.Sprintf("pullRequest\000%s\000%v", ref.String(), isMain)
+func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {
+	cacheKey := fmt.Sprintf("pullRequest\000%s\000%v", ref.String(), isBase)
 
 	if data, ok := r.cache.Get(cacheKey); ok {
 		if pullReq, ok := data.(*prchecklist.PullRequest); ok {
@@ -163,24 +160,24 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 		}
 	}
 
-	pullReq, err := r.getPullRequest(ctx, ref, isMain)
+	pullReq, err := r.getPullRequest(ctx, ref, isBase)
 	if err != nil {
 		return nil, err
 	}
-	if isMain && pullReq.IsPrivate {
+	if isBase && pullReq.IsPrivate {
 		// Do not cache result if the pull request is private
-		// and isMain is true to check if the visitor has rights to
+		// and isBase is true to check if the visitor has rights to
 		// read the repo.
-		// If isMain is false, we don't need to check vititor's rights
-		// because GetPullRequest() with truthy isMain must be called before falsy one.
+		// If isBase is false, we don't need to check vititor's rights
+		// because GetPullRequest() with truthy isBase must be called before falsy one.
 		// FIXME: The behavior noted above is based on the code of usecase package,
 		// which should not be known by this repository package.
 		return pullReq, nil
 	}
 
 	var cacheDuration time.Duration
-	if isMain {
-		cacheDuration = cacheDurationPullReqMain
+	if isBase {
+		cacheDuration = cacheDurationPullReqBase
 	} else {
 		cacheDuration = cacheDurationPullReqFeat
 	}
@@ -190,18 +187,18 @@ func (r githubRepository) GetPullRequest(ctx context.Context, ref prchecklist.Ch
 	return pullReq, nil
 }
 
-func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, error) {
+func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {
 	var qr githubPullRequest
 	err := queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
 		Owner:  ref.Owner,
 		Repo:   ref.Repo,
 		Number: ref.Number,
-		IsMain: isMain,
+		IsBase: isBase,
 	}, &qr)
 	if err != nil {
 		return nil, err
 	}
-	if qr.Repository.NameWithOwner == "" {
+	if qr.Repository == nil {
 		return nil, errors.Errorf("could not retrieve repo/pullreq")
 	}
 
@@ -241,7 +238,7 @@ func (r githubRepository) getPullRequest(ctx context.Context, ref prchecklist.Ch
 			Owner:        ref.Owner,
 			Repo:         ref.Repo,
 			Number:       ref.Number,
-			IsMain:       isMain,
+			IsBase:       isBase,
 			CommitsAfter: pageInfo.EndCursor,
 		}, &qr)
 		if err != nil {
