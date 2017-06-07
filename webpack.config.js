@@ -13,19 +13,8 @@ module.exports = {
   module: {
     rules: [
       { test: /\.tsx?$/, use: [ 'babel-loader', 'awesome-typescript-loader' ] },
-      { test: /\.scss$/,
-        use: [
-          { loader: 'style-loader' },
-          { loader: 'css-loader' },
-          { loader: 'sass-loader' },
-        ]
-      },
-      { test: /\.css$/,
-        use: [
-          { loader: 'style-loader' },
-          { loader: 'css-loader' },
-        ]
-      }
+      { test: /\.scss$/, use: [ 'style-loader', 'css-loader', 'sass-loader' ] },
+      { test: /\.css$/,  use: [ 'style-loader', 'css-loader' ] },
     ]
   },
   devServer: {

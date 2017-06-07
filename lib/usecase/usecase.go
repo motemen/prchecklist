@@ -142,8 +142,6 @@ func (u Usecase) AddUser(ctx context.Context, user prchecklist.GitHubUser) error
 }
 
 func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) (*prchecklist.Checklist, error) {
-	// TODO: check visibilities
-	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
 	err := u.coreRepo.AddCheck(ctx, clRef, prchecklist.ChecksKeyFeatureNum(featNum), user)
 	if err != nil {
@@ -176,7 +174,6 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 }
 
 func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) (*prchecklist.Checklist, error) {
-	// TODO: check visibilities
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
 	err := u.coreRepo.RemoveCheck(ctx, clRef, prchecklist.ChecksKeyFeatureNum(featNum), user)

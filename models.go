@@ -3,9 +3,9 @@ package prchecklist
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
 
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
@@ -16,10 +16,8 @@ type ChecklistResponse struct {
 
 type Checklist struct {
 	*PullRequest
-	Stage string
-	Items []*ChecklistItem
-	// Stage  string
-	// Stages []string
+	Stage  string
+	Items  []*ChecklistItem
 	Config *ChecklistConfig
 }
 
@@ -42,7 +40,7 @@ func (c Checklist) Item(featNum int) *ChecklistItem {
 }
 
 func (c Checklist) Path() string {
-	path := fmt.Sprintf("%s/%s/pull/%d", c.Owner, c.Repo, c.Number)
+	path := fmt.Sprintf("/%s/%s/pull/%d", c.Owner, c.Repo, c.Number)
 	if c.Stage != "" {
 		path = path + "/" + c.Stage
 	}
