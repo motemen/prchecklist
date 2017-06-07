@@ -57,9 +57,9 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
   private navigateToStage(stage: string) {
     const checklistRef = this.props.checklistRef;
     if (stage === '') {
-      location.pathname = `/${checklistRef.Owner}/${checklistRef.Repo}/pull/${checklistRef.Number}`;
+      location.replace(`/${checklistRef.Owner}/${checklistRef.Repo}/pull/${checklistRef.Number}`);
     } else {
-      location.pathname = `/${checklistRef.Owner}/${checklistRef.Repo}/pull/${checklistRef.Number}/${stage}`;
+      location.replace(`/${checklistRef.Owner}/${checklistRef.Repo}/pull/${checklistRef.Number}/${stage}`);
     }
   }
 
