@@ -48,29 +48,33 @@ export interface ChecklistRef {
   Stage: string;
 }
 
+function asQueryParam(ref: ChecklistRef) {
+  return `owner=${ref.Owner}&repo=${ref.Repo}&number=${ref.Number}&stage=${ref.Stage || ''}`;
+}
+
 export function getChecklist(ref: ChecklistRef): Promise<ChecklistResponse> {
-  return fetch(`/api/checklist?owner=${ref.Owner}&repo=${ref.Repo}&number=${ref.Number}&stage=${ref.Stage || ''}`, {
-      credentials: 'same-origin'
+  return fetch(`/api/checklist?${asQueryParam(ref)}`, {
+      credentials: 'same-origin',
     })
     .then((res) => {
       if (!res.ok) {
         return res.text().then((text) => {
-          throw `${res.status} ${res.statusText}\n${text}`;
+          throw new Error(`${res.status} ${res.statusText}\n${text}`);
         });
       }
       return res.json();
     });
 }
 
-export function setCheck(ref: ChecklistRef, featNum: number, checked: Boolean): Promise<ChecklistResponse> {
-  return fetch(`/api/check?owner=${ref.Owner}&repo=${ref.Repo}&number=${ref.Number}&stage=${ref.Stage || ''}&featureNumber=${featNum}`, {
+export function setCheck(ref: ChecklistRef, featNum: number, checked: boolean): Promise<ChecklistResponse> {
+  return fetch(`/api/check?${asQueryParam(ref)}&featureNumber=${featNum}`, {
       credentials: 'same-origin',
-      method: checked ? 'PUT' : 'DELETE'
+      method: checked ? 'PUT' : 'DELETE',
     })
     .then((res) => {
       if (!res.ok) {
         return res.text().then((text) => {
-          throw `${res.status} ${res.statusText}\n${text}`;
+          throw new Error(`${res.status} ${res.statusText}\n${text}`);
         });
       }
       return res.json();
@@ -79,7 +83,7 @@ export function setCheck(ref: ChecklistRef, featNum: number, checked: Boolean): 
 
 export function getMe(): Promise<GitHubUser> {
   return fetch('/api/me', {
-      credentials: 'same-origin'
+      credentials: 'same-origin',
     })
   .then((res) => res.json());
 }

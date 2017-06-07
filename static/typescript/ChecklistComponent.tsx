@@ -36,7 +36,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
       });
   }
 
-  ensureCorrectStage(checklist: API.Checklist): boolean {
+  private ensureCorrectStage(checklist: API.Checklist): boolean {
     const stages = checklist.Config && checklist.Config.Stages || [];
     const checklistRef = this.props.checklistRef;
     if (stages.length) {
@@ -54,7 +54,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
     return false;
   }
 
-  navigateToStage(stage: string) {
+  private navigateToStage(stage: string) {
     const checklistRef = this.props.checklistRef;
     if (stage === '') {
       location.pathname = `/${checklistRef.Owner}/${checklistRef.Repo}/pull/${checklistRef.Number}`;
@@ -63,13 +63,13 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
     }
   }
 
-  handleOnClickChecklistItem = (item: API.ChecklistItem): React.ChangeEventHandler<HTMLInputElement> => {
+  private handleOnClickChecklistItem = (item: API.ChecklistItem): React.ChangeEventHandler<HTMLInputElement> => {
     return (ev: React.ChangeEvent<HTMLInputElement>) => {
       const checked = ev.target.checked;
 
       this.setState((prevState: ChecklistState, props) => {
         prevState.checklist.Items.forEach((it) => {
-          if (it.Number == item.Number) {
+          if (it.Number === item.Number) {
             console.log(it);
             if (checked) {
               it.CheckedBy = it.CheckedBy.concat(this.state.me);
@@ -85,22 +85,22 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
         .then((data) => {
           this.setState({
             checklist: data.Checklist,
+            loading: false,
             me: data.Me,
-            loading: false
           });
         });
-    }
+    };
   }
 
-  handleOnSelectStage = (ev: React.ChangeEvent<HTMLSelectElement>) => {
+  private handleOnSelectStage = (ev: React.ChangeEvent<HTMLSelectElement>) => {
     this.navigateToStage(ev.target.value);
   }
 
-  itemIsCheckedByMe(item: API.ChecklistItem): boolean {
-    return item.CheckedBy.findIndex((user) => user.ID == this.state.me.ID) !== -1;
+  private itemIsCheckedByMe(item: API.ChecklistItem): boolean {
+    return item.CheckedBy.findIndex((user) => user.ID === this.state.me.ID) !== -1;
   }
 
-  checklistStages(): string[] {
+  private checklistStages(): string[] {
     if (this.state.checklist && this.state.checklist.Config) {
       return this.state.checklist.Config.Stages || [];
     }
@@ -108,14 +108,14 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
     return [];
   }
 
-  completed(): boolean {
-    let checklist = this.state.checklist;
+  private completed(): boolean {
+    const checklist = this.state.checklist;
     if (!checklist) return false;
 
     return checklist.Items.every((item) => item.CheckedBy.length > 0);
   }
 
-  render() {
+  public render() {
     if (this.state.error) {
       return <pre className="error">{this.state.error}</pre>;
     }
@@ -129,14 +129,19 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
 
     return <section className={this.completed() ? 'completed' : ''}>
       <nav>
-        <div className="logo"><strong>{checklist.Owner}/{checklist.Repo}#{checklist.Number}{checklist.IsPrivate ? <span className="lock-icon">🔒</span> : ''}</strong></div>
+        <div className="logo">
+          <strong>
+            {checklist.Owner}/{checklist.Repo}#{checklist.Number}
+            {checklist.IsPrivate ? <span className="lock-icon">🔒</span> : ''}
+          </strong>
+        </div>
         <div className="stages">
         {
           stages.length ?
             <select className="stages" value={this.props.checklistRef.Stage} onChange={this.handleOnSelectStage}>
               {
                 stages.map((stage) =>
-                  <option key={`stage-${stage}`}>{stage}</option>
+                  <option key={`stage-${stage}`}>{stage}</option>,
                 )
               }
             </select>
@@ -154,7 +159,10 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
           {
             checklist.Items.map((item) => {
               return <li key={`item-${item.Number}`}>
-                <input type="checkbox" onChange={this.handleOnClickChecklistItem(item)} checked={this.itemIsCheckedByMe(item)} />
+                <input
+                  type="checkbox"
+                  onChange={this.handleOnClickChecklistItem(item)}
+                  checked={this.itemIsCheckedByMe(item)} />
                 <span className="number"><a href={item.URL}>#{item.Number}</a></span>
                 {' '}
                 <span className="title">{item.Title}</span>
