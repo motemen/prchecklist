@@ -86,7 +86,7 @@ func (web *Web) Handler() http.Handler {
 	router.Handle("/api/check", httpHandler(web.handleAPICheck)).Methods("PUT", "DELETE")
 	router.Handle("/{owner}/{repo}/pull/{number}", httpHandler(web.handleChecklist))
 	router.Handle("/{owner}/{repo}/pull/{number}/{stage}", httpHandler(web.handleChecklist))
-	router.PathPrefix("/js/").Handler(httpHandler(web.handleStaticJS))
+	router.PathPrefix("/js/").Handler(http.FileServer(Assets))
 
 	if behindProxy {
 		return handlers.ProxyHeaders(router)
@@ -353,18 +353,5 @@ func (web *Web) handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 
 func (web *Web) handleChecklist(w http.ResponseWriter, req *http.Request) error {
 	fmt.Fprint(w, htmlContent)
-	return nil
-}
-
-func (web *Web) handleStaticJS(w http.ResponseWriter, req *http.Request) error {
-	path := "static" + req.URL.Path
-
-	b, err := Asset(path)
-	if err != nil {
-		http.NotFound(w, req)
-		return nil
-	}
-
-	w.Write(b)
 	return nil
 }

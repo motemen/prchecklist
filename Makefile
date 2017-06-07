@@ -1,7 +1,7 @@
 BIN = prechecklist
 TOOLDIR = internal/bin
 
-GOBINDATA = internal/bin/go-bindata
+GOASSETSBUILDER = internal/bin/go-assets-builder
 
 $(BIN):
 	go build -i -v ./cmd/prchecklist
@@ -14,13 +14,13 @@ develop:
 	yarn run webpack-dev-server & \
 	    { git ls-files lib | entr -r sh -c 'make && ./prchecklist --listen localhost:8081'; }
 
-lib/web/bindata.go: static/js/bundle.js $(GOBINDATA)
-	$(GOBINDATA) -nometadata -pkg web -o $@ static/js
+lib/web/assets.go: static/js/bundle.js $(GOASSETSBUILDER)
+	go-assets-builder -p web -o $@ -s /static static/js
 
 static/js/bundle.js: always
 	yarn run webpack -- -p --progress
 
-$(GOBINDATA):
-	which $(GOBINDATA) || GOBIN=$(abspath $(TOOLDIR)) go get -v github.com/jteeuwen/go-bindata/go-bindata
+$(GOASSETSBUILDER):
+	which $(GOASSETSBUILDER) || GOBIN=$(abspath $(TOOLDIR)) go get -v github.com/jessevdk/go-assets-builder
 
 always:

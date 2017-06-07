@@ -84,6 +84,12 @@
 			"versionExact": "v1.1"
 		},
 		{
+			"checksumSHA1": "Cq9h7eDNXXyR/qJPvO8/Rk4pmFg=",
+			"path": "github.com/jessevdk/go-assets",
+			"revision": "4f4301a06e153ff90e17793577ab6bf79f8dc5c5",
+			"revisionTime": "2016-09-21T14:41:39Z"
+		},
+		{
 			"checksumSHA1": "hcdoiWqBEW4p4CYZLsVz4Ij2Z8c=",
 			"path": "github.com/motemen/go-graphql-query",
 			"revision": "01c39f52ab0b3fbaa6ff5d8a18fff582dcd91f7e",
