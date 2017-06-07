@@ -1,1 +1,2 @@
 /static/js/* -diff
+/lib/web/assets.go -diff
