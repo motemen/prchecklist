@@ -93,10 +93,20 @@ type githubPullRequest struct {
 			GraphQLArguments struct {
 				Number int `graphql:"$number,notnull"`
 			}
-			Title   string
-			Number  int
-			Body    string
-			URL     string
+			Title  string
+			Number int
+			Body   string
+			URL    string
+			Author struct {
+				Login string
+			}
+			Assignees struct {
+				Edges []struct {
+					Node struct {
+						Login string
+					}
+				}
+			} `graphql:"(first: 1)"`
 			BaseRef struct {
 				Name string
 			}
@@ -284,6 +294,14 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 		Repo:      ref.Repo,
 		Number:    ref.Number,
 		Commits:   graphqlResultToCommits(qr),
+		User: prchecklist.GitHubUserSimple{
+			Login: qr.Repository.PullRequest.Author.Login,
+		},
+	}
+
+	// prefer assignee
+	if len(qr.Repository.PullRequest.Assignees.Edges) > 0 {
+		pullReq.User.Login = qr.Repository.PullRequest.Assignees.Edges[0].Node.Login
 	}
 
 	for _, e := range qr.Repository.PullRequest.HeadRef.Target.Tree.Entries {

@@ -67,6 +67,11 @@ nav .logo {
     margin-bottom: 10px;
 }
 
+.items li > .user {
+    @extend .uk-text-small;
+    @extend .uk-text-muted;
+}
+
 nav .logo strong {
     background-color: #333;
     color: #FFF;

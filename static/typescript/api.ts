@@ -29,6 +29,9 @@ export interface ChecklistItem {
   Repo: string;
   Title: string;
   URL: string;
+  User: {
+    Login: string;
+  };
 }
 
 export interface Commit {

@@ -167,6 +167,8 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
                 {' '}
                 <span className="title">{item.Title}</span>
                 {' '}
+                <span className="user">@{item.User.Login}</span>
+                {' '}
                 <span className="checkedby">
                 {
                   item.CheckedBy.map((user) => {

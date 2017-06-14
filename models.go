@@ -129,15 +129,19 @@ type PullRequest struct {
 	Repo      string
 	Number    int
 	IsPrivate bool
-	// Assignees []GitHubUser
+	User      GitHubUserSimple
 
-	// Filled for "main" pull reqs
+	// Filled for "base" pull reqs
 	Commits      []Commit
 	ConfigBlobID string
 }
 
 type Commit struct {
 	Message string
+}
+
+type GitHubUserSimple struct {
+	Login string
 }
 
 type GitHubUser struct {
