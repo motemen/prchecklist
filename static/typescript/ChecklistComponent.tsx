@@ -154,22 +154,24 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
         <span className="title"><a href={checklist.URL}>#{checklist.Number}</a> {checklist.Title}</span>
       </h1>
       <pre>{checklist.Body}</pre>
-      <div className="items">
+      <div id="checklist-items" className="items">
         <ul>
           {
             checklist.Items.map((item) => {
               return <li key={`item-${item.Number}`}>
-                <input
-                  type="checkbox"
-                  onChange={this.handleOnClickChecklistItem(item)}
-                  checked={this.itemIsCheckedByMe(item)} />
-                <span className="number"><a href={item.URL}>#{item.Number}</a></span>
+                <div className="check">
+                  <input
+                    type="checkbox"
+                    onChange={this.handleOnClickChecklistItem(item)}
+                    checked={this.itemIsCheckedByMe(item)} />
+                </div>
+                <div className="number"><a href={item.URL}>#{item.Number}</a></div>
                 {' '}
-                <span className="title">{item.Title}</span>
+                <div className="title" title={item.Title}>{item.Title}</div>
                 {' '}
-                <span className="user">@{item.User.Login}</span>
+                <div className="user">@{item.User.Login}</div>
                 {' '}
-                <span className="checkedby">
+                <div className="checkedby">
                 {
                   item.CheckedBy.map((user) => {
                     return <span className="user" key={`item-${item.Number}-checkedby-${user.ID}`}>
@@ -177,7 +179,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
                     </span>;
                   })
                 }
-                </span>
+                </div>
               </li>;
             })
           }

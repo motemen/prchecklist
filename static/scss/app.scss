@@ -16,10 +16,16 @@ body {
 }
 
 #main {
-    @extend .uk-width-1-1\@s;
+    width: 100%;
+
     @extend .uk-width-3-5\@m;
-    @extend .uk-width-xxlarge\@l;
-    padding: 1em;
+    @media (min-width: $breakpoint-large) {
+        width: 960px;
+    }
+
+    > section {
+        margin: 1em;
+    }
 }
 
 h1 {
@@ -38,10 +44,6 @@ ul {
     list-style: none;
     padding: 0;
     margin: 0;
-}
-
-li {
-    margin-bottom: 0.75em;
 }
 
 input[type="checkbox"] {
@@ -67,9 +69,25 @@ nav .logo {
     margin-bottom: 10px;
 }
 
-.items li > .user {
-    @extend .uk-text-small;
-    @extend .uk-text-muted;
+#checklist-items {
+    li {
+        @extend .uk-grid;
+        @extend .uk-grid-collapse;
+        margin-bottom: 0.75em;
+
+        .title {
+            @extend .uk-text-truncate;
+            @extend .uk-width-expand;
+        }
+        .title, > .user {
+            margin: 0 0.5em;
+        }
+        > .user {
+            @extend .uk-text-small;
+            @extend .uk-text-muted;
+            line-height: inherit;
+        }
+    }
 }
 
 nav .logo strong {
@@ -119,4 +137,7 @@ nav .stages {
 
 #index-pullRequets {
     margin-top: 40px;
+    h2 {
+        margin-top: 20px;
+    }
 }
