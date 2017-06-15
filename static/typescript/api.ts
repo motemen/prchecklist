@@ -3,6 +3,11 @@ export interface ChecklistResponse {
   Me: GitHubUser;
 }
 
+export interface MeResponse {
+  Me: GitHubUser;
+  PullRequests: { [name: string]: { URL: string; Title: string; Number: number; }[] };
+};
+
 export interface Checklist {
   Body: string;
   Commits: Commit[];
@@ -84,7 +89,7 @@ export function setCheck(ref: ChecklistRef, featNum: number, checked: boolean): 
     });
 }
 
-export function getMe(): Promise<GitHubUser> {
+export function getMe(): Promise<MeResponse> {
   return fetch('/api/me', {
       credentials: 'same-origin',
     })

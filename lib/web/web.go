@@ -235,9 +235,25 @@ func (web *Web) getAuthInfo(w http.ResponseWriter, req *http.Request) (*prcheckl
 	return user, nil
 }
 
+type apiMeResult struct {
+	Me           *prchecklist.GitHubUser
+	PullRequests map[string][]*prchecklist.PullRequest
+}
+
 func (web *Web) handleAPIMe(w http.ResponseWriter, req *http.Request) error {
 	u, _ := web.getAuthInfo(w, req)
-	return renderJSON(w, u)
+	result := apiMeResult{Me: u}
+	if u != nil {
+		ctx := prchecklist.RequestContext(req)
+		ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, u.HTTPClient(ctx))
+		var err error
+		result.PullRequests, err = web.app.GetRecentPullRequests(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	return renderJSON(w, &result)
 }
 
 func (web *Web) handleAPIChecklist(w http.ResponseWriter, req *http.Request) error {

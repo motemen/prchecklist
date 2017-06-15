@@ -19,17 +19,38 @@ if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/.test(location.pathname)) {
     document.querySelector('#main'),
   );
 } else {
-  API.getMe().then((me) => {
+  API.getMe().then((data) => {
     ReactDOM.render(
-      <nav>
-        <div className="logo"><strong>prchecklist</strong></div>
-        <div className="stages"></div>
+      <section>
+        <nav>
+          <div className="logo"><strong>prchecklist</strong></div>
+          <div className="stages"></div>
+          {
+            data.Me
+              ? <div className="user-signedin">{data.Me.Login}</div>
+              : <a className="user-signedin" href="/auth">Login</a>
+          }
+        </nav>
         {
-          me
-            ? <div className="user-signedin">{me.Login}</div>
-            : <a className="user-signedin" href="/auth">Login</a>
+          data.PullRequests ?
+            <section id="index-pullRequets">
+            {
+              Object.keys(data.PullRequests).map((repoPath: string) =>
+                <div key={`repo-${repoPath}`}>
+                  <h2>{repoPath}</h2>
+                  <ul>
+                  {
+                    data.PullRequests[repoPath].map((pr) =>
+                      <li key={`repo-${repoPath}-pr-${pr.Number}`}><a href={`${repoPath}/pull/${pr.Number}`}>#{pr.Number} {pr.Title}</a></li>
+                    )
+                  }
+                  </ul>
+                </div>
+              )
+            }
+            </section> : []
         }
-      </nav>,
+      </section>,
       document.querySelector('#main'),
     );
   });

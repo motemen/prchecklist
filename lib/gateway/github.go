@@ -146,6 +146,27 @@ type githubPullRequest struct {
 	}
 }
 
+type githubRecentPullRequests struct {
+	Viewer struct {
+		Repositories struct {
+			Edges []struct {
+				Node struct {
+					NameWithOwner string
+					PullRequests  struct {
+						Edges []struct {
+							Node struct {
+								Title  string
+								Number int
+								URL    string
+							}
+						}
+					} `graphql:"(first: 5, orderBy: {field: UPDATED_AT, direction: DESC}, baseRefName: \"master\")"`
+				}
+			}
+		} `graphql:"(first: 10, orderBy: {field: PUSHED_AT, direction: DESC}, affiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR])"`
+	}
+}
+
 type githubPullRequsetVars struct {
 	Owner        string `json:"owner"`
 	Repo         string `json:"repo"`
@@ -161,7 +182,10 @@ type graphQLResult struct {
 	}
 }
 
-var pullRequestQuery string
+var (
+	pullRequestQuery        string
+	recentPullRequestsQuery string
+)
 
 func init() {
 	b, err := graphqlquery.Build(&githubPullRequest{})
@@ -169,6 +193,12 @@ func init() {
 		panic(err)
 	}
 	pullRequestQuery = string(b)
+
+	b, err = graphqlquery.Build(&githubRecentPullRequests{})
+	if err != nil {
+		panic(err)
+	}
+	recentPullRequestsQuery = string(b)
 }
 
 func (g githubGateway) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
@@ -260,6 +290,33 @@ func (g githubGateway) GetPullRequest(ctx context.Context, ref prchecklist.Check
 	g.cache.Set(cacheKey, pullReq, cacheDuration)
 
 	return pullReq, contextWithRepoAccessRight(ctx, ref), nil
+}
+
+func (g githubGateway) GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error) {
+	var result githubRecentPullRequests
+	err := g.queryGraphQL(ctx, recentPullRequestsQuery, nil, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	pullRequests := map[string][]*prchecklist.PullRequest{}
+	for _, edge := range result.Viewer.Repositories.Edges {
+		repo := edge.Node
+		if len(repo.PullRequests.Edges) == 0 {
+			continue
+		}
+		pullRequests[repo.NameWithOwner] = make([]*prchecklist.PullRequest, len(repo.PullRequests.Edges))
+		for i, edge := range repo.PullRequests.Edges {
+			pullReq := edge.Node
+			pullRequests[repo.NameWithOwner][i] = &prchecklist.PullRequest{
+				Title:  pullReq.Title,
+				URL:    pullReq.URL,
+				Number: pullReq.Number,
+			}
+		}
+	}
+
+	return pullRequests, nil
 }
 
 func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {
