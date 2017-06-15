@@ -96,16 +96,16 @@
 			"revisionTime": "2017-06-05T23:56:15Z"
 		},
 		{
-			"checksumSHA1": "3M9tWNMKJ1aa29RPdx5UJKSv96k=",
+			"checksumSHA1": "JKZIVzMaIQOWgQciEnrCYBk7IqM=",
 			"path": "github.com/motemen/go-loghttp",
-			"revision": "f1552ae0d8e6d1980d67843f78b761a5fade8f67",
-			"revisionTime": "2014-12-02T04:36:16Z"
+			"revision": "154f4234ae1b5f25b2bcd04c52f5f5bf63d67771",
+			"revisionTime": "2017-06-15T00:06:47Z"
 		},
 		{
 			"checksumSHA1": "zifdW4ZhpVtqG4r2IhpndObZ7GU=",
 			"path": "github.com/motemen/go-loghttp/global",
-			"revision": "f1552ae0d8e6d1980d67843f78b761a5fade8f67",
-			"revisionTime": "2014-12-02T04:36:16Z"
+			"revision": "154f4234ae1b5f25b2bcd04c52f5f5bf63d67771",
+			"revisionTime": "2017-06-15T00:06:47Z"
 		},
 		{
 			"checksumSHA1": "kEs6qJ1fxy4nwNELqR/7b15JbhQ=",
