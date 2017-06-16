@@ -114,6 +114,12 @@
 			"revisionTime": "2017-05-31T04:02:05Z"
 		},
 		{
+			"checksumSHA1": "qqHxnr3YpSvLTTs0d77291P3lhQ=",
+			"path": "github.com/motemen/go-nuts/roundtime",
+			"revision": "d9d22c657fba7f90792ed44a0f6fda4851e77441",
+			"revisionTime": "2017-05-31T04:02:05Z"
+		},
+		{
 			"checksumSHA1": "u+3mJIAWj+u0Ovc53w2zWNaj830=",
 			"path": "github.com/patrickmn/go-cache",
 			"revision": "ea4bd2a538d816ad2bd3426ced3a99f2382103ba",
