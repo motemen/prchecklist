@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -221,7 +222,11 @@ func (g githubGateway) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef
 }
 
 func (g githubGateway) getBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
-	gh := github.NewClient(prchecklist.ContextClient(ctx))
+	gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
+	if err != nil {
+		return nil, err
+	}
+
 	blob, _, err := gh.Git.GetBlob(ctx, ref.Owner, ref.Repo, sha)
 	if err != nil {
 		return nil, err
@@ -433,15 +438,30 @@ func (g githubGateway) AuthCodeURL(code string) string {
 	return g.oauth2Config.AuthCodeURL(code)
 }
 
+func (g githubGateway) newGitHubClient(base *http.Client) (*github.Client, error) {
+	client := github.NewClient(base)
+	if g.apiBase != "https://api.github.com" {
+		var err error
+		client.BaseURL, err = url.Parse(g.apiBase + "/")
+		if err != nil {
+			return nil, err
+		}
+	}
+	return client, nil
+}
+
 func (g githubGateway) AuthenticateUser(ctx context.Context, code string) (*prchecklist.GitHubUser, error) {
 	token, err := g.oauth2Config.Exchange(ctx, code)
 	if err != nil {
 		return nil, err
 	}
 
-	client := github.NewClient(
+	client, err := g.newGitHubClient(
 		oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	u, _, err := client.Users.Get(ctx, "")
 	if err != nil {
