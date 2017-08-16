@@ -16,6 +16,10 @@ Register an OAuth application [on GitHub](https://github.com/settings/applicatio
 
     $ make # builds "prchecklist" stand-alone binary
 
+## Releases
+
+Release binaries are on [Releases page](https://github.com/motemen/prchecklist/releases). They are uploaded by [Travis CI](https://travis-ci.org/motemen/prchecklist).
+
 [Go]: https://golang.org/
 [yarn]: https://yarnpkg.com/
 [entr]: http://entrproject.org/
