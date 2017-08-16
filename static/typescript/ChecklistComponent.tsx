@@ -117,7 +117,18 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
 
   public render() {
     if (this.state.error) {
-      return <pre className="error">{this.state.error}</pre>;
+      return <section>
+        <nav>
+          <div className="logo"><strong>prchecklist</strong></div>
+          <div className="stages"></div>
+          {
+            this.state.me
+              ? <div className="user-signedin">{this.state.me.Login}</div>
+              : <a className="user-signedin" href="/auth">Login</a>
+          }
+        </nav>
+        <pre className="error">{this.state.error}</pre>
+      </section>;
     }
 
     const checklist = this.state.checklist;
