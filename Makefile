@@ -1,9 +1,9 @@
-BIN = prechecklist
+BIN = prchecklist
 TOOLDIR = internal/bin
 
 GOASSETSBUILDER = internal/bin/go-assets-builder
 
-$(BIN):
+$(BIN): lib/web/assets.go
 	go build -i -v ./cmd/prchecklist
 
 test:
