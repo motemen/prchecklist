@@ -164,7 +164,6 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
       <h1>
         <span className="title"><a href={checklist.URL}>#{checklist.Number}</a> {checklist.Title}</span>
       </h1>
-      <pre>{checklist.Body}</pre>
       <div id="checklist-items" className="items">
         <ul>
           {
@@ -196,6 +195,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
           }
         </ul>
       </div>
+      <pre>{checklist.Body}</pre>
     </section>;
   }
 }
