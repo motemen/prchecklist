@@ -17,7 +17,7 @@ develop:
 	    { git ls-files lib | entr -r sh -c 'make && ./prchecklist --listen localhost:8081'; }
 
 lib/web/assets.go: static/js/bundle.js $(GOASSETSBUILDER)
-	go-assets-builder -p web -o $@ -s /static static/js
+	$(GOASSETSBUILDER) -p web -o $@ -s /static static/js
 
 static/js/bundle.js: $(bundle_sources)
 	yarn run webpack -- -p --progress
