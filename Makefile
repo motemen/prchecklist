@@ -3,6 +3,8 @@ TOOLDIR = internal/bin
 
 GOASSETSBUILDER = internal/bin/go-assets-builder
 
+bundle_sources = $(wildcard static/typescript/* static/scss/*)
+
 $(BIN): lib/web/assets.go
 	go build -i -v ./cmd/prchecklist
 
@@ -17,7 +19,7 @@ develop:
 lib/web/assets.go: static/js/bundle.js $(GOASSETSBUILDER)
 	go-assets-builder -p web -o $@ -s /static static/js
 
-static/js/bundle.js: always
+static/js/bundle.js: $(bundle_sources)
 	yarn run webpack -- -p --progress
 
 $(GOASSETSBUILDER):
