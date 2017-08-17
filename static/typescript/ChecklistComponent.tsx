@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as API from './api';
+import {NavComponent} from './NavComponent';
 
 interface ChecklistProps {
   checklistRef: API.ChecklistRef;
@@ -118,15 +119,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
   public render() {
     if (this.state.error) {
       return <section>
-        <nav>
-          <div className="logo"><strong>prchecklist</strong></div>
-          <div className="stages"></div>
-          {
-            this.state.me
-              ? <div className="user-signedin">{this.state.me.Login}</div>
-              : <a className="user-signedin" href="/auth">Login</a>
-          }
-        </nav>
+        <NavComponent me={this.state.me} />
         <pre className="error">{this.state.error}</pre>
       </section>;
     }
@@ -139,28 +132,28 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
     const stages = this.checklistStages();
 
     return <section className={this.completed() ? 'completed' : ''}>
-      <nav>
-        <div className="logo">
-          <strong>
+      <NavComponent
+        logo={
+          <span>
             {checklist.Owner}/{checklist.Repo}#{checklist.Number}
             {checklist.IsPrivate ? <span className="lock-icon">🔒</span> : ''}
-          </strong>
-        </div>
-        <div className="stages">
-        {
+          </span>
+        }
+        stages={
           stages.length ?
-            <select className="stages" value={this.props.checklistRef.Stage} onChange={this.handleOnSelectStage}>
+            <select
+              className="stages"
+              value={this.props.checklistRef.Stage}
+              onChange={this.handleOnSelectStage}>
               {
                 stages.map((stage) =>
                   <option key={`stage-${stage}`}>{stage}</option>,
                 )
               }
             </select>
-            : []
+            : null
         }
-        </div>
-        <div className="user-signedin">{this.state.me.Login}</div>
-      </nav>
+        me={this.state.me} />
       <h1>
         <span className="title"><a href={checklist.URL}>#{checklist.Number}</a> {checklist.Title}</span>
       </h1>

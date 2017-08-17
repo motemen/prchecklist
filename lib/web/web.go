@@ -36,10 +36,18 @@ const (
 	sessionKeyGitHubUser = "githubUser"
 )
 
-const htmlContent = `<!DOCTYPE html>
-<meta name=viewport content="width=device-width">
-<body><div id="main"></div></body>
-<script src="/js/bundle.js"></script>
+var htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta name=viewport content="width=device-width">
+  <meta name="prchecklist version" content="` + prchecklist.Version + `">
+  <title>prchecklist</title>
+</head>
+<body>
+  <div id="main"></div>
+  <script src="/js/bundle.js"></script>
+</body>
+</html>
 `
 
 var sessionStore sessions.Store

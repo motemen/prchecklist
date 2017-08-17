@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 
 import * as API from './api';
 import {ChecklistComponent} from './ChecklistComponent';
+import {NavComponent} from './NavComponent';
 
 import '../scss/app.scss';
 
@@ -22,15 +23,7 @@ if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/.test(location.pathname)) {
   API.getMe().then((data) => {
     ReactDOM.render(
       <section>
-        <nav>
-          <div className="logo"><strong>prchecklist</strong></div>
-          <div className="stages"></div>
-          {
-            data.Me
-              ? <div className="user-signedin">{data.Me.Login}</div>
-              : <a className="user-signedin" href="/auth">Login</a>
-          }
-        </nav>
+        <NavComponent me={data.Me} />
         {
           data.PullRequests ?
             <section id="index-pullRequets">
