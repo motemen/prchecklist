@@ -1,6 +1,8 @@
 language: go
 go:
   - 1.8
+  - 1.9
+  - tip
 install:
   - go get -v github.com/mitchellh/gox
 script:
@@ -15,5 +17,5 @@ deploy:
   file: build/*
   on:
     repo: motemen/prchecklist
-    condition: $TRAVIS_GO_VERSION =~ ^1\.8
+    condition: $TRAVIS_GO_VERSION =~ ^1\.9
     tags: true

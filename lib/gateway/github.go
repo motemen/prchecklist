@@ -57,11 +57,6 @@ func NewGitHub() (*githubGateway, error) {
 		TokenURL: "https://" + githubDomain + "/login/oauth/access_token",
 	}
 
-	apiBase := "https://api.github.com"
-	if githubDomain != "github.com" {
-		apiBase = "https://" + githubDomain + "/api/v3"
-	}
-
 	return &githubGateway{
 		cache: cache.New(30*time.Second, 10*time.Minute),
 		oauth2Config: &oauth2.Config{
@@ -70,14 +65,14 @@ func NewGitHub() (*githubGateway, error) {
 			Endpoint:     githubEndpoint,
 			Scopes:       []string{"repo"},
 		},
-		apiBase: apiBase,
+		domain: githubDomain,
 	}, nil
 }
 
 type githubGateway struct {
 	cache        *cache.Cache
 	oauth2Config *oauth2.Config
-	apiBase      string
+	domain       string
 }
 
 type githubPullRequest struct {
@@ -141,9 +136,6 @@ type githubPullRequest struct {
 				TotalCount int
 			} `graphql:"@include(if: $isBase)"`
 		}
-	}
-	RateLimit struct {
-		Remaining int
 	}
 }
 
@@ -396,6 +388,14 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 	return pullReq, nil
 }
 
+func (g githubGateway) graphqlEndpoint() string {
+	if g.domain == "github.com" {
+		return "https://api.github.com/graphql"
+	} else {
+		return "https://" + g.domain + "/api/graphql"
+	}
+}
+
 func (g githubGateway) queryGraphQL(ctx context.Context, query string, variables interface{}, value interface{}) error {
 	client := prchecklist.ContextClient(ctx)
 
@@ -407,7 +407,7 @@ func (g githubGateway) queryGraphQL(ctx context.Context, query string, variables
 		return err
 	}
 
-	req, err := http.NewRequest("POST", g.apiBase+"/graphql", &buf)
+	req, err := http.NewRequest("POST", g.graphqlEndpoint(), &buf)
 	if err != nil {
 		return err
 	}
@@ -440,9 +440,9 @@ func (g githubGateway) AuthCodeURL(code string) string {
 
 func (g githubGateway) newGitHubClient(base *http.Client) (*github.Client, error) {
 	client := github.NewClient(base)
-	if g.apiBase != "https://api.github.com" {
+	if g.domain != "github.com" {
 		var err error
-		client.BaseURL, err = url.Parse(g.apiBase + "/")
+		client.BaseURL, err = url.Parse("https://" + g.domain + "/api/v3/")
 		if err != nil {
 			return nil, err
 		}
