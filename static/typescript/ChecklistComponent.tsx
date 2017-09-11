@@ -64,9 +64,9 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
     }
   }
 
-  private handleOnClickChecklistItem = (item: API.ChecklistItem): React.ChangeEventHandler<HTMLInputElement> => {
-    return (ev: React.ChangeEvent<HTMLInputElement>) => {
-      const checked = ev.target.checked;
+  private handleOnClickChecklistItem = (item: API.ChecklistItem): React.MouseEventHandler<HTMLElement> => {
+    return (ev: React.MouseEvent<HTMLElement>) => {
+      const checked = !this.itemIsCheckedByMe(item);
 
       this.setState((prevState: ChecklistState, props) => {
         prevState.checklist.Items.forEach((it) => {
@@ -132,6 +132,7 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
     const stages = this.checklistStages();
 
     return <section className={this.completed() ? 'completed' : ''}>
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
       <NavComponent
         logo={
           <span>
@@ -163,10 +164,9 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
             checklist.Items.map((item) => {
               return <li key={`item-${item.Number}`}>
                 <div className="check">
-                  <input
-                    type="checkbox"
-                    onChange={this.handleOnClickChecklistItem(item)}
-                    checked={this.itemIsCheckedByMe(item)} />
+                  <button
+                    className={`checkbox material-icons ${this.itemIsCheckedByMe(item) && 'checked'}`}
+                    onClick={this.handleOnClickChecklistItem(item)}>thumb_up</button>
                 </div>
                 <div className="number"><a href={item.URL}>#{item.Number}</a></div>
                 {' '}

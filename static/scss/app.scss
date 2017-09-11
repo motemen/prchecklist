@@ -88,6 +88,19 @@ nav .logo {
             line-height: inherit;
         }
     }
+    .check .checkbox {
+        border: 0;
+        padding: 5px;
+        background: transparent;
+        color: #CCC;
+        margin-right: 18px;
+        vertical-align: middle;
+        font-size: 28px;
+        cursor: pointer;
+        &.checked {
+            color: $global-link-color;
+        }
+    }
 }
 
 nav .logo strong {
