@@ -46,19 +46,11 @@ ul {
     margin: 0;
 }
 
-input[type="checkbox"] {
-    @extend .uk-checkbox;
-    margin-right: 1em;
-    vertical-align: middle;
-    cursor: pointer;
-    width: 24px;
-    height: 24px;
-}
-
 .user img {
     @extend .uk-border-circle;
     height: 28px;
     float: right;
+    margin-left: 3px;
 }
 
 nav {
@@ -87,6 +79,30 @@ nav .logo {
             @extend .uk-text-muted;
             line-height: inherit;
         }
+    }
+    .check .checkbox {
+        border: 0;
+        padding: 5px;
+        background: transparent;
+        color: #DDD;
+        margin-right: 18px;
+        vertical-align: middle;
+        font-size: 28px;
+        cursor: pointer;
+        &:focus {
+            outline: none;
+            color: darken(#DDD, 10%);
+        }
+        &.checked {
+            color: $global-link-color;
+            &:focus {
+                color: lighten($global-link-color, 10%);
+            }
+        }
+        -webkit-transition: 0.1s ease-in-out;
+        transition: 0.1s ease-in-out;
+        -webkit-transition-property: color, background-color, border-color;
+        transition-property: color, background-color, border-color;
     }
 }
 
