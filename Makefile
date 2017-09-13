@@ -3,13 +3,14 @@ TOOLDIR = internal/bin
 
 GOASSETSBUILDER = $(TOOLDIR)/go-assets-builder
 REFLEX = $(TOOLDIR)/reflex
+MOCKGEN = $(TOOLDIR)/mockgen
 
 bundle_sources = $(wildcard static/typescript/* static/scss/*)
 
 $(BIN): lib/web/assets.go always
 	go build -ldflags "-X github.com/motemen/prchecklist.Version=$$(git describe --tags HEAD)" -i -v ./cmd/prchecklist
 
-test:
+test: lib/web/web_mock_test.go
 	go vet . ./lib/...
 	go test -cover . ./lib/...
 
@@ -29,5 +30,10 @@ $(GOASSETSBUILDER):
 $(REFLEX):
 	which $(REFLEX) || GOBIN=$(abspath $(TOOLDIR)) go get -v github.com/cespare/reflex
 
+$(MOCKGEN):
+	which $(MOCKGEN) || GOBIN=$(abspath $(TOOLDIR)) go get -v gobin.cc/mockgen
+
+lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
+	$(MOCKGEN) -package web -source $< GitHubGateway > $@
 
 always:
