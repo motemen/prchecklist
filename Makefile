@@ -11,7 +11,7 @@ $(BIN): lib/web/assets.go always
 
 test:
 	go vet . ./lib/...
-	go test -cover . ./lib/...
+	./scripts/go-test-cover . ./lib/...
 
 develop: $(REFLEX)
 	yarn run webpack-dev-server & \
@@ -28,6 +28,5 @@ $(GOASSETSBUILDER):
 
 $(REFLEX):
 	which $(REFLEX) || GOBIN=$(abspath $(TOOLDIR)) go get -v github.com/cespare/reflex
-
 
 always:
