@@ -7,7 +7,7 @@ install:
   - go get -v github.com/mitchellh/gox
 script:
   - make test
-  - gox -os linux -arch amd64 -output "build/{{.Dir}}_{{.OS}}_{{.Arch}}" ./cmd/prchecklist
+  - gox -os linux -arch amd64 -output "build/{{.Dir}}_{{.OS}}_{{.Arch}}" -ldflags "-X github.com/motemen/prchecklist.Version=$(git describe --tags HEAD)" ./cmd/prchecklist
 deploy:
   provider: releases
   skip_cleanup: true
