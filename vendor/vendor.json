@@ -16,6 +16,13 @@
 			"versionExact": "v1.3.0"
 		},
 		{
+			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
+		},
+		{
 			"checksumSHA1": "2UmMbNHc8FBr98mJFN1k8ISOIHk=",
 			"path": "github.com/garyburd/redigo/internal",
 			"revision": "95d11dba2d44531bdb8022752b98912baafae03a",
@@ -134,6 +141,25 @@
 			"revisionTime": "2017-05-05T04:36:39Z",
 			"version": "v0.8",
 			"versionExact": "v0.8.0"
+		},
+		{
+			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
+		},
+		{
+			"checksumSHA1": "Bn333k9lTndxU3D6n/G5c+GMcYY=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
+		},
+		{
+			"checksumSHA1": "P9FJpir2c4G5PA46qEkaWy3l60U=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
 		},
 		{
 			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
