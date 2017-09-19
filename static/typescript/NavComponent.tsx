@@ -25,7 +25,7 @@ export class NavComponent extends React.Component<NavProps, NavState> {
       {
         this.props.me
           ? <div className="user-signedin">{this.props.me.Login}</div>
-          : <a className="user-signedin" href="/auth">Login</a>
+          : <a className="user-signedin" href={`/auth?return_to=${encodeURIComponent(location.pathname)}`}>Login</a>
       }
     </nav>;
   }

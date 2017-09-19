@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -60,7 +62,7 @@ func init() {
 }
 
 type GitHubGateway interface {
-	AuthCodeURL(state string) string
+	AuthCodeURL(state string, redirectURI *url.URL) string
 	AuthenticateUser(ctx context.Context, code string) (*prchecklist.GitHubUser, error)
 }
 
@@ -150,7 +152,16 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	http.Redirect(w, req, web.github.AuthCodeURL(state), http.StatusFound)
+	ctx := prchecklist.RequestContext(req)
+
+	callback := prchecklist.BuildURL(ctx, "/auth/callback")
+	if returnTo := req.URL.Query().Get("return_to"); returnTo != "" {
+		callback.RawQuery = url.Values{"return_to": {returnTo}}.Encode()
+	}
+
+	authURL := web.github.AuthCodeURL(state, callback)
+
+	http.Redirect(w, req, authURL, http.StatusFound)
 
 	return nil
 }
@@ -204,7 +215,12 @@ func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) err
 		return err
 	}
 
-	http.Redirect(w, req, "/", http.StatusFound)
+	returnTo := req.URL.Query().Get("return_to")
+	if !strings.HasPrefix(returnTo, "/") {
+		returnTo = "/"
+	}
+
+	http.Redirect(w, req, returnTo, http.StatusFound)
 
 	return nil
 }
