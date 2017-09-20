@@ -1,7 +1,7 @@
-GOASSETSBUILDER = .bin/go-assets-builder
-GOX             = .bin/gox
-MOCKGEN         = .bin/mockgen
-REFLEX          = .bin/reflex
+GOBINDATA = .bin/go-bindata
+GOX       = .bin/gox
+MOCKGEN   = .bin/mockgen
+REFLEX    = .bin/reflex
 
 WEBPACK          = node_modules/.bin/webpack
 WEBPACKDEVSERVER = node_modules/.bin/webpack-dev-server
@@ -9,7 +9,7 @@ WEBPACKDEVSERVER = node_modules/.bin/webpack-dev-server
 GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEAD)
 GOOSARCH  = linux/amd64
 
-go_tools   = $(GOASSETSBUILDER) $(REFLEX) $(MOCKGEN) $(GOX)
+go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX)
 node_tools = $(WEBPACKDEVSERVER) $(WEBPACK)
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
@@ -24,7 +24,7 @@ setup-node: $(node_tools)
 
 $(go_tools): Makefile
 	GOBIN=$(abspath .bin) go get -v \
-	      github.com/jessevdk/go-assets-builder \
+	      gobin.cc/go-bindata \
 	      gobin.cc/reflex \
 	      gobin.cc/mockgen \
 	      gobin.cc/gox
@@ -57,8 +57,8 @@ develop: $(REFLEX) $(WEBPACKDEVSERVER)
 	    { $(REFLEX) -r '\.go\z' -R node_modules -s -- \
 	      sh -c 'make build && ./prchecklist --listen localhost:8081'; }
 
-lib/web/assets.go: static/js/bundle.js $(GOASSETSBUILDER)
-	$(GOASSETSBUILDER) -p web -o $@ -s /static static/js
+lib/web/assets.go: static/js/bundle.js $(GOBINDATA)
+	$(GOBINDATA) -pkg web -o $@ -prefix static/ static/js
 
 static/js/bundle.js: $(bundled_sources)
 	$(WEBPACK) -p --progress
