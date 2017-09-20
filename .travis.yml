@@ -3,6 +3,12 @@ go:
   - 1.8
   - 1.9
   - tip
+cache:
+  - yarn
+  - directories:
+    - node_modules
+    - $GOPATH/src
+    - $GOPATH/pkg
 script:
   - make setup-go
   - make test
