@@ -6,6 +6,7 @@ go:
 script:
   - make setup-go
   - make test
+  - make -t lib/web/assets.go
   - make xbuild
 deploy:
   provider: releases

@@ -30,7 +30,7 @@ $(go_tools): Makefile
 	      gobin.cc/gox
 	@touch .bin/*
 
-$(node_modules): package.json
+$(node_tools): package.json
 	yarn install
 	@touch node_modules/.bin/*
 
@@ -60,7 +60,7 @@ develop: $(REFLEX) $(WEBPACKDEVSERVER)
 lib/web/assets.go: static/js/bundle.js $(GOBINDATA)
 	$(GOBINDATA) -pkg web -o $@ -prefix static/ static/js
 
-static/js/bundle.js: $(bundled_sources)
+static/js/bundle.js: $(bundled_sources) $(WEBPACK)
 	$(WEBPACK) -p --progress
 
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
