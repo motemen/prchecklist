@@ -46,7 +46,10 @@ var htmlContent = `<!DOCTYPE html>
   <title>prchecklist</title>
 </head>
 <body>
-  <div id="main"></div>
+  <div id="container">
+    <div id="main"></div>
+  </div>
+  <footer><a href="https://github.com/motemen/prchecklist">prchecklist</a> ` + prchecklist.Version + `</footer>
   <script src="/js/bundle.js"></script>
 </body>
 </html>
