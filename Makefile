@@ -55,6 +55,7 @@ test: lib/web/web_mock_test.go
 	./scripts/go-test-cover . ./lib/...
 
 develop: $(REFLEX) $(WEBPACKDEVSERVER)
+	test "$$GITHUB_CLIENT_ID" && test "$$GITHUB_CLIENT_SECRET"
 	$(WEBPACKDEVSERVER) & \
 	    { $(REFLEX) -r '\.go\z' -R node_modules -s -- \
 	      sh -c 'make build && ./prchecklist --listen localhost:8081'; }
