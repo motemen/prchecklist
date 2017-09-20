@@ -6,6 +6,6 @@ for pkg in $(go list "$@"); do \
     file="$(go list -f '{{.Dir}}' "$pkg")/coverage.out"
     go test \
         -coverprofile "$file" \
-        "$pkg"
-    test -e "$file" && tail -n+2 "$file" >> coverage-all.out || :
+        "$pkg" || failed=t
+    test -e "$file" && tail -n+2 "$file" >> coverage-all.out
 done

@@ -4,3 +4,5 @@
 /internal/
 coverage.out
 /coverage-all.*
+/build/
+/.bin/
