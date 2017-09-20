@@ -2,6 +2,7 @@ GOBINDATA = .bin/go-bindata
 GOX       = .bin/gox
 MOCKGEN   = .bin/mockgen
 REFLEX    = .bin/reflex
+GOVENDOR  = .bin/govendor
 
 WEBPACK          = node_modules/.bin/webpack
 WEBPACKDEVSERVER = node_modules/.bin/webpack-dev-server
@@ -9,7 +10,7 @@ WEBPACKDEVSERVER = node_modules/.bin/webpack-dev-server
 GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEAD)
 GOOSARCH  = linux/amd64
 
-go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX)
+go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX) $(GOVENDOR)
 node_tools = $(WEBPACKDEVSERVER) $(WEBPACK)
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
@@ -27,7 +28,8 @@ $(go_tools): Makefile
 	      gobin.cc/go-bindata \
 	      gobin.cc/reflex \
 	      gobin.cc/mockgen \
-	      gobin.cc/gox
+	      gobin.cc/gox \
+	      gobin.cc/govendor
 	@touch .bin/*
 
 $(node_tools): package.json
@@ -57,11 +59,14 @@ develop: $(REFLEX) $(WEBPACKDEVSERVER)
 	    { $(REFLEX) -r '\.go\z' -R node_modules -s -- \
 	      sh -c 'make build && ./prchecklist --listen localhost:8081'; }
 
-lib/web/assets.go: static/js/bundle.js $(GOBINDATA)
-	$(GOBINDATA) -pkg web -o $@ -prefix static/ static/js
+lib/web/assets.go: static/js/bundle.js static/text/licenses $(GOBINDATA)
+	$(GOBINDATA) -pkg web -o $@ -prefix static/ static/js static/text
 
 static/js/bundle.js: $(bundled_sources) $(WEBPACK)
 	$(WEBPACK) -p --progress
+
+static/text/licenses: vendor/vendor.json $(GOVENDOR)
+	$(GOVENDOR) license > $@
 
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
 	$(MOCKGEN) -package web -source $< GitHubGateway > $@
