@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/golang/mock/gomock"
+	"github.com/motemen/go-nuts/httputil"
 )
 
 func TestWeb_HandleAuth(t *testing.T) {
@@ -38,5 +39,20 @@ func TestWeb_HandleAuth(t *testing.T) {
 
 	if got, expected := resp.Header.Get("Location"), "http://github-auth-stub"; got != expected {
 		t.Fatalf("Location header differs: %v != %v", got, expected)
+	}
+}
+
+func TestWeb_Static(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	g := NewMockGitHubGateway(ctrl)
+
+	web := New(nil, g)
+	s := httptest.NewServer(web.Handler())
+	defer s.Close()
+
+	_, err := httputil.Succeeding(http.Get(s.URL + "/js/bundle.js"))
+	if err != nil {
+		t.Fatal(err)
 	}
 }

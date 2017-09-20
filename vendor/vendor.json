@@ -23,6 +23,12 @@
 			"revisionTime": "2016-03-05T16:54:46Z"
 		},
 		{
+			"checksumSHA1": "bGdOim32+2dyKoQEtwW1PNwcdBc=",
+			"path": "github.com/elazarl/go-bindata-assetfs",
+			"revision": "9a6736ed45b44bf3835afeebb3034b57ed329f3e",
+			"revisionTime": "2016-08-22T20:44:01Z"
+		},
+		{
 			"checksumSHA1": "2UmMbNHc8FBr98mJFN1k8ISOIHk=",
 			"path": "github.com/garyburd/redigo/internal",
 			"revision": "95d11dba2d44531bdb8022752b98912baafae03a",
@@ -35,6 +41,12 @@
 			"revisionTime": "2017-05-10T23:06:39Z",
 			"version": "v1.1",
 			"versionExact": "v1.1.0"
+		},
+		{
+			"checksumSHA1": "eF2jojWx8CC89wOXJ/A6dTF1F3o=",
+			"path": "github.com/golang/mock/gomock",
+			"revision": "18f6dd13ccdd227b8ebc546ca95cd62a02f3970c",
+			"revisionTime": "2017-08-22T21:49:03Z"
 		},
 		{
 			"checksumSHA1": "EEM/hH2plQnsevU4aK7HM2Tg0co=",
@@ -89,12 +101,6 @@
 			"revisionTime": "2016-08-26T13:13:12Z",
 			"version": "v1.1",
 			"versionExact": "v1.1"
-		},
-		{
-			"checksumSHA1": "Cq9h7eDNXXyR/qJPvO8/Rk4pmFg=",
-			"path": "github.com/jessevdk/go-assets",
-			"revision": "4f4301a06e153ff90e17793577ab6bf79f8dc5c5",
-			"revisionTime": "2016-09-21T14:41:39Z"
 		},
 		{
 			"checksumSHA1": "hcdoiWqBEW4p4CYZLsVz4Ij2Z8c=",

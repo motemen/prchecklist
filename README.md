@@ -8,7 +8,6 @@ Requires [Go][] and [yarn][].
 
 Register an OAuth application [on GitHub](https://github.com/settings/applications/new), with callback URL configured as `http://localhost:8080/auth/callback`. Set OAuth client ID/secret as `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` environment variables respectively.
 
-    $ yarn
     $ make develop
     $ open http://localhost:8080/
 

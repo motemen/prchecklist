@@ -11,6 +11,9 @@ body {
     font-size: 18px;
     margin-top: 1em;
     color: #333;
+}
+
+#container {
     @extend .uk-flex;
     @extend .uk-flex-center;
 }
@@ -26,6 +29,12 @@ body {
     > section {
         margin: 1em;
     }
+}
+
+footer {
+    font-size: small;
+    margin: 20px 0;
+    text-align: center;
 }
 
 h1 {

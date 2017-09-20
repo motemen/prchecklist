@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -46,7 +47,10 @@ var htmlContent = `<!DOCTYPE html>
   <title>prchecklist</title>
 </head>
 <body>
-  <div id="main"></div>
+  <div id="container">
+    <div id="main"></div>
+  </div>
+  <footer><a href="https://github.com/motemen/prchecklist">prchecklist</a> ` + prchecklist.Version + `</footer>
   <script src="/js/bundle.js"></script>
 </body>
 </html>
@@ -96,7 +100,7 @@ func (web *Web) Handler() http.Handler {
 	router.Handle("/api/check", httpHandler(web.handleAPICheck)).Methods("PUT", "DELETE")
 	router.Handle("/{owner}/{repo}/pull/{number}", httpHandler(web.handleChecklist))
 	router.Handle("/{owner}/{repo}/pull/{number}/{stage}", httpHandler(web.handleChecklist))
-	router.PathPrefix("/js/").Handler(http.FileServer(Assets))
+	router.PathPrefix("/js/").Handler(http.FileServer(&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo}))
 
 	if behindProxy {
 		return handlers.ProxyHeaders(router)
