@@ -1,6 +1,8 @@
-# prchecklist
+# prchecklist [![Build Status](https://travis-ci.org/motemen/prchecklist.svg?branch=master)](https://travis-ci.org/motemen/prchecklist) [![Gitter](https://img.shields.io/gitter/room/motemen/prchecklist.svg)](https://gitter.im/motemen/prchecklist?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-WIP - Checklist based on pull requests
+Checklist for "release" pull requests, which includes feature pull requests to merge into mainline
+
+![Screenshot](docs/screenshot.png)
 
 ## Development
 
@@ -21,3 +23,7 @@ Release binaries are on [Releases page](https://github.com/motemen/prchecklist/r
 
 [Go]: https://golang.org/
 [yarn]: https://yarnpkg.com/
+
+## Author
+
+motemen, with great support of [Hatena](http://hatenacorp.jp/) members.
