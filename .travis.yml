@@ -12,6 +12,7 @@ cache:
 script:
   - make setup-go
   - make test
+  - git describe --tags HEAD
   - make xbuild
 deploy:
   provider: releases
