@@ -1,60 +1,6 @@
-export interface ChecklistResponse {
-  Checklist: Checklist;
-  Me: GitHubUser;
-}
+import {ChecklistRef, ChecklistResponse, MeResponse} from './api-schema';
 
-export interface MeResponse {
-  Me: GitHubUser;
-  PullRequests: { [name: string]: { URL: string; Title: string; Number: number; }[] };
-};
-
-export interface Checklist {
-  Body: string;
-  Commits: Commit[];
-  Config: ChecklistConfig;
-  IsPrivate: boolean;
-  Items: ChecklistItem[];
-  Number: number;
-  Owner: string;
-  Repo: string;
-  Title: string;
-  URL: string;
-}
-
-export interface ChecklistConfig {
-  Stages: string[];
-}
-
-export interface ChecklistItem {
-  Body: string;
-  CheckedBy: GitHubUser[];
-  Commits: Commit[];
-  Number: number;
-  Owner: string;
-  Repo: string;
-  Title: string;
-  URL: string;
-  User: {
-    Login: string;
-  };
-}
-
-export interface Commit {
-  Message: string;
-}
-
-export interface GitHubUser {
-  AvatarURL: string;
-  ID: number;
-  Login: string;
-}
-
-export interface ChecklistRef {
-  Owner: string;
-  Repo: string;
-  Number: number;
-  Stage: string;
-}
+export {Checklist, ChecklistRef, ChecklistResponse, ChecklistItem, GitHubUser} from './api-schema';
 
 function asQueryParam(ref: ChecklistRef) {
   return `owner=${ref.Owner}&repo=${ref.Repo}&number=${ref.Number}&stage=${ref.Stage || ''}`;

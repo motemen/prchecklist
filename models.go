@@ -14,6 +14,11 @@ type ChecklistResponse struct {
 	Me        *GitHubUser
 }
 
+type MeResponse struct {
+	Me           *GitHubUser
+	PullRequests map[string][]*PullRequest
+}
+
 type Checklist struct {
 	*PullRequest
 	Stage  string

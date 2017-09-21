@@ -1,17 +1,19 @@
-GOBINDATA = .bin/go-bindata
-GOX       = .bin/gox
-MOCKGEN   = .bin/mockgen
-REFLEX    = .bin/reflex
-GOVENDOR  = .bin/govendor
+GOBINDATA     = .bin/go-bindata
+GOX           = .bin/gox
+MOCKGEN       = .bin/mockgen
+REFLEX        = .bin/reflex
+GOVENDOR      = .bin/govendor
+GOJSSCHEMAGEN = .bin/gojsschemagen
 
 WEBPACK          = node_modules/.bin/webpack
 WEBPACKDEVSERVER = node_modules/.bin/webpack-dev-server
+JSON2TS          = node_modules/.bin/json2ts
 
 GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEAD)
 GOOSARCH  = linux/amd64
 
-go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX) $(GOVENDOR)
-node_tools = $(WEBPACKDEVSERVER) $(WEBPACK)
+go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX) $(GOVENDOR) $(GOJSSCHEMAGEN)
+node_tools = $(WEBPACKDEVSERVER) $(WEBPACK) $(JSON2TS)
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
 
@@ -29,7 +31,8 @@ $(go_tools): Makefile
 	      gobin.cc/reflex \
 	      gobin.cc/mockgen \
 	      gobin.cc/gox \
-	      gobin.cc/govendor
+	      gobin.cc/govendor \
+	      github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 	@touch .bin/*
 
 $(node_tools): package.json
@@ -71,5 +74,8 @@ static/text/licenses: vendor/vendor.json $(GOVENDOR)
 
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
 	$(MOCKGEN) -package web -source $< GitHubGateway > $@
+
+static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) $(JSON2TS)
+	$(GOJSSCHEMAGEN) $< | node -p 'x = JSON.parse(fs.readFileSync(0)); x.properties = Object.keys(x.definitions).map(n => ({ "$$ref": "#/definitions/" + n })); JSON.stringify(x)' | $(JSON2TS) > $@
 
 .PHONY: build xbuild test develop setup setup-go setup-node
