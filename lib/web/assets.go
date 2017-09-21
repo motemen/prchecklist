@@ -85,7 +85,7 @@ func jsBundleJs() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "js/bundle.js", size: 403476, mode: os.FileMode(420), modTime: time.Unix(1505882809, 0)}
+	info := bindataFileInfo{name: "js/bundle.js", size: 403476, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -105,7 +105,7 @@ func jsBundleJsMap() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "js/bundle.js.map", size: 2193462, mode: os.FileMode(420), modTime: time.Unix(1505882693, 0)}
+	info := bindataFileInfo{name: "js/bundle.js.map", size: 2193462, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -125,7 +125,7 @@ func textLicenses() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "text/licenses", size: 81908, mode: os.FileMode(420), modTime: time.Unix(1505894076, 0)}
+	info := bindataFileInfo{name: "text/licenses", size: 81908, mode: os.FileMode(420), modTime: time.Unix(1, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

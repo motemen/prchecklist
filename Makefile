@@ -61,7 +61,7 @@ develop: $(REFLEX) $(WEBPACKDEVSERVER)
 	      sh -c 'make build && ./prchecklist --listen localhost:8081'; }
 
 lib/web/assets.go: static/js/bundle.js static/text/licenses $(GOBINDATA)
-	$(GOBINDATA) -pkg web -o $@ -prefix static/ static/js static/text
+	$(GOBINDATA) -pkg web -o $@ -prefix static/ -modtime 1 static/js static/text
 
 static/js/bundle.js: $(bundled_sources) $(WEBPACK)
 	$(WEBPACK) -p --progress
