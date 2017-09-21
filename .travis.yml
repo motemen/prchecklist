@@ -7,7 +7,6 @@ cache:
   - yarn
   - directories:
     - node_modules
-    - $GOPATH/src
     - $GOPATH/pkg
 script:
   - make setup-go
