@@ -4,6 +4,8 @@ Checklist for "release" pull requests, which includes feature pull requests to m
 
 ![Screenshot](docs/screenshot.png)
 
+[Demo](https://prchecklist.herokuapp.com/motemen/test-repository/pull/2)
+
 ## Development
 
 Requires [Go][] and [yarn][].
