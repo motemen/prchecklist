@@ -4,15 +4,17 @@ MOCKGEN       = .bin/mockgen
 REFLEX        = .bin/reflex
 GOVENDOR      = .bin/govendor
 GOJSSCHEMAGEN = .bin/gojsschemagen
+GOLINT        = .bin/golint
 
 WEBPACK          = node_modules/.bin/webpack
 WEBPACKDEVSERVER = node_modules/.bin/webpack-dev-server
+TSLINT           = node_modules/.bin/tslint
 
 GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEAD)
 GOOSARCH  = linux/amd64
 
-go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX) $(GOVENDOR) $(GOJSSCHEMAGEN)
-node_tools = $(WEBPACKDEVSERVER) $(WEBPACK) node_modules/json-schema-to-typescript
+go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX) $(GOVENDOR) $(GOJSSCHEMAGEN) $(GOLINT)
+node_tools = $(WEBPACKDEVSERVER) $(WEBPACK) $(TSLINT) node_modules/json-schema-to-typescript
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
 
@@ -31,6 +33,7 @@ $(go_tools): Makefile
 	      gobin.cc/mockgen \
 	      gobin.cc/gox \
 	      gobin.cc/govendor \
+	      gobin.cc/golint \
 	      github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 	@touch .bin/*
 
@@ -51,6 +54,10 @@ xbuild: lib/web/assets.go
 	    -output "build/{{.Dir}}_{{.OS}}_{{.Arch}}" \
 	    -ldflags "$(GOLDFLAGS)" \
 	    ./cmd/prchecklist
+
+lint: $(GOLINT)
+	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
+	$(TSLINT) static/typescript/*
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...

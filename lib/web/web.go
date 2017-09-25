@@ -20,7 +20,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
-	_ "github.com/motemen/go-loghttp/global"
 	"github.com/pkg/errors"
 
 	"github.com/motemen/prchecklist"
@@ -65,16 +64,20 @@ func init() {
 	gob.Register(&prchecklist.GitHubUser{})
 }
 
+// GitHubGateway is an interface that makes API calls to GitHub (Enterprise).
+// Used for OAuth interaction.
 type GitHubGateway interface {
 	AuthCodeURL(state string, redirectURI *url.URL) string
 	AuthenticateUser(ctx context.Context, code string) (*prchecklist.GitHubUser, error)
 }
 
+// Web is a web server implementation.
 type Web struct {
 	app    *usecase.Usecase
 	github GitHubGateway
 }
 
+// New creates a new Web.
 func New(app *usecase.Usecase, github GitHubGateway) *Web {
 	return &Web{
 		app:    app,
@@ -82,6 +85,7 @@ func New(app *usecase.Usecase, github GitHubGateway) *Web {
 	}
 }
 
+// Handler is the main logic of Web.
 func (web *Web) Handler() http.Handler {
 	cookieStore := sessions.NewCookieStore([]byte(sessionSecret))
 	cookieStore.Options = &sessions.Options{

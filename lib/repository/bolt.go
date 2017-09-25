@@ -26,6 +26,9 @@ const (
 	boltBucketNameChecks = "checks"
 )
 
+// NewBoltCore creates a coreRepository backed by boltdb.
+// The datasource must start with "bolt:", followed by a path on the filesystem,
+// which passed to bolt.Open.
 func NewBoltCore(datasource string) (coreRepository, error) {
 	path := datasource[len("bolt:"):]
 
@@ -50,6 +53,7 @@ func NewBoltCore(datasource string) (coreRepository, error) {
 	return &boltCoreRepository{db: db}, nil
 }
 
+// AddUser implements coreRepository.AddUser.
 func (r boltCoreRepository) AddUser(ctx context.Context, user prchecklist.GitHubUser) error {
 	return r.db.Update(func(tx *bolt.Tx) error {
 		usersBucket := tx.Bucket([]byte(boltBucketNameUsers))
@@ -63,6 +67,7 @@ func (r boltCoreRepository) AddUser(ctx context.Context, user prchecklist.GitHub
 	})
 }
 
+// GetUsers implements coreRepository.GetUser.
 func (r boltCoreRepository) GetUsers(ctx context.Context, userIDs []int) (map[int]prchecklist.GitHubUser, error) {
 	users := make(map[int]prchecklist.GitHubUser, len(userIDs))
 	err := r.db.View(func(tx *bolt.Tx) error {
@@ -87,6 +92,7 @@ func (r boltCoreRepository) GetUsers(ctx context.Context, userIDs []int) (map[in
 	return users, errors.Wrap(err, "GetUsers")
 }
 
+// GetChecks implements coreRepository.GetChecks.
 func (r boltCoreRepository) GetChecks(ctx context.Context, clRef prchecklist.ChecklistRef) (prchecklist.Checks, error) {
 	if err := clRef.Validate(); err != nil {
 		return nil, err
@@ -112,6 +118,7 @@ func (r boltCoreRepository) GetChecks(ctx context.Context, clRef prchecklist.Che
 	return checks, errors.Wrap(err, "GetChecks")
 }
 
+// AddCheck implements coreRepository.AddCheck.
 func (r boltCoreRepository) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error {
 	if err := clRef.Validate(); err != nil {
 		return err
@@ -148,6 +155,7 @@ func (r boltCoreRepository) AddCheck(ctx context.Context, clRef prchecklist.Chec
 	})
 }
 
+// RemoveCheck implements coreRepository.RemoveCheck.
 func (r boltCoreRepository) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error {
 	if err := clRef.Validate(); err != nil {
 		return err

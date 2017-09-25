@@ -25,6 +25,7 @@ func registerCoreRepositoryBuilder(proto string, builder coreRepositoryBuilder) 
 	registry[proto] = builder
 }
 
+// NewCore creates a coreRepository based on the value of datasource.
 func NewCore(datasource string) (coreRepository, error) {
 	p := strings.IndexByte(datasource, ':')
 	if p == -1 {
