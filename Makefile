@@ -7,13 +7,12 @@ GOJSSCHEMAGEN = .bin/gojsschemagen
 
 WEBPACK          = node_modules/.bin/webpack
 WEBPACKDEVSERVER = node_modules/.bin/webpack-dev-server
-JSON2TS          = node_modules/.bin/json2ts
 
 GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEAD)
 GOOSARCH  = linux/amd64
 
 go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX) $(GOVENDOR) $(GOJSSCHEMAGEN)
-node_tools = $(WEBPACKDEVSERVER) $(WEBPACK) $(JSON2TS)
+node_tools = $(WEBPACKDEVSERVER) $(WEBPACK)
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
 
@@ -66,7 +65,7 @@ develop: $(REFLEX) $(WEBPACKDEVSERVER)
 lib/web/assets.go: static/js/bundle.js static/text/licenses $(GOBINDATA)
 	$(GOBINDATA) -pkg web -o $@ -prefix static/ -modtime 1 static/js static/text
 
-static/js/bundle.js: $(bundled_sources) $(WEBPACK)
+static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources) $(WEBPACK)
 	$(WEBPACK) -p --progress
 
 static/text/licenses: vendor/vendor.json $(GOVENDOR)
@@ -75,7 +74,7 @@ static/text/licenses: vendor/vendor.json $(GOVENDOR)
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
 	$(MOCKGEN) -package web -source $< GitHubGateway > $@
 
-static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) $(JSON2TS)
-	$(GOJSSCHEMAGEN) $< | node -p 'x = JSON.parse(fs.readFileSync(0)); x.properties = Object.keys(x.definitions).map(n => ({ "$$ref": "#/definitions/" + n })); JSON.stringify(x)' | $(JSON2TS) > $@
+static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) setup-node
+	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@
 
 .PHONY: build xbuild test develop setup setup-go setup-node

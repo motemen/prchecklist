@@ -37,6 +37,82 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
       });
   }
 
+  public render() {
+    if (this.state.error) {
+      return <section>
+        <NavComponent me={this.state.me} />
+        <pre className="error">{this.state.error}</pre>
+      </section>;
+    }
+
+    const checklist = this.state.checklist;
+    if (!checklist) {
+      return <section>Loading...</section>;
+    }
+
+    const stages = this.checklistStages();
+
+    return <section className={this.completed() ? 'completed' : ''}>
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+      <NavComponent
+        logo={
+          <span>
+            {checklist.Owner}/{checklist.Repo}#{checklist.Number}
+            {checklist.IsPrivate ? <span className="lock-icon">🔒</span> : ''}
+          </span>
+        }
+        stages={
+          stages.length ?
+            <select
+              className="stages"
+              value={this.props.checklistRef.Stage}
+              onChange={this.handleOnSelectStage}>
+              {
+                stages.map((stage) =>
+                  <option key={`stage-${stage}`}>{stage}</option>,
+                )
+              }
+            </select>
+            : null
+        }
+        me={this.state.me} />
+      <h1>
+        <span className="title"><a href={checklist.URL}>#{checklist.Number}</a> {checklist.Title}</span>
+      </h1>
+      <div id="checklist-items" className="items">
+        <ul>
+          {
+            checklist.Items.map((item) => {
+              return <li key={`item-${item.Number}`}>
+                <div className="check">
+                  <button
+                    className={`checkbox material-icons ${this.itemIsCheckedByMe(item) && 'checked'}`}
+                    onClick={this.handleOnClickChecklistItem(item)}>thumb_up</button>
+                </div>
+                <div className="number"><a href={item.URL}>#{item.Number}</a></div>
+                {' '}
+                <div className="title" title={item.Title}>{item.Title}</div>
+                {' '}
+                <div className="user">@{item.User.Login}</div>
+                {' '}
+                <div className="checkedby">
+                {
+                  item.CheckedBy.map((user) => {
+                    return <span className="user" key={`item-${item.Number}-checkedby-${user.ID}`}>
+                      <img src={user.AvatarURL} alt={user.Login} />
+                    </span>;
+                  })
+                }
+                </div>
+              </li>;
+            })
+          }
+        </ul>
+      </div>
+      <pre>{checklist.Body}</pre>
+    </section>;
+  }
+
   private ensureCorrectStage(checklist: API.Checklist): boolean {
     const stages = checklist.Config && checklist.Config.Stages || [];
     const checklistRef = this.props.checklistRef;
@@ -114,81 +190,5 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
     if (!checklist) return false;
 
     return checklist.Items.every((item) => item.CheckedBy.length > 0);
-  }
-
-  public render() {
-    if (this.state.error) {
-      return <section>
-        <NavComponent me={this.state.me} />
-        <pre className="error">{this.state.error}</pre>
-      </section>;
-    }
-
-    const checklist = this.state.checklist;
-    if (!checklist) {
-      return <section>Loading...</section>;
-    }
-
-    const stages = this.checklistStages();
-
-    return <section className={this.completed() ? 'completed' : ''}>
-      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-      <NavComponent
-        logo={
-          <span>
-            {checklist.Owner}/{checklist.Repo}#{checklist.Number}
-            {checklist.IsPrivate ? <span className="lock-icon">🔒</span> : ''}
-          </span>
-        }
-        stages={
-          stages.length ?
-            <select
-              className="stages"
-              value={this.props.checklistRef.Stage}
-              onChange={this.handleOnSelectStage}>
-              {
-                stages.map((stage) =>
-                  <option key={`stage-${stage}`}>{stage}</option>,
-                )
-              }
-            </select>
-            : null
-        }
-        me={this.state.me} />
-      <h1>
-        <span className="title"><a href={checklist.URL}>#{checklist.Number}</a> {checklist.Title}</span>
-      </h1>
-      <div id="checklist-items" className="items">
-        <ul>
-          {
-            checklist.Items.map((item) => {
-              return <li key={`item-${item.Number}`}>
-                <div className="check">
-                  <button
-                    className={`checkbox material-icons ${this.itemIsCheckedByMe(item) && 'checked'}`}
-                    onClick={this.handleOnClickChecklistItem(item)}>thumb_up</button>
-                </div>
-                <div className="number"><a href={item.URL}>#{item.Number}</a></div>
-                {' '}
-                <div className="title" title={item.Title}>{item.Title}</div>
-                {' '}
-                <div className="user">@{item.User.Login}</div>
-                {' '}
-                <div className="checkedby">
-                {
-                  item.CheckedBy.map((user) => {
-                    return <span className="user" key={`item-${item.Number}-checkedby-${user.ID}`}>
-                      <img src={user.AvatarURL} alt={user.Login} />
-                    </span>;
-                  })
-                }
-                </div>
-              </li>;
-            })
-          }
-        </ul>
-      </div>
-      <pre>{checklist.Body}</pre>
-    </section>;
   }
 }
