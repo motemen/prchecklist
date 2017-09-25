@@ -25,6 +25,9 @@ func init() {
 	registerCoreRepositoryBuilder("redis", NewRedisCore)
 }
 
+// NewRedisCore creates a coreRepository backed by boltdb.
+// datasource must be a URL of form "redis://[<user>:<password>@]<hostname>",
+// whose user is not used.
 func NewRedisCore(datasource string) (coreRepository, error) {
 	u, err := url.Parse(datasource)
 	if err != nil {
@@ -56,6 +59,7 @@ func (r redisCoreRepository) withConn(f func(redis.Conn) error) error {
 	return f(conn)
 }
 
+// AddUser implements coreRepository.AddUser.
 func (r redisCoreRepository) AddUser(ctx context.Context, user prchecklist.GitHubUser) error {
 	err := r.withConn(func(conn redis.Conn) error {
 		buf, err := json.Marshal(user)
@@ -69,6 +73,7 @@ func (r redisCoreRepository) AddUser(ctx context.Context, user prchecklist.GitHu
 	return errors.Wrap(err, "AddUser")
 }
 
+// GetUsers implements coreRepository.GetUser.
 func (r redisCoreRepository) GetUsers(ctx context.Context, userIDs []int) (map[int]prchecklist.GitHubUser, error) {
 	users := make(map[int]prchecklist.GitHubUser, len(userIDs))
 	if len(userIDs) == 0 {
@@ -98,6 +103,7 @@ func (r redisCoreRepository) GetUsers(ctx context.Context, userIDs []int) (map[i
 	return users, errors.Wrap(err, "GetUsers")
 }
 
+// GetChecks implements coreRepository.GetChecks.
 func (r redisCoreRepository) GetChecks(ctx context.Context, clRef prchecklist.ChecklistRef) (prchecklist.Checks, error) {
 	if err := clRef.Validate(); err != nil {
 		return nil, err
@@ -120,6 +126,7 @@ func (r redisCoreRepository) GetChecks(ctx context.Context, clRef prchecklist.Ch
 	return checks, errors.Wrap(err, "GetChecks")
 }
 
+// AddCheck implements coreRepository.AddCheck.
 func (r redisCoreRepository) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error {
 	if err := clRef.Validate(); err != nil {
 		return err
@@ -155,6 +162,7 @@ func (r redisCoreRepository) AddCheck(ctx context.Context, clRef prchecklist.Che
 	})
 }
 
+// RemoveCheck implements coreRepository.RemoveCheck.
 func (r redisCoreRepository) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error {
 	if err := clRef.Validate(); err != nil {
 		return err

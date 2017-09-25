@@ -47,6 +47,7 @@ func init() {
 	flag.StringVar(&githubDomain, "github-domain", getenv("GITHUB_DOMAIN", "github.com"), "GitHub domain (GITHUB_DOMAIN)")
 }
 
+// NewGitHub creates a new GitHub gateway.
 func NewGitHub() (*githubGateway, error) {
 	if githubClientID == "" || githubClientSecret == "" {
 		return nil, errors.New("gateway/github: both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set")
@@ -391,9 +392,9 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 func (g githubGateway) graphqlEndpoint() string {
 	if g.domain == "github.com" {
 		return "https://api.github.com/graphql"
-	} else {
-		return "https://" + g.domain + "/api/graphql"
 	}
+
+	return "https://" + g.domain + "/api/graphql"
 }
 
 func (g githubGateway) queryGraphQL(ctx context.Context, query string, variables interface{}, value interface{}) error {

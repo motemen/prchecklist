@@ -14,26 +14,38 @@ import (
 	"github.com/motemen/prchecklist"
 )
 
+// GitHubGateway is an interface that makes API calls to GitHub (Enterprise) and
+// retrieves information about repositories.
+// Implemented by gateway.GitHub.
 type GitHubGateway interface {
 	GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error)
 	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, context.Context, error)
 	GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error)
 }
 
+// CoreRepository is a repository for prchecklist's core data,
+// namely Checks and GitHubUsers.
 type CoreRepository interface {
+	// GetChecks returns the Checks for the checklist pointed by clRef
 	GetChecks(ctx context.Context, clRef prchecklist.ChecklistRef) (prchecklist.Checks, error)
+	// AddCheck updates the Checks for the checklist pointed by clRef, by adding a check of the user for the item specified by key.
 	AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error
+	// RemoveCheck updates the Checks for the checklist pointed by clRef, by removing a check of the user for the item specified by key.
 	RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, key string, user prchecklist.GitHubUser) error
 
+	// AddUser registers the user's data, which can retrieved by GetUsers.
 	AddUser(ctx context.Context, user prchecklist.GitHubUser) error
+	// GetUsers retrieves the users' data registered by AddUser.
 	GetUsers(ctx context.Context, userIDs []int) (map[int]prchecklist.GitHubUser, error)
 }
 
+// Usecase stands for the use cases of this application by its methods.
 type Usecase struct {
 	coreRepo CoreRepository
 	github   GitHubGateway
 }
 
+// New creates a new Usecase.
 func New(github GitHubGateway, coreRepo CoreRepository) *Usecase {
 	return &Usecase{
 		coreRepo: coreRepo,
@@ -41,6 +53,8 @@ func New(github GitHubGateway, coreRepo CoreRepository) *Usecase {
 	}
 }
 
+// GetChecklist retrieves a Checklist pointed by clRef.
+// It makes some call to GitHub to create a complete view of one checklist.
 // Only this method can create prchecklist.Checklist.
 func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRef) (*prchecklist.Checklist, error) {
 	pr, ctx, err := u.github.GetPullRequest(ctx, clRef, true)
@@ -138,12 +152,15 @@ func (u Usecase) loadConfig(buf []byte) (*prchecklist.ChecklistConfig, error) {
 	return &config, nil
 }
 
+// AddUser calls a repo to register the information of a user.
 func (u Usecase) AddUser(ctx context.Context, user prchecklist.GitHubUser) error {
 	return u.coreRepo.AddUser(ctx, user)
 }
 
+// AddCheck adds a check by the user for a checklist item for a feature pull reuquest number featNum, for the checklist pointed by clRef.
+// On checking, it may send notifications according to the configuration on prchecklist.yml.
+// NOTE: we may not need user, could receive only token (from ctx) for checking visiblities & gettting user info
 func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) (*prchecklist.Checklist, error) {
-	// NOTE: could receive only token (from ctx) and check visiblities & get user info
 	err := u.coreRepo.AddCheck(ctx, clRef, prchecklist.ChecksKeyFeatureNum(featNum), user)
 	if err != nil {
 		return nil, err
@@ -174,6 +191,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 	return checklist, nil
 }
 
+// RemoveCheck removes a check from a checklist pointed by clRef.
 func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef, featNum int, user prchecklist.GitHubUser) (*prchecklist.Checklist, error) {
 	// TODO: check featNum existence
 	// NOTE: could receive only token (from ctx) and check visiblities & get user info
@@ -206,6 +224,8 @@ func (u Usecase) mergedPullRequestRefs(pr *prchecklist.PullRequest) []prchecklis
 	return refs
 }
 
+// GetRecentPullRequests list recent pullrequests the user may be interested in.
+// Crafted for the top page.
 func (u Usecase) GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error) {
 	return u.github.GetRecentPullRequests(ctx)
 }
