@@ -10,6 +10,7 @@ cache:
     - $GOPATH/pkg
 script:
   - make setup-go
+  - make lint
   - make test
   - git describe --tags HEAD
   - make xbuild
