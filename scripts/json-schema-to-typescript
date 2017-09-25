@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const compile = require('json-schema-to-typescript').compile;
+
+let schema = JSON.parse(fs.readFileSync(0))
+schema.properties = Object.keys(schema.definitions).map(n => ({ "$ref": "#/definitions/" + n }))
+
+compile(schema, '', { bannerComment: '' })
+  .then(ts => process.stdout.write(ts))
+  .catch(err => { console.error(err); process.exit(1) });

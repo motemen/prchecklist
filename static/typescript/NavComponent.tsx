@@ -12,9 +12,9 @@ interface NavState {
 }
 
 export class NavComponent extends React.Component<NavProps, NavState> {
-  componentWillMount() {
+  public componentWillMount() {
     this.setState({
-      version: document.querySelector('meta[name="prchecklist version"]').getAttribute('content')
+      version: document.querySelector('meta[name="prchecklist version"]').getAttribute('content'),
     });
   }
 

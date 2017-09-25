@@ -34,11 +34,13 @@ if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/.test(location.pathname)) {
                   <ul>
                   {
                     data.PullRequests[repoPath].map((pr) =>
-                      <li key={`repo-${repoPath}-pr-${pr.Number}`}><a href={`${repoPath}/pull/${pr.Number}`}>#{pr.Number} {pr.Title}</a></li>
+                      <li key={`repo-${repoPath}-pr-${pr.Number}`}>
+                        <a href={`${repoPath}/pull/${pr.Number}`}>#{pr.Number} {pr.Title}</a>
+                      </li>,
                     )
                   }
                   </ul>
-                </div>
+                </div>,
               )
             }
             </section> : []
