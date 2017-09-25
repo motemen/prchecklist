@@ -12,7 +12,7 @@ GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEA
 GOOSARCH  = linux/amd64
 
 go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX) $(GOVENDOR) $(GOJSSCHEMAGEN)
-node_tools = $(WEBPACKDEVSERVER) $(WEBPACK)
+node_tools = $(WEBPACKDEVSERVER) $(WEBPACK) node_modules/json-schema-to-typescript
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
 
@@ -36,7 +36,7 @@ $(go_tools): Makefile
 
 $(node_tools): package.json
 	yarn install
-	@touch node_modules/.bin/*
+	@touch $(node_tools)
 
 build: lib/web/assets.go
 	go build \
@@ -74,7 +74,7 @@ static/text/licenses: vendor/vendor.json $(GOVENDOR)
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
 	$(MOCKGEN) -package web -source $< GitHubGateway > $@
 
-static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) setup-node
+static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) $(node_tools)
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@
 
 .PHONY: build xbuild test develop setup setup-go setup-node
