@@ -1,4 +1,4 @@
-import {ChecklistRef, ChecklistResponse, MeResponse, ErrorResponse} from './api-schema';
+import {ChecklistRef, ChecklistResponse, ErrorResponse, MeResponse} from './api-schema';
 
 export {Checklist, ChecklistRef, ChecklistResponse, ChecklistItem, GitHubUser} from './api-schema';
 
@@ -15,10 +15,11 @@ export function getChecklist(ref: ChecklistRef): Promise<ChecklistResponse> {
         return res.text().then((text): never => {
           try {
             const err: ErrorResponse = JSON.parse(text);
-            if (err.Type == 'not_authed') {
+            if (err.Type === 'not_authed') {
               location.href = `/auth?return_to=${encodeURIComponent(location.pathname)}`;
             }
           } catch (e) {
+            // fallthrough
           }
 
           throw new Error(`${res.status} ${res.statusText}\n${text}`);
