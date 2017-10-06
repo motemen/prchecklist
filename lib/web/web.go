@@ -289,7 +289,10 @@ func (web *Web) handleAPIChecklist(w http.ResponseWriter, req *http.Request) err
 		return err
 	}
 	if u == nil {
-		return httpError(http.StatusForbidden)
+		w.WriteHeader(http.StatusForbidden)
+		return renderJSON(w, &prchecklist.ErrorResponse{
+			Type: prchecklist.ErrorTypeNotAuthed,
+		})
 	}
 
 	type inQuery struct {

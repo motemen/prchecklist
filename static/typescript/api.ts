@@ -1,4 +1,4 @@
-import {ChecklistRef, ChecklistResponse, MeResponse} from './api-schema';
+import {ChecklistRef, ChecklistResponse, MeResponse, ErrorResponse} from './api-schema';
 
 export {Checklist, ChecklistRef, ChecklistResponse, ChecklistItem, GitHubUser} from './api-schema';
 
@@ -12,10 +12,19 @@ export function getChecklist(ref: ChecklistRef): Promise<ChecklistResponse> {
     })
     .then((res) => {
       if (!res.ok) {
-        return res.text().then((text) => {
+        return res.text().then((text): never => {
+          try {
+            const err: ErrorResponse = JSON.parse(text);
+            if (err.Type == 'not_authed') {
+              location.href = `/auth?return_to=${encodeURIComponent(location.pathname)}`;
+            }
+          } catch (e) {
+          }
+
           throw new Error(`${res.status} ${res.statusText}\n${text}`);
         });
       }
+
       return res.json();
     });
 }
