@@ -198,8 +198,10 @@ type ErrorResponse struct {
 	Type ErrorType
 }
 
+// ErrorType indicates the type of ErrorResponse.
 type ErrorType string
 
 const (
+	// ErrorTypeNotAuthed means: Visitor has not been authenticated. Should visit /auth
 	ErrorTypeNotAuthed ErrorType = "not_authed"
 )
