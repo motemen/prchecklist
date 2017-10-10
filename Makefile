@@ -57,7 +57,7 @@ xbuild: lib/web/assets.go
 
 lint: $(GOLINT)
 	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
-	$(TSLINT) --force static/typescript/*
+	$(TSLINT) --exclude '**/api-schema.ts' static/typescript/*
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...

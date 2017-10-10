@@ -192,3 +192,16 @@ type GitHubUser struct {
 func (u GitHubUser) HTTPClient(ctx context.Context) *http.Client {
 	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(u.Token))
 }
+
+// ErrorResponse corresponds to JSON containing error results in APIs.
+type ErrorResponse struct {
+	Type ErrorType
+}
+
+// ErrorType indicates the type of ErrorResponse.
+type ErrorType string
+
+const (
+	// ErrorTypeNotAuthed means: Visitor has not been authenticated. Should visit /auth
+	ErrorTypeNotAuthed ErrorType = "not_authed"
+)
