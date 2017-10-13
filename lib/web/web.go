@@ -398,6 +398,13 @@ func (web *Web) handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 }
 
 func (web *Web) handleChecklist(w http.ResponseWriter, req *http.Request) error {
+	// handle logged-out state earlier than APIs called
+	u, _ := web.getAuthInfo(w, req)
+	if u == nil {
+		http.Redirect(w, req, "/auth?"+url.Values{"return_to": {req.URL.Path}}.Encode(), http.StatusFound)
+		return nil
+	}
+
 	fmt.Fprint(w, htmlContent)
 	return nil
 }
