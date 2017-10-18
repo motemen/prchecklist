@@ -21,6 +21,13 @@ export class ChecklistComponent extends React.Component<ChecklistProps, Checklis
 
     API.getChecklist(props.checklistRef)
       .then((data) => {
+        if (data instanceof API.APIError) {
+          if (data.errorType === 'not_authed') {
+            location.href = `/auth?return_to=${encodeURIComponent(location.pathname)}`;
+            return;
+          }
+          throw data;
+        }
         if (data.Checklist) {
           if (this.ensureCorrectStage(data.Checklist)) {
             return;

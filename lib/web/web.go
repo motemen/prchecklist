@@ -55,8 +55,6 @@ var htmlContent = `<!DOCTYPE html>
 </html>
 `
 
-var sessionStore sessions.Store
-
 func init() {
 	flag.StringVar(&sessionSecret, "session-secret", sessionSecret, "session secret (PRCHECKLIST_SESSION_SECRET)")
 	flag.BoolVar(&behindProxy, "behind-proxy", behindProxy, "prchecklist is behind a reverse proxy (PRCHECKLIST_BEHIND_PROXY)")
@@ -73,27 +71,29 @@ type GitHubGateway interface {
 
 // Web is a web server implementation.
 type Web struct {
-	app    *usecase.Usecase
-	github GitHubGateway
+	app          *usecase.Usecase
+	github       GitHubGateway
+	sessionStore sessions.Store
 }
 
 // New creates a new Web.
 func New(app *usecase.Usecase, github GitHubGateway) *Web {
+	cookieStore := sessions.NewCookieStore([]byte(sessionSecret))
+	cookieStore.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   int(30 * 24 * time.Hour / time.Second),
+		HttpOnly: true,
+	}
+
 	return &Web{
-		app:    app,
-		github: github,
+		app:          app,
+		github:       github,
+		sessionStore: cookieStore,
 	}
 }
 
 // Handler is the main logic of Web.
 func (web *Web) Handler() http.Handler {
-	cookieStore := sessions.NewCookieStore([]byte(sessionSecret))
-	cookieStore.Options = &sessions.Options{
-		Path:     "/",
-		HttpOnly: true,
-	}
-	sessionStore = cookieStore
-
 	router := mux.NewRouter()
 	router.Handle("/", httpHandler(web.handleIndex))
 	router.Handle("/auth", httpHandler(web.handleAuth))
@@ -147,7 +147,7 @@ func renderJSON(w http.ResponseWriter, v interface{}) error {
 }
 
 func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
-	sess, _ := sessionStore.Get(req, sessionName)
+	sess, _ := web.sessionStore.Get(req, sessionName)
 
 	state, err := makeRandomString()
 	if err != nil {
@@ -155,7 +155,7 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	sess.Values[sessionKeyOAuthState] = state
-	err = sessionStore.Save(req, w, sess)
+	err = web.sessionStore.Save(req, w, sess)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
 }
 
 func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
-	sess, err := sessionStore.Get(req, sessionName)
+	sess, err := web.sessionStore.Get(req, sessionName)
 	if err != nil {
 		return errors.Wrapf(err, "sessionStore.Get")
 	}
@@ -246,7 +246,7 @@ func (web *Web) handleAuthClear(w http.ResponseWriter, req *http.Request) error 
 }
 
 func (web *Web) getAuthInfo(w http.ResponseWriter, req *http.Request) (*prchecklist.GitHubUser, error) {
-	sess, err := sessionStore.Get(req, sessionName)
+	sess, err := web.sessionStore.Get(req, sessionName)
 	if err != nil {
 		// FIXME
 		// return nil, err
@@ -398,6 +398,13 @@ func (web *Web) handleAPICheck(w http.ResponseWriter, req *http.Request) error {
 }
 
 func (web *Web) handleChecklist(w http.ResponseWriter, req *http.Request) error {
+	// handle logged-out state earlier than APIs called
+	u, _ := web.getAuthInfo(w, req)
+	if u == nil {
+		http.Redirect(w, req, "/auth?"+url.Values{"return_to": {req.URL.Path}}.Encode(), http.StatusFound)
+		return nil
+	}
+
 	fmt.Fprint(w, htmlContent)
 	return nil
 }
