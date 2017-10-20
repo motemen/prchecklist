@@ -2,4 +2,4 @@ package prchecklist
 
 // Version is the prchecklist release version.
 // Specified by Makefile.
-var Version = "HEAD"
+var Version = "2.1.0"
