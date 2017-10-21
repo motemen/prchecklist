@@ -13,33 +13,32 @@ TSLINT           = node_modules/.bin/tslint
 GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEAD)
 GOOSARCH  = linux/amd64
 
-go_tools   = $(GOBINDATA) $(REFLEX) $(MOCKGEN) $(GOX) $(GOVENDOR) $(GOJSSCHEMAGEN) $(GOLINT)
-node_tools = $(WEBPACKDEVSERVER) $(WEBPACK) $(TSLINT) node_modules/json-schema-to-typescript
-
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
 
 default: build
 
 setup: setup-go setup-node
 
-setup-go: $(go_tools)
-
-setup-node: $(node_tools)
-
-$(go_tools): Makefile
+setup-go:
 	GOBIN=$(abspath .bin) go get -v \
-	      gobin.cc/go-bindata \
-	      gobin.cc/reflex \
-	      gobin.cc/mockgen \
-	      gobin.cc/gox \
-	      gobin.cc/govendor \
-	      gobin.cc/golint \
-	      github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
-	@touch .bin/*
+	    gobin.cc/go-bindata \
+	    gobin.cc/reflex \
+	    gobin.cc/mockgen \
+	    gobin.cc/gox \
+	    gobin.cc/govendor \
+	    gobin.cc/golint \
+	    github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 
-$(node_tools): package.json
+setup-node:
 	yarn install
-	@touch $(node_tools)
+
+.bin/%: Makefile
+	@$(MAKE) setup-go
+	@touch $@
+
+node_modules/%: package.json
+	@$(MAKE) setup-node
+	@touch $@
 
 build: lib/web/assets.go
 	go build \
@@ -55,7 +54,7 @@ xbuild: lib/web/assets.go
 	    -ldflags "$(GOLDFLAGS)" \
 	    ./cmd/prchecklist
 
-lint: $(GOLINT)
+lint: $(GOLINT) $(TSLINT)
 	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
 	$(TSLINT) --exclude '**/api-schema.ts' static/typescript/*
 
@@ -81,7 +80,7 @@ static/text/licenses: vendor/vendor.json $(GOVENDOR)
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
 	$(MOCKGEN) -package web -source $< GitHubGateway > $@
 
-static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) $(node_tools)
+static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) node_modules/json-schema-to-typescript
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@
 
-.PHONY: build xbuild test develop setup setup-go setup-node
+.PHONY: default build xbuild test lint develop setup setup-go setup-node
