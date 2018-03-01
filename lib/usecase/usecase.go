@@ -172,21 +172,19 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 	}
 
 	// TODO: check item existence?
-	go func() {
-		// notify in sequence
-		events := []notificationEvent{
-			addCheckEvent{checklist: checklist, item: checklist.Item(featNum), user: user},
+	// notify in sequence
+	events := []notificationEvent{
+		addCheckEvent{checklist: checklist, item: checklist.Item(featNum), user: user},
+	}
+	if checklist.Completed() {
+		events = append(events, completeEvent{checklist: checklist})
+	}
+	for _, event := range events {
+		err := u.notifyEvent(ctx, checklist, event)
+		if err != nil {
+			log.Printf("notifyEvent(%v): %s", event, err)
 		}
-		if checklist.Completed() {
-			events = append(events, completeEvent{checklist: checklist})
-		}
-		for _, event := range events {
-			err := u.notifyEvent(ctx, checklist, event)
-			if err != nil {
-				log.Printf("notifyEvent(%v): %s", event, err)
-			}
-		}
-	}()
+	}
 
 	return checklist, nil
 }
