@@ -21,6 +21,7 @@ type GitHubGateway interface {
 	GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error)
 	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, context.Context, error)
 	GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error)
+	SetRepositoryStatusAs(ctx context.Context, owner, repo, ref, contextName, state string) error
 }
 
 // CoreRepository is a repository for prchecklist's core data,

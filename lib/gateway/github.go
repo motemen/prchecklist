@@ -481,3 +481,20 @@ func (g githubGateway) AuthenticateUser(ctx context.Context, code string) (*prch
 		Token:     token,
 	}, nil
 }
+
+func (g githubGateway) SetRepositoryStatusAs(ctx context.Context, owner, repo, ref, contextName, state string) error {
+	gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
+	if err != nil {
+		return err
+	}
+
+	status := &github.RepoStatus{
+		State:   &state,
+		Context: &contextName,
+	}
+	if _, _, err = gh.Repositories.CreateStatus(ctx, owner, repo, ref, status); err != nil {
+		return err
+	}
+
+	return nil
+}
