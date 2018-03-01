@@ -172,7 +172,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 	}
 
 	// TODO: check item existence?
-	go func() {
+	go func(ctx context.Context) {
 		// notify in sequence
 		events := []notificationEvent{
 			addCheckEvent{checklist: checklist, item: checklist.Item(featNum), user: user},
@@ -186,7 +186,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 				log.Printf("notifyEvent(%v): %s", event, err)
 			}
 		}
-	}()
+	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)))
 
 	return checklist, nil
 }
