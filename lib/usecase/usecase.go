@@ -201,7 +201,19 @@ func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef
 		return nil, err
 	}
 
-	return u.GetChecklist(ctx, clRef)
+	cl, err := u.GetChecklist(ctx, clRef)
+	if err != nil {
+		return nil, err
+	}
+
+	go func(ctx context.Context, cl *prchecklist.Checklist) {
+		lastCommitID := cl.Commits[len(cl.Commits)-1].Oid
+		if err := u.setRepositoryCompletedStatusAs(ctx, cl.Owner, cl.Repo, lastCommitID, "pending"); err != nil {
+			log.Printf("Failed to SetRepositoryStatusAs: %s (%+v)", err, err)
+		}
+	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)), cl)
+
+	return cl, nil
 }
 
 var rxMergeCommitMessage = regexp.MustCompile(`\AMerge pull request #(?P<number>\d+) `)
