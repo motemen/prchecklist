@@ -127,6 +127,7 @@ type githubPullRequest struct {
 					Node struct {
 						Commit struct {
 							Message string
+							Oid     string
 						}
 					}
 				}
@@ -335,7 +336,7 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 	graphqlResultToCommits := func(qr githubPullRequest) []prchecklist.Commit {
 		commits := make([]prchecklist.Commit, len(qr.Repository.PullRequest.Commits.Edges))
 		for i, e := range qr.Repository.PullRequest.Commits.Edges {
-			commits[i] = prchecklist.Commit{Message: e.Node.Commit.Message}
+			commits[i] = prchecklist.Commit{Message: e.Node.Commit.Message, Oid: e.Node.Commit.Oid}
 		}
 		return commits
 	}

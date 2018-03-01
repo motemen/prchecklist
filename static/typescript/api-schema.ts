@@ -31,6 +31,7 @@ export interface Checklist {
  */
 export interface Commit {
   Message: string;
+  Oid: string;
 }
 /**
  * ChecklistConfig is a configuration object for the repository,

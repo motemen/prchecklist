@@ -170,6 +170,7 @@ type PullRequest struct {
 // Commit is a commit data on GitHub.
 type Commit struct {
 	Message string
+	Oid     string
 }
 
 // GitHubUserSimple is a minimalistic GitHub user data.
