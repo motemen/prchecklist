@@ -64,9 +64,7 @@ func (u Usecase) notifyEvent(ctx context.Context, checklist *prchecklist.Checkli
 	case eventTypeOnComplete:
 		chNames = config.Notification.Events.OnComplete
 		lastCommitID := checklist.Commits[len(checklist.Commits)-1].Oid
-		ctxName := "prchecklist/completed"
-		state := "success"
-		if err := u.github.SetRepositoryStatusAs(ctx, checklist.Owner, checklist.Repo, lastCommitID, ctxName, state); err != nil {
+		if err := u.setRepositoryCompletedStatusAs(ctx, checklist.Owner, checklist.Repo, lastCommitID, "success"); err != nil {
 			log.Printf("Failed to SetRepositoryStatusAs: %s (%+v)", err, err)
 		}
 	default:

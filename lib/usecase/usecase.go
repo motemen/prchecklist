@@ -230,3 +230,7 @@ func (u Usecase) mergedPullRequestRefs(pr *prchecklist.PullRequest) []prchecklis
 func (u Usecase) GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error) {
 	return u.github.GetRecentPullRequests(ctx)
 }
+
+func (u Usecase) setRepositoryCompletedStatusAs(ctx context.Context, owner, repo, ref, state string) error {
+	return u.github.SetRepositoryStatusAs(ctx, owner, repo, ref, "prchecklist/completed", state)
+}
