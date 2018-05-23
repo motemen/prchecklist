@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e
+
+part=$1
+
+git diff --quiet && git diff --cached --quiet
+
+curr_version=$(gobump show -r)
+next_version=$(gobump "$part" -w -v -r)
+
+test -n "$curr_version"
+test -n "$next_version"
+
+git commit -a -m "bump version to $next_version"
+git tag "v$next_version"
+
+${GHCH-ghch} -w --format=markdown --from="v$curr_version" --next-version="v$next_version"
+
+${EDITOR-vim} CHANGELOG.md
