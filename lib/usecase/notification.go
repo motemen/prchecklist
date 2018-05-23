@@ -63,6 +63,10 @@ func (u Usecase) notifyEvent(ctx context.Context, checklist *prchecklist.Checkli
 		chNames = config.Notification.Events.OnCheck
 	case eventTypeOnComplete:
 		chNames = config.Notification.Events.OnComplete
+		lastCommitID := checklist.Commits[len(checklist.Commits)-1].Oid
+		if err := u.setRepositoryCompletedStatusAs(ctx, checklist.Owner, checklist.Repo, lastCommitID, "success"); err != nil {
+			log.Printf("Failed to SetRepositoryStatusAs: %s (%+v)", err, err)
+		}
 	default:
 		return errors.Errorf("unknown event type: %v", event.eventType())
 	}

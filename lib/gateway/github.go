@@ -127,6 +127,7 @@ type githubPullRequest struct {
 					Node struct {
 						Commit struct {
 							Message string
+							Oid     string
 						}
 					}
 				}
@@ -335,7 +336,7 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 	graphqlResultToCommits := func(qr githubPullRequest) []prchecklist.Commit {
 		commits := make([]prchecklist.Commit, len(qr.Repository.PullRequest.Commits.Edges))
 		for i, e := range qr.Repository.PullRequest.Commits.Edges {
-			commits[i] = prchecklist.Commit{Message: e.Node.Commit.Message}
+			commits[i] = prchecklist.Commit{Message: e.Node.Commit.Message, Oid: e.Node.Commit.Oid}
 		}
 		return commits
 	}
@@ -479,4 +480,21 @@ func (g githubGateway) AuthenticateUser(ctx context.Context, code string) (*prch
 		AvatarURL: u.GetAvatarURL(),
 		Token:     token,
 	}, nil
+}
+
+func (g githubGateway) SetRepositoryStatusAs(ctx context.Context, owner, repo, ref, contextName, state string) error {
+	gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
+	if err != nil {
+		return err
+	}
+
+	status := &github.RepoStatus{
+		State:   &state,
+		Context: &contextName,
+	}
+	if _, _, err = gh.Repositories.CreateStatus(ctx, owner, repo, ref, status); err != nil {
+		return err
+	}
+
+	return nil
 }

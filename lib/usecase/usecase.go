@@ -21,6 +21,7 @@ type GitHubGateway interface {
 	GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error)
 	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, context.Context, error)
 	GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error)
+	SetRepositoryStatusAs(ctx context.Context, owner, repo, ref, contextName, state string) error
 }
 
 // CoreRepository is a repository for prchecklist's core data,
@@ -172,7 +173,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 	}
 
 	// TODO: check item existence?
-	go func() {
+	go func(ctx context.Context) {
 		// notify in sequence
 		events := []notificationEvent{
 			addCheckEvent{checklist: checklist, item: checklist.Item(featNum), user: user},
@@ -186,7 +187,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 				log.Printf("notifyEvent(%v): %s", event, err)
 			}
 		}
-	}()
+	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)))
 
 	return checklist, nil
 }
@@ -200,7 +201,19 @@ func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef
 		return nil, err
 	}
 
-	return u.GetChecklist(ctx, clRef)
+	cl, err := u.GetChecklist(ctx, clRef)
+	if err != nil {
+		return nil, err
+	}
+
+	go func(ctx context.Context, cl *prchecklist.Checklist) {
+		lastCommitID := cl.Commits[len(cl.Commits)-1].Oid
+		if err := u.setRepositoryCompletedStatusAs(ctx, cl.Owner, cl.Repo, lastCommitID, "pending"); err != nil {
+			log.Printf("Failed to SetRepositoryStatusAs: %s (%+v)", err, err)
+		}
+	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)), cl)
+
+	return cl, nil
 }
 
 var rxMergeCommitMessage = regexp.MustCompile(`\AMerge pull request #(?P<number>\d+) `)
@@ -228,4 +241,8 @@ func (u Usecase) mergedPullRequestRefs(pr *prchecklist.PullRequest) []prchecklis
 // Crafted for the top page.
 func (u Usecase) GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error) {
 	return u.github.GetRecentPullRequests(ctx)
+}
+
+func (u Usecase) setRepositoryCompletedStatusAs(ctx context.Context, owner, repo, ref, state string) error {
+	return u.github.SetRepositoryStatusAs(ctx, owner, repo, ref, "prchecklist/completed", state)
 }
