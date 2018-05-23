@@ -1,7 +1,7 @@
 language: go
 go:
-  - 1.8
   - 1.9
+  - 1.10
   - tip
 cache:
   - yarn
@@ -23,5 +23,5 @@ deploy:
   file: build/*
   on:
     repo: motemen/prchecklist
-    condition: $TRAVIS_GO_VERSION =~ ^1\.9
+    condition: $TRAVIS_GO_VERSION =~ ^1\.10
     tags: true
