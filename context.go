@@ -57,3 +57,11 @@ func BuildURL(ctx context.Context, path string) *url.URL {
 		Path:   path,
 	}
 }
+
+// NewContextWithValuesOf creates new context which inherits values of base context.
+func NewContextWithValuesOf(base context.Context) context.Context {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, ContextKeyHTTPClient, base.Value(ContextKeyHTTPClient))
+	ctx = context.WithValue(ctx, contextKeyRequestOrigin, base.Value(contextKeyRequestOrigin))
+	return ctx
+}
