@@ -188,7 +188,7 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 				log.Printf("notifyEvent(%v): %s", event, err)
 			}
 		}
-	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)))
+	}(prchecklist.NewContextWithValuesOf(ctx))
 
 	return checklist, nil
 }

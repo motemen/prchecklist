@@ -57,3 +57,10 @@ func BuildURL(ctx context.Context, path string) *url.URL {
 		Path:   path,
 	}
 }
+
+func NewContextWithValuesOf(base context.Context) context.Context {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, ContextKeyHTTPClient, base.Value(ContextKeyHTTPClient))
+	ctx = context.WithValue(ctx, contextKeyRequestOrigin, base.Value(contextKeyRequestOrigin))
+	return ctx
+}
