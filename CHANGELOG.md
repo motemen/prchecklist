@@ -1,3 +1,7 @@
+## [v2.2.2](https://github.com/motemen/prchecklist/compare/v2.2.1...v2.2.2) (2018-06-06)
+
+* include checklist URL in GitHub status [#57](https://github.com/motemen/prchecklist/pull/57) ([motemen](https://github.com/motemen))
+
 ## [v2.2.1](https://github.com/motemen/prchecklist/compare/v2.2.0...v2.2.1) (2018-06-06)
 
 * Enhance commit status [#56](https://github.com/motemen/prchecklist/pull/56) ([aereal](https://github.com/aereal))
