@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 	"strconv"
@@ -21,7 +22,7 @@ type GitHubGateway interface {
 	GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error)
 	GetPullRequest(ctx context.Context, clRef prchecklist.ChecklistRef, isMain bool) (*prchecklist.PullRequest, context.Context, error)
 	GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error)
-	SetRepositoryStatusAs(ctx context.Context, owner, repo, ref, contextName, state string) error
+	SetRepositoryStatusAs(ctx context.Context, owner, repo, ref, contextName, state, targetURL string) error
 }
 
 // CoreRepository is a repository for prchecklist's core data,
@@ -208,7 +209,7 @@ func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef
 
 	go func(ctx context.Context, cl *prchecklist.Checklist) {
 		lastCommitID := cl.Commits[len(cl.Commits)-1].Oid
-		if err := u.setRepositoryCompletedStatusAs(ctx, cl.Owner, cl.Repo, lastCommitID, "pending"); err != nil {
+		if err := u.setRepositoryCompletedStatusAs(ctx, cl.Owner, cl.Repo, lastCommitID, "pending", cl.Stage, cl.URL); err != nil {
 			log.Printf("Failed to SetRepositoryStatusAs: %s (%+v)", err, err)
 		}
 	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)), cl)
@@ -243,6 +244,6 @@ func (u Usecase) GetRecentPullRequests(ctx context.Context) (map[string][]*prche
 	return u.github.GetRecentPullRequests(ctx)
 }
 
-func (u Usecase) setRepositoryCompletedStatusAs(ctx context.Context, owner, repo, ref, state string) error {
-	return u.github.SetRepositoryStatusAs(ctx, owner, repo, ref, "prchecklist/completed", state)
+func (u Usecase) setRepositoryCompletedStatusAs(ctx context.Context, owner, repo, ref, state, stage, targetURL string) error {
+	return u.github.SetRepositoryStatusAs(ctx, owner, repo, ref, fmt.Sprintf("prchecklist/%s/completed", stage), state, targetURL)
 }
