@@ -2,11 +2,11 @@
 
 * include checklist URL in GitHub status [#57](https://github.com/motemen/prchecklist/pull/57) ([motemen](https://github.com/motemen))
 
-## [v2.2.1](https://github.com/motemen/prchecklist/compare/v2.2.0...v2.2.1) (2018-06-06)
+### v2.2.1
 
 * Enhance commit status [#56](https://github.com/motemen/prchecklist/pull/56) ([aereal](https://github.com/aereal))
 
-## [v2.2.0](https://github.com/motemen/prchecklist/compare/v2.1.0...v2.2.0) (2018-05-23)
+### v2.2.0
 
 * Set checklist completed status using status API [#55](https://github.com/motemen/prchecklist/pull/55) ([aereal](https://github.com/aereal))
 * refactor Makefile [#51](https://github.com/motemen/prchecklist/pull/51) ([motemen](https://github.com/motemen))
