@@ -1,0 +1,37 @@
+{
+  "name": "prchecklist",
+  "description": "",
+  "scripts": {
+  },
+  "env": {
+    "GITHUB_CLIENT_ID": {
+      "required": true
+    },
+    "GITHUB_CLIENT_SECRET": {
+      "required": true
+    },
+    "PRCHECKLIST_BEHIND_PROXY": {
+      "required": true
+    },
+    "PRCHECKLIST_SESSION_SECRET": {
+      "required": true
+    },
+    "REDIS_URL": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "heroku-postgresql",
+    "heroku-redis"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/go"
+    }
+  ]
+}
