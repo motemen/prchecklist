@@ -228,7 +228,7 @@ func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef
 				log.Printf("notifyEvent(%v): %s", event, err)
 			}
 		}
-	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)), cl)
+	}(prchecklist.NewContextWithValuesOf(ctx), cl)
 
 	return cl, nil
 }
