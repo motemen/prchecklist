@@ -146,8 +146,11 @@ func (u Usecase) loadConfig(buf []byte) (*prchecklist.ChecklistConfig, error) {
 		return nil, errors.Wrap(err, "yaml.Unmarshal")
 	}
 
-	if config.Notification.Events.OnCheck == nil && config.Notification.Events.OnComplete == nil {
+	if config.Notification.Events.OnCheck == nil {
 		config.Notification.Events.OnCheck = []string{"default"}
+	}
+
+	if config.Notification.Events.OnComplete == nil {
 		config.Notification.Events.OnComplete = []string{"default"}
 	}
 
