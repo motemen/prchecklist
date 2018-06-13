@@ -215,9 +215,18 @@ func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef
 	}
 
 	go func(ctx context.Context, cl *prchecklist.Checklist) {
-		lastCommitID := cl.Commits[len(cl.Commits)-1].Oid
-		if err := u.setRepositoryCompletedStatusAs(ctx, cl.Owner, cl.Repo, lastCommitID, "pending", cl.Stage, cl.URL); err != nil {
-			log.Printf("Failed to SetRepositoryStatusAs: %s (%+v)", err, err)
+		events := []notificationEvent{
+			removeCheckEvent{
+				checklist: cl,
+				item:      cl.Item(featNum),
+				user:      user,
+			},
+		}
+		for _, event := range events {
+			err := u.notifyEvent(ctx, cl, event)
+			if err != nil {
+				log.Printf("notifyEvent(%v): %s", event, err)
+			}
 		}
 	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)), cl)
 
