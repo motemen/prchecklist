@@ -154,6 +154,10 @@ func (u Usecase) loadConfig(buf []byte) (*prchecklist.ChecklistConfig, error) {
 		config.Notification.Events.OnComplete = []string{"default"}
 	}
 
+	if config.Notification.Events.OnRemove == nil {
+		config.Notification.Events.OnRemove = []string{"default"}
+	}
+
 	return &config, nil
 }
 

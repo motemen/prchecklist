@@ -75,6 +75,8 @@ func (u Usecase) notifyEvent(ctx context.Context, checklist *prchecklist.Checkli
 
 	var chNames []string
 	switch event.eventType() {
+	case eventTypeOnRemove:
+		chNames = config.Notification.Events.OnRemove
 	case eventTypeOnCheck:
 		chNames = config.Notification.Events.OnCheck
 	case eventTypeOnComplete:
