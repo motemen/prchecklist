@@ -146,9 +146,16 @@ func (u Usecase) loadConfig(buf []byte) (*prchecklist.ChecklistConfig, error) {
 		return nil, errors.Wrap(err, "yaml.Unmarshal")
 	}
 
-	if config.Notification.Events.OnCheck == nil && config.Notification.Events.OnComplete == nil {
+	if config.Notification.Events.OnCheck == nil {
 		config.Notification.Events.OnCheck = []string{"default"}
+	}
+
+	if config.Notification.Events.OnComplete == nil {
 		config.Notification.Events.OnComplete = []string{"default"}
+	}
+
+	if config.Notification.Events.OnRemove == nil {
+		config.Notification.Events.OnRemove = []string{"default"}
 	}
 
 	return &config, nil
@@ -208,11 +215,20 @@ func (u Usecase) RemoveCheck(ctx context.Context, clRef prchecklist.ChecklistRef
 	}
 
 	go func(ctx context.Context, cl *prchecklist.Checklist) {
-		lastCommitID := cl.Commits[len(cl.Commits)-1].Oid
-		if err := u.setRepositoryCompletedStatusAs(ctx, cl.Owner, cl.Repo, lastCommitID, "pending", cl.Stage, cl.URL); err != nil {
-			log.Printf("Failed to SetRepositoryStatusAs: %s (%+v)", err, err)
+		events := []notificationEvent{
+			removeCheckEvent{
+				checklist: cl,
+				item:      cl.Item(featNum),
+				user:      user,
+			},
 		}
-	}(context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ctx.Value(prchecklist.ContextKeyHTTPClient)), cl)
+		for _, event := range events {
+			err := u.notifyEvent(ctx, cl, event)
+			if err != nil {
+				log.Printf("notifyEvent(%v): %s", event, err)
+			}
+		}
+	}(prchecklist.NewContextWithValuesOf(ctx), cl)
 
 	return cl, nil
 }

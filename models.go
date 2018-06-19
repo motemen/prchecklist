@@ -79,6 +79,7 @@ type ChecklistConfig struct {
 		Events struct {
 			OnComplete []string `yaml:"on_complete"` // channel names
 			OnCheck    []string `yaml:"on_check"`
+			OnRemove   []string `yaml:"on_remove"`
 		}
 		Channels map[string]struct{ URL string }
 	}

@@ -20,11 +20,27 @@ const (
 	eventTypeInvalid eventType = iota
 	eventTypeOnCheck
 	eventTypeOnComplete
+	eventTypeOnRemove
 )
 
 type notificationEvent interface {
 	slackMessageText(ctx context.Context) string
 	eventType() eventType
+}
+
+type removeCheckEvent struct {
+	checklist *prchecklist.Checklist
+	item      *prchecklist.ChecklistItem
+	user      prchecklist.GitHubUser
+}
+
+func (e removeCheckEvent) slackMessageText(ctx context.Context) string {
+	u := prchecklist.BuildURL(ctx, e.checklist.Path()).String()
+	return fmt.Sprintf("[<%s|%s>] #%d %q check removed by %s", u, e.checklist, e.item.Number, e.item.Title, e.user.Login)
+}
+
+func (e removeCheckEvent) eventType() eventType {
+	return eventTypeOnRemove
 }
 
 type addCheckEvent struct {
@@ -59,6 +75,8 @@ func (u Usecase) notifyEvent(ctx context.Context, checklist *prchecklist.Checkli
 
 	var chNames []string
 	switch event.eventType() {
+	case eventTypeOnRemove:
+		chNames = config.Notification.Events.OnRemove
 	case eventTypeOnCheck:
 		chNames = config.Notification.Events.OnCheck
 	case eventTypeOnComplete:
