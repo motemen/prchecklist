@@ -78,7 +78,7 @@ static/text/licenses: vendor/vendor.json $(GOVENDOR)
 	$(GOVENDOR) license > $@
 
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
-	$(MOCKGEN) -package web -source $< GitHubGateway > $@
+	$(MOCKGEN) -package web -destination $@ github.com/motemen/prchecklist/lib/web GitHubGateway
 
 static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) node_modules/json-schema-to-typescript
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@
