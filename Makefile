@@ -26,7 +26,7 @@ setup-go:
 	    github.com/golang/mock/mockgen \
 	    github.com/mitchellh/gox \
 	    github.com/kardianos/govendor \
-	    github.com/golang/lint/golint \
+	    golang.org/x/lint/golint \
 	    github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 
 setup-node:
