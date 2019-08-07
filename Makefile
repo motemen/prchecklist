@@ -21,12 +21,12 @@ setup: setup-go setup-node
 
 setup-go:
 	GOBIN=$(abspath .bin) go get -v \
-	    gobin.cc/go-bindata \
-	    gobin.cc/reflex \
-	    gobin.cc/mockgen \
-	    gobin.cc/gox \
-	    gobin.cc/govendor \
-	    gobin.cc/golint \
+	    github.com/jteeuwen/go-bindata/go-bindata \
+	    github.com/cespare/reflex \
+	    github.com/golang/mock/mockgen \
+	    github.com/mitchellh/gox \
+	    github.com/kardianos/govendor \
+	    github.com/golang/lint/golint \
 	    github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 
 setup-node:
