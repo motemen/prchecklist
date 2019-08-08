@@ -14,13 +14,14 @@ GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEA
 GOOSARCH  = linux/amd64
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
+export GO111MODULE=on
 
 default: build
 
 setup: setup-go setup-node
 
 setup-go:
-	GOBIN=$(abspath .bin) go get -v \
+	GO111MODULE=off GOBIN=$(abspath .bin) go get -v \
 	    github.com/jteeuwen/go-bindata/go-bindata \
 	    github.com/cespare/reflex \
 	    github.com/golang/mock/mockgen \
