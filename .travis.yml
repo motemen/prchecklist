@@ -1,8 +1,6 @@
 language: go
 go:
-  - '1.11'
-  - '1.12'
-  - tip
+  - 1.12
 cache:
   - yarn
   - directories:
