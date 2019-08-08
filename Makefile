@@ -2,7 +2,7 @@ GOBINDATA     = .bin/go-bindata
 GOX           = .bin/gox
 MOCKGEN       = .bin/mockgen
 REFLEX        = .bin/reflex
-GOVENDOR      = .bin/govendor
+GOCREDITS     = .bin/gocredits
 GOJSSCHEMAGEN = .bin/gojsschemagen
 GOLINT        = .bin/golint
 
@@ -26,7 +26,7 @@ setup-go:
 	    github.com/cespare/reflex \
 	    github.com/golang/mock/mockgen \
 	    github.com/mitchellh/gox \
-	    github.com/kardianos/govendor \
+	    github.com/Songmu/gocredits/cmd/gocredits \
 	    golang.org/x/lint/golint \
 	    github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 
@@ -75,8 +75,8 @@ lib/web/assets.go: static/js/bundle.js static/text/licenses $(GOBINDATA)
 static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources) $(WEBPACK)
 	$(WEBPACK) -p --progress
 
-static/text/licenses: vendor/vendor.json $(GOVENDOR)
-	$(GOVENDOR) license > $@
+static/text/licenses: $(GOCREDITS)
+	$(GOCREDITS) . > $@
 
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
 	$(MOCKGEN) -package web -destination $@ github.com/motemen/prchecklist/lib/web GitHubGateway
