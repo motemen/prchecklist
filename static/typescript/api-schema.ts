@@ -47,6 +47,7 @@ export interface ChecklistConfig {
     Events: {
       OnCheck: string[];
       OnComplete: string[];
+      OnRemove: string[];
     };
   };
   Stages: string[];
