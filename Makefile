@@ -21,12 +21,12 @@ setup: setup-go setup-node
 
 setup-go:
 	GOBIN=$(abspath .bin) go get -v \
-	    gobin.cc/go-bindata \
-	    gobin.cc/reflex \
-	    gobin.cc/mockgen \
-	    gobin.cc/gox \
-	    gobin.cc/govendor \
-	    gobin.cc/golint \
+	    github.com/jteeuwen/go-bindata/go-bindata \
+	    github.com/cespare/reflex \
+	    github.com/golang/mock/mockgen \
+	    github.com/mitchellh/gox \
+	    github.com/kardianos/govendor \
+	    golang.org/x/lint/golint \
 	    github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 
 setup-node:
@@ -78,7 +78,7 @@ static/text/licenses: vendor/vendor.json $(GOVENDOR)
 	$(GOVENDOR) license > $@
 
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
-	$(MOCKGEN) -package web -source $< GitHubGateway > $@
+	$(MOCKGEN) -package web -destination $@ github.com/motemen/prchecklist/lib/web GitHubGateway
 
 static/typescript/api-schema.ts: models.go $(GOJSSCHEMAGEN) node_modules/json-schema-to-typescript
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@
