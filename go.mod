@@ -16,7 +16,7 @@ require (
 	github.com/gorilla/schema v1.1.0
 	github.com/gorilla/sessions v1.2.0
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/motemen/go-graphql-query v0.0.0-20170605235615-01c39f52ab0b
+	github.com/motemen/go-graphql-query v0.0.0-20190808105856-1e064957a3ee
 	github.com/motemen/go-loghttp v0.0.0-20170804080138-974ac5ceac27
 	github.com/motemen/go-nuts v0.0.0-20190725124253-1d2432db96b0
 	github.com/patrickmn/go-cache v2.1.0+incompatible

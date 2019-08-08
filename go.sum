@@ -33,8 +33,8 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/motemen/go-graphql-query v0.0.0-20170605235615-01c39f52ab0b h1:RTxQR+iFA7TY6ke+Z93xhvqRhckRQjC9aLNjtgCHcF4=
-github.com/motemen/go-graphql-query v0.0.0-20170605235615-01c39f52ab0b/go.mod h1:Yt9CyYXAp49DM6CRBGOSzaCUtvx4r6o8GoNJPTwwmms=
+github.com/motemen/go-graphql-query v0.0.0-20190808105856-1e064957a3ee h1:M9yeeWASBJwVuo5N9k+SMRokc4n/xjUELun+tg/LXvE=
+github.com/motemen/go-graphql-query v0.0.0-20190808105856-1e064957a3ee/go.mod h1:Yt9CyYXAp49DM6CRBGOSzaCUtvx4r6o8GoNJPTwwmms=
 github.com/motemen/go-loghttp v0.0.0-20170804080138-974ac5ceac27 h1:uAI3rnOT1OSSY4PUtI/M1orb3q0ewkovwd3wr8xSno4=
 github.com/motemen/go-loghttp v0.0.0-20170804080138-974ac5ceac27/go.mod h1:6eu9CfGt5kfrMVgeu9MfB9PRUnpc47I+udLswiTszI8=
 github.com/motemen/go-nuts v0.0.0-20190725124253-1d2432db96b0 h1:CnSVrlMNAZMWI1+uH6ldpXRv2pe7t50IQX448EJrJhw=
