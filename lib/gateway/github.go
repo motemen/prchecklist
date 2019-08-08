@@ -475,7 +475,7 @@ func (g githubGateway) AuthenticateUser(ctx context.Context, code string) (*prch
 	}
 
 	return &prchecklist.GitHubUser{
-		ID:        u.GetID(),
+		ID:        int(u.GetID()),
 		Login:     u.GetLogin(),
 		AvatarURL: u.GetAvatarURL(),
 		Token:     token,
