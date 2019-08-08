@@ -76,6 +76,7 @@ static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources) $(WEBPAC
 	$(WEBPACK) -p --progress
 
 static/text/licenses: $(GOCREDITS)
+	go mod tidy # get all the dependencies regardress of OS, architecture and build tags
 	$(GOCREDITS) . > $@
 
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
