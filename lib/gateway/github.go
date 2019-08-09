@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/github"
-	"github.com/motemen/go-graphql-query"
+	graphqlquery "github.com/motemen/go-graphql-query"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
