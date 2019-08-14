@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/github"
-	"github.com/motemen/go-graphql-query"
+	graphqlquery "github.com/motemen/go-graphql-query"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -475,7 +475,7 @@ func (g githubGateway) AuthenticateUser(ctx context.Context, code string) (*prch
 	}
 
 	return &prchecklist.GitHubUser{
-		ID:        u.GetID(),
+		ID:        int(u.GetID()),
 		Login:     u.GetLogin(),
 		AvatarURL: u.GetAvatarURL(),
 		Token:     token,

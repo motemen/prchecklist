@@ -2,7 +2,7 @@ GOBINDATA     = .bin/go-bindata
 GOX           = .bin/gox
 MOCKGEN       = .bin/mockgen
 REFLEX        = .bin/reflex
-GOVENDOR      = .bin/govendor
+GOCREDITS     = .bin/gocredits
 GOJSSCHEMAGEN = .bin/gojsschemagen
 GOLINT        = .bin/golint
 
@@ -14,18 +14,19 @@ GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEA
 GOOSARCH  = linux/amd64
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
+export GO111MODULE=on
 
 default: build
 
 setup: setup-go setup-node
 
 setup-go:
-	GOBIN=$(abspath .bin) go get -v \
+	GO111MODULE=off GOBIN=$(abspath .bin) go get -v \
 	    github.com/jteeuwen/go-bindata/go-bindata \
 	    github.com/cespare/reflex \
 	    github.com/golang/mock/mockgen \
 	    github.com/mitchellh/gox \
-	    github.com/kardianos/govendor \
+	    github.com/Songmu/gocredits/cmd/gocredits \
 	    golang.org/x/lint/golint \
 	    github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 
@@ -74,8 +75,9 @@ lib/web/assets.go: static/js/bundle.js static/text/licenses $(GOBINDATA)
 static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources) $(WEBPACK)
 	$(WEBPACK) -p --progress
 
-static/text/licenses: vendor/vendor.json $(GOVENDOR)
-	$(GOVENDOR) license > $@
+static/text/licenses: $(GOCREDITS)
+	go mod tidy # get all the dependencies regardress of OS, architecture and build tags
+	$(GOCREDITS) . > $@
 
 lib/web/web_mock_test.go: lib/web/web.go $(MOCKGEN)
 	$(MOCKGEN) -package web -destination $@ github.com/motemen/prchecklist/lib/web GitHubGateway

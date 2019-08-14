@@ -107,7 +107,7 @@ func (u Usecase) notifyEvent(ctx context.Context, checklist *prchecklist.Checkli
 
 			v := url.Values{"payload": {string(payload)}}
 
-			_, err = httputil.Succeeding(http.PostForm(ch.URL, v))
+			_, err = httputil.Successful(http.PostForm(ch.URL, v))
 			if err != nil {
 				log.Printf("posting Slack webhook: %s", err)
 				return

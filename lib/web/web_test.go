@@ -51,7 +51,7 @@ func TestWeb_Static(t *testing.T) {
 	s := httptest.NewServer(web.Handler())
 	defer s.Close()
 
-	_, err := httputil.Succeeding(http.Get(s.URL + "/js/bundle.js"))
+	_, err := httputil.Successful(http.Get(s.URL + "/js/bundle.js"))
 	if err != nil {
 		t.Fatal(err)
 	}
