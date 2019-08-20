@@ -20,6 +20,7 @@ const (
 	eventTypeInvalid eventType = iota
 	eventTypeOnCheck
 	eventTypeOnComplete
+	eventTypeOnCompleteChecksOfUser
 	eventTypeOnRemove
 )
 
@@ -67,6 +68,18 @@ func (e completeEvent) slackMessageText(ctx context.Context) string {
 
 func (e completeEvent) eventType() eventType { return eventTypeOnComplete }
 
+type completeChecksOfUserEvent struct {
+	checklist *prchecklist.Checklist
+	user      prchecklist.GitHubUser
+}
+
+func (e completeChecksOfUserEvent) slackMessageText(ctx context.Context) string {
+	u := prchecklist.BuildURL(ctx, e.checklist.Path()).String()
+	return fmt.Sprintf("[<%s|%s>] completed checks of %s", u, e.checklist, e.user.Login)
+}
+
+func (e completeChecksOfUserEvent) eventType() eventType { return eventTypeOnCompleteChecksOfUser }
+
 func (u Usecase) notifyEvent(ctx context.Context, checklist *prchecklist.Checklist, event notificationEvent) error {
 	config := checklist.Config
 	if config == nil {
@@ -79,6 +92,8 @@ func (u Usecase) notifyEvent(ctx context.Context, checklist *prchecklist.Checkli
 		chNames = config.Notification.Events.OnRemove
 	case eventTypeOnCheck:
 		chNames = config.Notification.Events.OnCheck
+	case eventTypeOnCompleteChecksOfUser:
+		chNames = config.Notification.Events.OnCompleteChecksOfUser
 	case eventTypeOnComplete:
 		chNames = config.Notification.Events.OnComplete
 		lastCommitID := checklist.Commits[len(checklist.Commits)-1].Oid

@@ -158,6 +158,10 @@ func (u Usecase) loadConfig(buf []byte) (*prchecklist.ChecklistConfig, error) {
 		config.Notification.Events.OnRemove = []string{"default"}
 	}
 
+	if config.Notification.Events.OnCompleteChecksOfUser == nil {
+		config.Notification.Events.OnCompleteChecksOfUser = []string{}
+	}
+
 	return &config, nil
 }
 
@@ -185,6 +189,9 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 		// notify in sequence
 		events := []notificationEvent{
 			addCheckEvent{checklist: checklist, item: checklist.Item(featNum), user: user},
+		}
+		if checklist.CompletedChecksOfUser(checklist.Item(featNum).User) {
+			events = append(events, completeChecksOfUserEvent{checklist: checklist, user: user})
 		}
 		if checklist.Completed() {
 			events = append(events, completeEvent{checklist: checklist})

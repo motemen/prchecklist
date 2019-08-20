@@ -14,11 +14,15 @@ func makeStubChecklist() Checklist {
 		},
 		Items: []*ChecklistItem{
 			{
-				PullRequest: &PullRequest{Number: 2},
+				PullRequest: &PullRequest{Number: 2, User: GitHubUserSimple{Login: "foo"}},
 				CheckedBy:   []GitHubUser{},
 			},
 			{
-				PullRequest: &PullRequest{Number: 3},
+				PullRequest: &PullRequest{Number: 3, User: GitHubUserSimple{Login: "foo"}},
+				CheckedBy:   []GitHubUser{},
+			},
+			{
+				PullRequest: &PullRequest{Number: 4, User: GitHubUserSimple{Login: "bar"}},
 				CheckedBy:   []GitHubUser{},
 			},
 		},
@@ -43,9 +47,32 @@ func TestChecklist_Completed(t *testing.T) {
 	}
 
 	checklist.Items[1].CheckedBy = append(checklist.Items[1].CheckedBy, GitHubUser{})
+	checklist.Items[2].CheckedBy = append(checklist.Items[1].CheckedBy, GitHubUser{})
 	if expected, got := true, checklist.Completed(); got != expected {
 		t.Errorf("expected %v but got %v", expected, got)
 	}
+}
+
+func TestChecklist_CompletedChecksOfUser(t *testing.T) {
+	checklist := makeStubChecklist()
+
+	if expected, got := false, checklist.CompletedChecksOfUser(GitHubUserSimple{Login: "foo"}); got != expected {
+		t.Errorf("expected %v but got %v", expected, got)
+	}
+
+	checklist.Items[0].CheckedBy = append(checklist.Items[0].CheckedBy, GitHubUser{})
+	if expected, got := false, checklist.CompletedChecksOfUser(GitHubUserSimple{Login: "foo"}); got != expected {
+		t.Errorf("expected %v but got %v", expected, got)
+	}
+
+	checklist.Items[1].CheckedBy = append(checklist.Items[1].CheckedBy, GitHubUser{})
+	if expected, got := true, checklist.CompletedChecksOfUser(GitHubUserSimple{Login: "foo"}); got != expected {
+		t.Errorf("expected %v but got %v", expected, got)
+	}
+	if expected, got := false, checklist.CompletedChecksOfUser(GitHubUserSimple{Login: "bar"}); got != expected {
+		t.Errorf("expected %v but got %v", expected, got)
+	}
+
 }
 
 func TestChecklist_Item(t *testing.T) {
