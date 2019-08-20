@@ -44,8 +44,8 @@ func (c Checklist) Completed() bool {
 	return true
 }
 
-// UserCompleted returns whether all the items are checked by any user.
-func (c Checklist) UserCompleted(user GitHubUserSimple) bool {
+// CompletedChecksOfUser returns whether all the items are checked by any user.
+func (c Checklist) CompletedChecksOfUser(user GitHubUserSimple) bool {
 	for _, item := range c.Items {
 		if len(item.CheckedBy) == 0 && item.User.Login == user.Login {
 			return false
@@ -87,10 +87,10 @@ type ChecklistConfig struct {
 	Stages       []string
 	Notification struct {
 		Events struct {
-			OnComplete     []string `yaml:"on_complete"`      // channel names
-			OnUserComplete []string `yaml:"on_user_complete"` // channel names
-			OnCheck        []string `yaml:"on_check"`         // channel names
-			OnRemove       []string `yaml:"on_remove"`        // channel names
+			OnComplete             []string `yaml:"on_complete"`                // channel names
+			OnCompleteChecksOfUser []string `yaml:"on_complete_checks_of_user"` // channel names
+			OnCheck                []string `yaml:"on_check"`                   // channel names
+			OnRemove               []string `yaml:"on_remove"`                  // channel names
 		}
 		Channels map[string]struct{ URL string }
 	}
