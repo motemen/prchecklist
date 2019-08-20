@@ -78,7 +78,7 @@ func (e completeChecksOfUserEvent) slackMessageText(ctx context.Context) string 
 	return fmt.Sprintf("[<%s|%s>] completed checks of %s", u, e.checklist, e.user.Login)
 }
 
-func (e completeChecksOfUserEvent) eventType() eventType { return eventTypeOnComplete }
+func (e completeChecksOfUserEvent) eventType() eventType { return eventTypeOnCompleteChecksOfUser }
 
 func (u Usecase) notifyEvent(ctx context.Context, checklist *prchecklist.Checklist, event notificationEvent) error {
 	config := checklist.Config
