@@ -44,7 +44,7 @@ func (c Checklist) Completed() bool {
 	return true
 }
 
-// CompletedChecksOfUser returns whether all the items are checked by any user.
+// CompletedChecksOfUser returns whether all the items of user are checked by any user.
 func (c Checklist) CompletedChecksOfUser(user GitHubUserSimple) bool {
 	for _, item := range c.Items {
 		if len(item.CheckedBy) == 0 && item.User.Login == user.Login {
