@@ -1,13 +1,12 @@
-// +build ignore
-
 package repository
 
 import (
 	"context"
 	"log"
 
-	"cloud.google.com/go/datastore"
 	"github.com/pkg/errors"
+
+	"cloud.google.com/go/datastore"
 
 	"github.com/motemen/prchecklist"
 )

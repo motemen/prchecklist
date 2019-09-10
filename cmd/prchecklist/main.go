@@ -40,7 +40,11 @@ func getenv(key, def string) string {
 
 func init() {
 	flag.StringVar(&datasource, "datasource", datasource, "database source name")
-	flag.StringVar(&addr, "listen", "localhost:8080", "`address` to listen")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	flag.StringVar(&addr, "listen", ":"+port, "`address` to listen")
 	flag.BoolVar(&showVersion, "version", false, "show version information")
 	flag.BoolVar(&showLicenses, "licenses", false, "show license notifications")
 }
