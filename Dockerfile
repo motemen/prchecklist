@@ -20,6 +20,8 @@ RUN go mod download
 ADD . .
 RUN rm -rf node_modules && make BUILDFLAGS='-mod=readonly'
 
-EXPOSE 80
-CMD ["./prchecklist"]
+EXPOSE 8080
+
+# For self-signed GitHub Enterprise Server
+CMD if [ -n "$(ls -1 /usr/local/share/ca-certificates)" ]; then update-ca-certificates; fi && exec ./prchecklist
 
