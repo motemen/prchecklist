@@ -3,9 +3,12 @@ module github.com/motemen/prchecklist
 go 1.12
 
 require (
+	github.com/a-urth/go-bindata v0.0.0-20180209162145-df38da164efc // indirect
 	github.com/boltdb/bolt v1.3.1
+	github.com/cespare/reflex v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.0
+	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/garyburd/redigo v1.6.0
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2 // indirect
@@ -15,10 +18,13 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/schema v1.1.0
 	github.com/gorilla/sessions v1.2.0
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/motemen/go-graphql-query v0.0.0-20190808105856-1e064957a3ee
 	github.com/motemen/go-loghttp v0.0.0-20170804080138-974ac5ceac27
 	github.com/motemen/go-nuts v0.0.0-20190725124253-1d2432db96b0
+	github.com/ogier/pflag v0.0.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.3.0
