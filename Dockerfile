@@ -17,11 +17,18 @@ RUN \
 ADD go.mod go.sum ./
 RUN go mod download
 
-ADD . .
-RUN rm -rf node_modules && make BUILDFLAGS='-mod=readonly'
+ADD Makefile *.json *.js yarn.lock *.go ./
+ADD static static
+ADD lib lib
+ADD cmd cmd
+ADD scripts scripts
+RUN make setup
+RUN make build BUILDFLAGS='-mod=readonly'
 
 EXPOSE 8080
 
 # For self-signed GitHub Enterprise Server
-CMD if [ -n "$(ls -1 /usr/local/share/ca-certificates)" ]; then update-ca-certificates; fi && exec ./prchecklist
+CMD if [ -n "$LOCAL_CA_CERT_BASE64" ]; then echo "$LOCAL_CA_CERT_BASE64" | base64 --decode > /usr/local/share/ca-certificates/local.crt; fi && \
+    if [ -n "$(ls -1 /usr/local/share/ca-certificates)" ]; then update-ca-certificates; fi && \
+    exec ./prchecklist
 

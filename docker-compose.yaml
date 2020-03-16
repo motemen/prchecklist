@@ -2,8 +2,6 @@ version: '3'
 services:
   app:
     build: .
-    volumes:
-      - ./certs:/usr/local/share/ca-certificates
     ports:
       - "${PORT-8080}:${PORT-8080}"
     environment:
@@ -14,3 +12,4 @@ services:
       - GITHUB_CLIENT_ID
       - GITHUB_CLIENT_SECRET
       - GITHUB_DOMAIN
+      - LOCAL_CERT_BASE64
