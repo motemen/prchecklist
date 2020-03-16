@@ -21,7 +21,7 @@ default: build
 setup: setup-node
 
 setup-node:
-	yarn install
+	yarn install --frozen-lockfile
 
 node_modules/%: package.json
 	@$(MAKE) setup-node
@@ -60,7 +60,7 @@ lib/web/assets.go: static/js/bundle.js static/text/licenses
 	$(GOBINDATA) -pkg web -o $@ -prefix static/ -modtime 1 static/js static/text
 
 static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources)
-	$(WEBPACK) -p --progress
+	$(WEBPACK) --progress
 
 static/text/licenses:
 	go mod tidy # get all the dependencies regardress of OS, architecture and build tags
