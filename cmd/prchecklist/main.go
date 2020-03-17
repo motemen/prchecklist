@@ -45,7 +45,7 @@ func init() {
 	}
 
 	datasource = getenv("PRCHECKLIST_DATASOURCE", defaultDatasource)
-	flag.StringVar(&datasource, "datasource", datasource, "database source name")
+	flag.StringVar(&datasource, "datasource", datasource, "database source name (PRCHECKLIST_DATASOURCE)")
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
