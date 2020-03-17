@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	datasource   = getenv("PRCHECKLIST_DATASOURCE", "bolt:./prchecklist.db")
+	datasource   string
 	addr         string
 	showVersion  bool
 	showLicenses bool
@@ -39,6 +39,12 @@ func getenv(key, def string) string {
 }
 
 func init() {
+	var defaultDatasource = "bolt:./prchecklist.db"
+	if os.Getenv("GOOGLE_CLOUD_PROJECT") != "" {
+		defaultDatasource = "datastore:" + os.Getenv("GOOGLE_CLOUD_PROJECT")
+	}
+
+	datasource = getenv("PRCHECKLIST_DATASOURCE", defaultDatasource)
 	flag.StringVar(&datasource, "datasource", datasource, "database source name")
 	port := os.Getenv("PORT")
 	if port == "" {

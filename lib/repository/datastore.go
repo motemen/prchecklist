@@ -24,7 +24,8 @@ func init() {
 	registerCoreRepositoryBuilder("datastore", NewDatastoreCore)
 }
 
-func NewDatastoreCore(projectID string) (coreRepository, error) {
+func NewDatastoreCore(datasource string) (coreRepository, error) {
+	projectID := datasource[len("datastore:"):]
 	client, err := datastore.NewClient(context.Background(), projectID)
 	return &datastoreRepository{
 		client: client,
