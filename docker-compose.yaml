@@ -12,4 +12,4 @@ services:
       - GITHUB_CLIENT_ID
       - GITHUB_CLIENT_SECRET
       - GITHUB_DOMAIN
-      - LOCAL_CERT_BASE64
+      - LOCAL_CA_CERT_BASE64

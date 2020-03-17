@@ -3,10 +3,9 @@ FROM golang:1.14
 WORKDIR /app
 
 
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # FIXME
 RUN \
-    set -o pipefail && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
     echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
     apt-get update && \
@@ -14,14 +13,14 @@ RUN \
     apt-get clean && \
     rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
-ADD go.mod go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
-ADD Makefile *.json *.js yarn.lock *.go ./
-ADD static static
-ADD lib lib
-ADD cmd cmd
-ADD scripts scripts
+COPY Makefile *.json *.js yarn.lock *.go ./
+COPY static static
+COPY lib lib
+COPY cmd cmd
+COPY scripts scripts
 RUN make setup
 RUN make build BUILDFLAGS='-mod=readonly'
 
