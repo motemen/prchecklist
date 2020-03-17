@@ -1,13 +1,12 @@
-// +build ignore
-
 package repository
 
 import (
 	"context"
 	"log"
 
-	"cloud.google.com/go/datastore"
 	"github.com/pkg/errors"
+
+	"cloud.google.com/go/datastore"
 
 	"github.com/motemen/prchecklist"
 )
@@ -25,7 +24,10 @@ func init() {
 	registerCoreRepositoryBuilder("datastore", NewDatastoreCore)
 }
 
-func NewDatastoreCore(projectID string) (coreRepository, error) {
+// NewDatastoreCore creates a coreRepository backed by Cloud Datastore.
+// The datasource must start with "datastore:", followed by a GCP project id.
+func NewDatastoreCore(datasource string) (coreRepository, error) {
+	projectID := datasource[len("datastore:"):]
 	client, err := datastore.NewClient(context.Background(), projectID)
 	return &datastoreRepository{
 		client: client,
