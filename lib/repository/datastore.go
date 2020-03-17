@@ -24,6 +24,8 @@ func init() {
 	registerCoreRepositoryBuilder("datastore", NewDatastoreCore)
 }
 
+// NewDatastoreCore creates a coreRepository backed by Cloud Datastore.
+// The datasource must start with "datastore:", followed by a GCP project id.
 func NewDatastoreCore(datasource string) (coreRepository, error) {
 	projectID := datasource[len("datastore:"):]
 	client, err := datastore.NewClient(context.Background(), projectID)
