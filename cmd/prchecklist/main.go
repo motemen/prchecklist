@@ -22,7 +22,7 @@ import (
 
 var (
 	datasource   = getenv("PRCHECKLIST_DATASOURCE", "bolt:./prchecklist.db")
-	addr         string
+	addr         = ":" + getenv("PORT", "8080")
 	showVersion  bool
 	showLicenses bool
 )
@@ -39,8 +39,8 @@ func getenv(key, def string) string {
 }
 
 func init() {
-	flag.StringVar(&datasource, "datasource", datasource, "database source name")
-	flag.StringVar(&addr, "listen", "localhost:8080", "`address` to listen")
+	flag.StringVar(&datasource, "datasource", datasource, "database source name (PRCHECKLIST_DATASOURCE)")
+	flag.StringVar(&addr, "listen", addr, "`address` to listen")
 	flag.BoolVar(&showVersion, "version", false, "show version information")
 	flag.BoolVar(&showLicenses, "licenses", false, "show license notifications")
 }
