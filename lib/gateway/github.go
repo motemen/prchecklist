@@ -18,7 +18,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
-	"github.com/motemen/prchecklist"
+	"github.com/motemen/prchecklist/v2"
 )
 
 const (

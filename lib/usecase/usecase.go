@@ -12,7 +12,7 @@ import (
 	"golang.org/x/tools/container/intsets"
 	"gopkg.in/yaml.v2"
 
-	"github.com/motemen/prchecklist"
+	"github.com/motemen/prchecklist/v2"
 )
 
 // GitHubGateway is an interface that makes API calls to GitHub (Enterprise) and

@@ -8,7 +8,7 @@ import (
 
 	"cloud.google.com/go/datastore"
 
-	"github.com/motemen/prchecklist"
+	"github.com/motemen/prchecklist/v2"
 )
 
 type datastoreRepository struct {

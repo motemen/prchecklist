@@ -10,7 +10,7 @@ WEBPACK          = yarn webpack
 WEBPACKDEVSERVER = yarn webpack-dev-server
 TSLINT           = yarn tslint
 
-GOLDFLAGS = -X github.com/motemen/prchecklist.Version=$$(git describe --tags HEAD)
+GOLDFLAGS = -X github.com/motemen/prchecklist/v2.Version=$$(git describe --tags HEAD)
 GOOSARCH  = linux/amd64
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
@@ -48,7 +48,7 @@ lint:
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...
-	./scripts/go-test-cover . ./lib/...
+	go test -cover . ./lib/...
 
 develop:
 	test "$$GITHUB_CLIENT_ID" && test "$$GITHUB_CLIENT_SECRET"
@@ -67,7 +67,7 @@ static/text/licenses:
 	$(GOCREDITS) . > $@
 
 lib/web/web_mock_test.go: lib/web/web.go
-	$(MOCKGEN) -package web -destination $@ github.com/motemen/prchecklist/lib/web GitHubGateway
+	$(MOCKGEN) -package web -destination $@ github.com/motemen/prchecklist/v2/lib/web GitHubGateway
 
 static/typescript/api-schema.ts: models.go node_modules/json-schema-to-typescript
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@

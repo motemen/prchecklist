@@ -10,7 +10,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/pkg/errors"
 
-	"github.com/motemen/prchecklist"
+	"github.com/motemen/prchecklist/v2"
 )
 
 func init() {
