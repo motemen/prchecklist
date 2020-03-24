@@ -13,11 +13,11 @@ import (
 
 	_ "github.com/motemen/go-loghttp/global"
 
-	"github.com/motemen/prchecklist"
-	"github.com/motemen/prchecklist/lib/gateway"
-	"github.com/motemen/prchecklist/lib/repository"
-	"github.com/motemen/prchecklist/lib/usecase"
-	"github.com/motemen/prchecklist/lib/web"
+	"github.com/motemen/prchecklist/v2"
+	"github.com/motemen/prchecklist/v2/lib/gateway"
+	"github.com/motemen/prchecklist/v2/lib/repository"
+	"github.com/motemen/prchecklist/v2/lib/usecase"
+	"github.com/motemen/prchecklist/v2/lib/web"
 )
 
 var (

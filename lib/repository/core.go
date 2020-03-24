@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/motemen/prchecklist"
+	"github.com/motemen/prchecklist/v2"
 	"github.com/pkg/errors"
 )
 

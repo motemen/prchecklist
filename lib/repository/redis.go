@@ -9,7 +9,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/pkg/errors"
 
-	"github.com/motemen/prchecklist"
+	"github.com/motemen/prchecklist/v2"
 )
 
 const (

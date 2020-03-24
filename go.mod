@@ -1,4 +1,4 @@
-module github.com/motemen/prchecklist
+module github.com/motemen/prchecklist/v2
 
 go 1.12
 

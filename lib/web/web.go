@@ -22,8 +22,8 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 
-	"github.com/motemen/prchecklist"
-	"github.com/motemen/prchecklist/lib/usecase"
+	"github.com/motemen/prchecklist/v2"
+	"github.com/motemen/prchecklist/v2/lib/usecase"
 )
 
 var (
