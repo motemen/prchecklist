@@ -1,3 +1,9 @@
+## [v2.4.0](https://github.com/motemen/prchecklist/compare/v2.3.0...v2.4.0) (2020-03-24)
+
+* Support Docker [#64](https://github.com/motemen/prchecklist/pull/64)
+* Support Google App Engine [#65](https://github.com/motemen/prchecklist/pull/65)
+* Modified module path to align with Go modules versioning [#66](https://github.com/motemen/prchecklist/pull/66)
+
 ## [v2.3.0](https://github.com/motemen/prchecklist/compare/v2.2.2...v2.3.0) (2019-08-22)
 
 * Add complete notification for each user [#63](https://github.com/motemen/prchecklist/pull/63) ([mechairoi](https://github.com/mechairoi))
