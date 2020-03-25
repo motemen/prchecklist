@@ -1,12 +1,12 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es2015",
-        "noImplicitAny": true,
-        "noImplicitReturns": true,
-        "noUnusedLocals": true,
-        "strictNullchecks": true,
-        "sourceMap": false,
-        "jsx": "react"
-    }
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2015",
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "strictNullChecks": false,
+    "sourceMap": false,
+    "jsx": "react"
+  }
 }
