@@ -8,7 +8,7 @@ GOLINT        = go run golang.org/x/lint/golint
 
 WEBPACK          = yarn webpack
 WEBPACKDEVSERVER = yarn webpack-dev-server
-TSLINT           = yarn tslint
+ESLINT           = yarn eslint
 
 GOLDFLAGS = -X github.com/motemen/prchecklist/v2.Version=$$(git describe --tags HEAD)
 GOOSARCH  = linux/amd64
@@ -44,7 +44,7 @@ xbuild: lib/web/assets.go
 
 lint:
 	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
-	$(TSLINT) --exclude '**/api-schema.ts' static/typescript/*
+	$(ESLINT) static/typescript/*
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...
@@ -63,7 +63,6 @@ static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources)
 	$(WEBPACK) --progress
 
 static/text/licenses:
-	go mod tidy # get all the dependencies regardress of OS, architecture and build tags
 	$(GOCREDITS) . > $@
 
 lib/web/web_mock_test.go: lib/web/web.go

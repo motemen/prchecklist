@@ -7,13 +7,13 @@ import {NavComponent} from './NavComponent';
 
 import '../scss/app.scss';
 
-if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/.test(location.pathname)) {
+if (/^\/([^/]+)\/([^/]+)\/pull\/(\d+)$/.test(location.pathname)) {
   ReactDOM.render(
     <ChecklistComponent
       checklistRef={{Owner: RegExp.$1, Repo: RegExp.$2, Number: parseInt(RegExp.$3, 10), Stage: ''}} />,
     document.querySelector('#main'),
   );
-} else if (/^\/([^\/]+)\/([^\/]+)\/pull\/(\d+)\/([^\/]+)$/.test(location.pathname)) {
+} else if (/^\/([^/]+)\/([^/]+)\/pull\/(\d+)\/([^/]+)$/.test(location.pathname)) {
   ReactDOM.render(
     <ChecklistComponent
       checklistRef={{Owner: RegExp.$1, Repo: RegExp.$2, Number: parseInt(RegExp.$3, 10), Stage: RegExp.$4}} />,
