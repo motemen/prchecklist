@@ -10,7 +10,13 @@ WEBPACK          = yarn webpack
 WEBPACKDEVSERVER = yarn webpack-dev-server
 ESLINT           = yarn eslint
 
-GOLDFLAGS = -X github.com/motemen/prchecklist/v2.Version=$$(git describe --tags HEAD)
+GIT_VERSION := $(shell git describe --tags HEAD)
+
+ifeq ($(GIT_VERSION),)
+    GOLDFLAGS =
+else
+    GOLDFLAGS = -X github.com/motemen/prchecklist/v2.Version=$(GIT_VERSION)
+endif
 GOOSARCH  = linux/amd64
 
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
