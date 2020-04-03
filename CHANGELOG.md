@@ -1,3 +1,7 @@
+## [v2.4.1](https://github.com/motemen/prchecklist/compare/v2.4.0...v2.4.1) (2020-04-03)
+
+* Upgrade npm modules [#69](https://github.com/motemen/prchecklist/pull/69) ([motemen](https://github.com/motemen))
+
 ## [v2.4.0](https://github.com/motemen/prchecklist/compare/v2.3.0...v2.4.0) (2020-03-24)
 
 * Support Docker [#64](https://github.com/motemen/prchecklist/pull/64)
