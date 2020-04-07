@@ -14,8 +14,7 @@ interface NavState {
 export class NavComponent extends React.Component<NavProps, NavState> {
   public componentDidMount() {
     this.setState({
-      // FIXME
-      version: document.querySelector('meta[name="prchecklist version"]')?.getAttribute('content'),
+      version: process.env.GIT_VERSION,
     });
   }
 
