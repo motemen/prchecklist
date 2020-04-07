@@ -1,3 +1,8 @@
+## [v2.4.2](https://github.com/motemen/prchecklist/compare/v2.4.1...v2.4.2) (2020-04-07)
+
+* use environment variables as a source of the version instead of a meta element [#71](https://github.com/motemen/prchecklist/pull/71) ([aereal](https://github.com/aereal))
+* Test TypeScript [#70](https://github.com/motemen/prchecklist/pull/70) ([motemen](https://github.com/motemen))
+
 ## [v2.4.1](https://github.com/motemen/prchecklist/compare/v2.4.0...v2.4.1) (2020-04-03)
 
 * Upgrade npm modules [#69](https://github.com/motemen/prchecklist/pull/69) ([motemen](https://github.com/motemen))
