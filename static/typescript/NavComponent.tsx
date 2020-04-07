@@ -21,7 +21,7 @@ export class NavComponent extends React.Component<NavProps, NavState> {
 
   public render() {
     return <nav>
-      <div className="logo"><strong>{this.props.logo || `prchecklist ${this.state.version}`}</strong></div>
+      <div className="logo"><strong>{this.props.logo || `prchecklist ${this.state?.version}`}</strong></div>
       <div className="stages">{this.props.stages}</div>
       {
         this.props.me
