@@ -55,6 +55,7 @@ lint:
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...
 	go test -cover . ./lib/...
+	yarn test
 
 develop:
 	test "$$GITHUB_CLIENT_ID" && test "$$GITHUB_CLIENT_SECRET"
