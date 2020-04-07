@@ -14,13 +14,14 @@ interface NavState {
 export class NavComponent extends React.Component<NavProps, NavState> {
   public componentDidMount() {
     this.setState({
-      version: document.querySelector('meta[name="prchecklist version"]').getAttribute('content'),
+      // FIXME
+      version: document.querySelector('meta[name="prchecklist version"]')?.getAttribute('content'),
     });
   }
 
   public render() {
     return <nav>
-      <div className="logo"><strong>{this.props.logo || `prchecklist ${this.state.version}`}</strong></div>
+      <div className="logo"><strong>{this.props.logo || `prchecklist ${this.state?.version}`}</strong></div>
       <div className="stages">{this.props.stages}</div>
       {
         this.props.me

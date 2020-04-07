@@ -50,11 +50,12 @@ xbuild: lib/web/assets.go
 
 lint:
 	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
-	$(ESLINT) static/typescript/*
+	$(ESLINT) 'static/typescript/**/*.{ts,tsx}'
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...
 	go test -cover . ./lib/...
+	yarn test
 
 develop:
 	test "$$GITHUB_CLIENT_ID" && test "$$GITHUB_CLIENT_SECRET"

@@ -1,0 +1,302 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[` 1`] = `
+<section>
+  Loading...
+</section>
+`;
+
+exports[` 2`] = `
+<section
+  className=""
+>
+  <link
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet"
+  />
+  <nav>
+    <div
+      className="logo"
+    >
+      <strong>
+        <span>
+          motemen
+          /
+          test-repository
+          #
+          2
+          
+        </span>
+      </strong>
+    </div>
+    <div
+      className="stages"
+    >
+      <select
+        className="stages"
+        onChange={[Function]}
+        value="production"
+      >
+        <option>
+          qa
+        </option>
+        <option>
+          production
+        </option>
+      </select>
+    </div>
+    <div
+      className="user-signedin"
+    >
+      motemen
+    </div>
+  </nav>
+  <h1>
+    <span
+      className="title"
+    >
+      <a
+        href="https://github.com/motemen/test-repository/pull/2"
+      >
+        #
+        2
+      </a>
+       
+      Release 2017-10-11 20:18:22 +0900
+    </span>
+  </h1>
+  <div
+    className="items"
+    id="checklist-items"
+  >
+    <ul>
+      <li>
+        <div
+          className="check"
+        >
+          <button
+            className="checkbox material-icons checked"
+            onClick={[Function]}
+          >
+            thumb_up
+          </button>
+        </div>
+        <div
+          className="number"
+        >
+          <a
+            href="https://github.com/motemen/test-repository/pull/1"
+          >
+            #
+            1
+          </a>
+        </div>
+         
+        <div
+          className="title"
+          title="feature-1"
+        >
+          feature-1
+        </div>
+         
+        <div
+          className="user"
+        >
+          @
+          motemen
+        </div>
+         
+        <div
+          className="checkedby"
+        >
+          <span
+            className="user"
+          >
+            <img
+              alt="motemen"
+              src="https://avatars2.githubusercontent.com/u/8465?v=4"
+            />
+          </span>
+        </div>
+      </li>
+      <li>
+        <div
+          className="check"
+        >
+          <button
+            className="checkbox material-icons false"
+            onClick={[Function]}
+          >
+            thumb_up
+          </button>
+        </div>
+        <div
+          className="number"
+        >
+          <a
+            href="https://github.com/motemen/test-repository/pull/3"
+          >
+            #
+            3
+          </a>
+        </div>
+         
+        <div
+          className="title"
+          title="foo bar baz foo foo foo foo foo foo foof foohof ofhfof"
+        >
+          foo bar baz foo foo foo foo foo foo foof foohof ofhfof
+        </div>
+         
+        <div
+          className="user"
+        >
+          @
+          motemen
+        </div>
+         
+        <div
+          className="checkedby"
+        />
+      </li>
+      <li>
+        <div
+          className="check"
+        >
+          <button
+            className="checkbox material-icons checked"
+            onClick={[Function]}
+          >
+            thumb_up
+          </button>
+        </div>
+        <div
+          className="number"
+        >
+          <a
+            href="https://github.com/motemen/test-repository/pull/4"
+          >
+            #
+            4
+          </a>
+        </div>
+         
+        <div
+          className="title"
+          title="1403357307"
+        >
+          1403357307
+        </div>
+         
+        <div
+          className="user"
+        >
+          @
+          motemen
+        </div>
+         
+        <div
+          className="checkedby"
+        >
+          <span
+            className="user"
+          >
+            <img
+              alt="motemen"
+              src="https://avatars2.githubusercontent.com/u/8465?v=4"
+            />
+          </span>
+        </div>
+      </li>
+      <li>
+        <div
+          className="check"
+        >
+          <button
+            className="checkbox material-icons false"
+            onClick={[Function]}
+          >
+            thumb_up
+          </button>
+        </div>
+        <div
+          className="number"
+        >
+          <a
+            href="https://github.com/motemen/test-repository/pull/7"
+          >
+            #
+            7
+          </a>
+        </div>
+         
+        <div
+          className="title"
+          title="feature-y"
+        >
+          feature-y
+        </div>
+         
+        <div
+          className="user"
+        >
+          @
+          werckerbot
+        </div>
+         
+        <div
+          className="checkedby"
+        />
+      </li>
+      <li>
+        <div
+          className="check"
+        >
+          <button
+            className="checkbox material-icons false"
+            onClick={[Function]}
+          >
+            thumb_up
+          </button>
+        </div>
+        <div
+          className="number"
+        >
+          <a
+            href="https://github.com/motemen/test-repository/pull/33"
+          >
+            #
+            33
+          </a>
+        </div>
+         
+        <div
+          className="title"
+          title="mk-feature"
+        >
+          mk-feature
+        </div>
+         
+        <div
+          className="user"
+        >
+          @
+          motemen
+        </div>
+         
+        <div
+          className="checkedby"
+        />
+      </li>
+    </ul>
+  </div>
+  <pre>
+    Blah blah blah
+- [ ] #1 feature-1 @motemen
+- [ ] #3 foo bar baz foo foo foo foo foo foo foof foohof ofhfof @motemen
+- [ ] #33 mk-feature @motemen
+- [ ] #4 1403357307 @motemen
+- [ ] #7 feature-y @motemen
+  </pre>
+</section>
+`;
