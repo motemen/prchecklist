@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[` 1`] = `
+<nav>
+  <div
+    className="logo"
+  >
+    <strong>
+      prchecklist undefined
+    </strong>
+  </div>
+  <div
+    className="stages"
+  />
+  <a
+    className="user-signedin"
+    href="/auth?return_to=%2F"
+  >
+    Login
+  </a>
+</nav>
+`;
