@@ -66,7 +66,7 @@ lib/web/assets.go: static/js/bundle.js static/text/licenses
 	$(GOBINDATA) -pkg web -o $@ -prefix static/ -modtime 1 static/js static/text
 
 static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources)
-	$(WEBPACK) --progress
+	env GIT_VERSION=$(GIT_VERSION) $(WEBPACK) --progress
 
 static/text/licenses:
 	$(GOCREDITS) . > $@

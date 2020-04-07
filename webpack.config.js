@@ -1,4 +1,5 @@
 const path = require('path');
+const { DefinePlugin } = require('webpack');
 
 module.exports = {
   entry: './static/typescript/index.tsx',
@@ -23,5 +24,8 @@ module.exports = {
       '/': 'http://localhost:8081'
     },
     publicPath: '/js/'
-  }
+  },
+  plugins: [
+    new DefinePlugin(['GIT_VERSION']),
+  ],
 };
