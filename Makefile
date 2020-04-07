@@ -50,7 +50,7 @@ xbuild: lib/web/assets.go
 
 lint:
 	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
-	$(ESLINT) static/typescript/*
+	$(ESLINT) 'static/typescript/**/*.{ts,tsx}'
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...

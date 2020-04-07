@@ -6,7 +6,7 @@ import {NavComponent} from './NavComponent';
 test('', async () => {
   const component = renderer.create(<NavComponent />);
 
-  let tree = component.toJSON();
+  const tree = component.toJSON();
   expect(tree).toMatchSnapshot();
 });
 
