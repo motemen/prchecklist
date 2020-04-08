@@ -2,9 +2,12 @@ package web
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/gob"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -163,9 +166,32 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 	ctx := prchecklist.RequestContext(req)
 
 	callback := prchecklist.BuildURL(ctx, "/auth/callback")
-	if returnTo := req.URL.Query().Get("return_to"); returnTo != "" {
-		callback.RawQuery = url.Values{"return_to": {returnTo}}.Encode()
+
+	// XXX Special and ad-hoc implementation for review apps
+	var crossDomainOAuth bool
+	if callbackHost := os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_HOST"); callbackHost != "" {
+		callback.Host = callbackHost
+		crossDomainOAuth = true
 	}
+
+	returnTo := req.URL.Query().Get("return_to")
+	if returnTo == "" {
+		returnTo = "/"
+	}
+
+	if crossDomainOAuth {
+		returnTo = prchecklist.BuildURL(ctx, returnTo).String()
+	}
+
+	v := url.Values{"return_to": {returnTo}}
+
+	if crossDomainOAuth {
+		h := hmac.New(sha256.New, []byte(sessionSecret))
+		h.Write([]byte(returnTo))
+		v.Add("sig", fmt.Sprintf("%x", h.Sum(nil)))
+	}
+
+	callback.RawQuery = v.Encode()
 
 	authURL := web.github.AuthCodeURL(state, callback)
 
@@ -225,6 +251,18 @@ func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) err
 
 	returnTo := req.URL.Query().Get("return_to")
 	if !strings.HasPrefix(returnTo, "/") {
+		if sig := req.URL.Query().Get("sig"); sig != "" {
+			h := hmac.New(sha256.New, []byte(sessionSecret))
+			h.Write([]byte(returnTo))
+
+			sigBytes := make([]byte, 32)
+			_, err = hex.Decode(sigBytes, []byte(sig))
+			if err == nil && hmac.Equal(h.Sum(nil), sigBytes) {
+				http.Redirect(w, req, returnTo, http.StatusFound)
+				return nil
+			}
+		}
+
 		returnTo = "/"
 	}
 
