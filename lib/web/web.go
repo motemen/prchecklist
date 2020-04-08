@@ -232,7 +232,6 @@ func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) err
 	ctx := prchecklist.RequestContext(req)
 
 	code := req.URL.Query().Get("code")
-
 	user, err := web.github.AuthenticateUser(ctx, code)
 	if err != nil {
 		return err
