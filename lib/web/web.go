@@ -175,7 +175,7 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	returnTo := req.URL.Query().Get("return_to")
-	if returnTo != "" {
+	if returnTo == "" {
 		returnTo = "/"
 	}
 
