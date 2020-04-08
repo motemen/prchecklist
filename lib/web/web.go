@@ -167,31 +167,27 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 
 	callback := prchecklist.BuildURL(ctx, "/auth/callback")
 
+	if returnTo := req.URL.Query().Get("return_to"); returnTo != "" {
+		v := url.Values{"return_to": {returnTo}}
+		callback.RawQuery = v.Encode()
+
+	}
+
 	// XXX Special and ad-hoc implementation for review apps
-	var crossDomainOAuth bool
 	if callbackHost := os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_HOST"); callbackHost != "" {
-		callback.Host = callbackHost
-		crossDomainOAuth = true
-	}
-
-	returnTo := req.URL.Query().Get("return_to")
-	if returnTo == "" {
-		returnTo = "/"
-	}
-
-	if crossDomainOAuth {
-		returnTo = prchecklist.BuildURL(ctx, returnTo).String()
-	}
-
-	v := url.Values{"return_to": {returnTo}}
-
-	if crossDomainOAuth {
 		h := hmac.New(sha256.New, []byte(sessionSecret))
-		h.Write([]byte(returnTo))
-		v.Add("sig", fmt.Sprintf("%x", h.Sum(nil)))
-	}
+		h.Write([]byte(callback.String()))
 
-	callback.RawQuery = v.Encode()
+		callback = &url.URL{
+			Scheme: callback.Scheme,
+			Host:   callbackHost,
+			Path:   callback.Path,
+			RawQuery: url.Values{
+				"forward":     {callback.String()},
+				"forward_sig": {fmt.Sprintf("%x", h.Sum(nil))},
+			}.Encode(),
+		}
+	}
 
 	authURL := web.github.AuthCodeURL(state, callback)
 
@@ -215,6 +211,36 @@ func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
 }
 
 func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
+	forward := req.URL.Query().Get("forward")
+	forwardSig := req.URL.Query().Get("forward_sig")
+
+	if forward != "" && forwardSig != "" {
+		h := hmac.New(sha256.New, []byte(sessionSecret))
+		h.Write([]byte(forward))
+
+		sigBytes := make([]byte, 32)
+		_, err := hex.Decode(sigBytes, []byte(forwardSig))
+		if err != nil {
+			return err
+		}
+		if !hmac.Equal(h.Sum(nil), sigBytes) {
+			return errors.New("Signature invalid")
+		}
+
+		forwardURL, err := url.Parse(forward)
+		if err != nil {
+			return err
+		}
+
+		q := forwardURL.Query()
+		q.Set("code", req.URL.Query().Get("code"))
+		q.Set("state", req.URL.Query().Get("state"))
+		forwardURL.RawQuery = q.Encode()
+
+		http.Redirect(w, req, forwardURL.String(), http.StatusFound)
+		return nil
+	}
+
 	sess, err := web.sessionStore.Get(req, sessionName)
 	if err != nil {
 		return errors.Wrapf(err, "sessionStore.Get")
@@ -251,18 +277,6 @@ func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) err
 
 	returnTo := req.URL.Query().Get("return_to")
 	if !strings.HasPrefix(returnTo, "/") {
-		if sig := req.URL.Query().Get("sig"); sig != "" {
-			h := hmac.New(sha256.New, []byte(sessionSecret))
-			h.Write([]byte(returnTo))
-
-			sigBytes := make([]byte, 32)
-			_, err = hex.Decode(sigBytes, []byte(sig))
-			if err == nil && hmac.Equal(h.Sum(nil), sigBytes) {
-				http.Redirect(w, req, returnTo, http.StatusFound)
-				return nil
-			}
-		}
-
 		returnTo = "/"
 	}
 
