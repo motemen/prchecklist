@@ -168,9 +168,7 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 	callback := prchecklist.BuildURL(ctx, "/auth/callback")
 
 	if returnTo := req.URL.Query().Get("return_to"); returnTo != "" {
-		v := url.Values{"return_to": {returnTo}}
-		callback.RawQuery = v.Encode()
-
+		callback.RawQuery = url.Values{"return_to": {returnTo}}.Encode()
 	}
 
 	// XXX Special and ad-hoc implementation for review apps
