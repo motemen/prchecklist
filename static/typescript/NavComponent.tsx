@@ -1,5 +1,5 @@
-import * as React from 'react';
-import * as API from './api';
+import * as React from "react";
+import * as API from "./api";
 
 interface NavProps {
   logo?: JSX.Element;
@@ -19,14 +19,25 @@ export class NavComponent extends React.Component<NavProps, NavState> {
   }
 
   public render() {
-    return <nav>
-      <div className="logo"><strong>{this.props.logo || `prchecklist ${this.state?.version}`}</strong></div>
-      <div className="stages">{this.props.stages}</div>
-      {
-        this.props.me
-          ? <div className="user-signedin">{this.props.me.Login}</div>
-          : <a className="user-signedin" href={`/auth?return_to=${encodeURIComponent(location.pathname)}`}>Login</a>
-      }
-    </nav>;
+    return (
+      <nav>
+        <div className="logo">
+          <strong>
+            {this.props.logo || `prchecklist ${this.state?.version}`}
+          </strong>
+        </div>
+        <div className="stages">{this.props.stages}</div>
+        {this.props.me ? (
+          <div className="user-signedin">{this.props.me.Login}</div>
+        ) : (
+          <a
+            className="user-signedin"
+            href={`/auth?return_to=${encodeURIComponent(location.pathname)}`}
+          >
+            Login
+          </a>
+        )}
+      </nav>
+    );
   }
 }
