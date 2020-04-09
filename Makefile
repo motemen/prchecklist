@@ -48,14 +48,21 @@ xbuild: lib/web/assets.go
 	    -ldflags "$(GOLDFLAGS)" \
 	    ./cmd/prchecklist
 
-lint:
+lint: lint-go lint-ts
+
+lint-go:
 	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
+
+lint-ts:
 	$(ESLINT) 'static/typescript/**/*.{ts,tsx}'
+
+fix:
+	$(ESLINT) 'static/typescript/**/*.{ts,tsx}' --fix --quiet
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...
 	go test -cover . ./lib/...
-	yarn test
+	yarn test --coverage
 
 develop:
 	test "$$GITHUB_CLIENT_ID" && test "$$GITHUB_CLIENT_SECRET"

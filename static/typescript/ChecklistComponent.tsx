@@ -23,7 +23,7 @@ export class ChecklistComponent extends React.Component<
     this.state = { loading: false };
 
     API.getChecklist(props.checklistRef)
-      .then(data => {
+      .then((data) => {
         if (data instanceof API.APIError) {
           if (data.errorType === "not_authed") {
             location.href = `/auth?return_to=${encodeURIComponent(
@@ -40,10 +40,10 @@ export class ChecklistComponent extends React.Component<
         }
         this.setState({
           checklist: data.Checklist,
-          me: data.Me
+          me: data.Me,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: `${err}` });
         console.error(err);
       });
@@ -86,7 +86,7 @@ export class ChecklistComponent extends React.Component<
                 value={this.props.checklistRef.Stage}
                 onChange={this.handleOnSelectStage}
               >
-                {stages.map(stage => (
+                {stages.map((stage) => (
                   <option key={`stage-${stage}`}>{stage}</option>
                 ))}
               </select>
@@ -101,14 +101,14 @@ export class ChecklistComponent extends React.Component<
         </h1>
         <div id="checklist-items" className="items">
           <ul>
-            {checklist.Items.map(item => {
+            {checklist.Items.map((item) => {
               return (
                 <li key={`item-${item.Number}`}>
                   <div className="check">
                     <button
-                      className={`checkbox material-icons ${this.itemIsCheckedByMe(
-                        item
-                      ) && "checked"}`}
+                      className={`checkbox material-icons ${
+                        this.itemIsCheckedByMe(item) && "checked"
+                      }`}
                       onClick={this.handleOnClickChecklistItem(item)}
                     >
                       thumb_up
@@ -122,7 +122,7 @@ export class ChecklistComponent extends React.Component<
                   </div>{" "}
                   <div className="user">@{item.User.Login}</div>{" "}
                   <div className="checkedby">
-                    {item.CheckedBy.map(user => {
+                    {item.CheckedBy.map((user) => {
                       return (
                         <span
                           className="user"
@@ -147,7 +147,7 @@ export class ChecklistComponent extends React.Component<
     const stages = (checklist.Config && checklist.Config.Stages) || [];
     const checklistRef = this.props.checklistRef;
     if (stages.length) {
-      if (stages.findIndex(s => s === checklistRef.Stage) === -1) {
+      if (stages.findIndex((s) => s === checklistRef.Stage) === -1) {
         this.navigateToStage(stages[0]);
         return true;
       }
@@ -181,14 +181,14 @@ export class ChecklistComponent extends React.Component<
       const checked = !this.itemIsCheckedByMe(item);
 
       this.setState((prevState: ChecklistState, props) => {
-        prevState.checklist.Items.forEach(it => {
+        prevState.checklist.Items.forEach((it) => {
           if (it.Number === item.Number) {
             console.log(it);
             if (checked) {
               it.CheckedBy = it.CheckedBy.concat(this.state.me);
             } else {
               it.CheckedBy = it.CheckedBy.filter(
-                user => user.ID !== this.state.me.ID
+                (user) => user.ID !== this.state.me.ID
               );
             }
           }
@@ -196,13 +196,15 @@ export class ChecklistComponent extends React.Component<
         return { ...prevState, loading: true };
       });
 
-      API.setCheck(this.props.checklistRef, item.Number, checked).then(data => {
-        this.setState({
-          checklist: data.Checklist,
-          loading: false,
-          me: data.Me
-        });
-      });
+      API.setCheck(this.props.checklistRef, item.Number, checked).then(
+        (data) => {
+          this.setState({
+            checklist: data.Checklist,
+            loading: false,
+            me: data.Me,
+          });
+        }
+      );
     };
   };
 
@@ -212,7 +214,7 @@ export class ChecklistComponent extends React.Component<
 
   private itemIsCheckedByMe(item: API.ChecklistItem): boolean {
     return (
-      item.CheckedBy.findIndex(user => user.ID === this.state.me.ID) !== -1
+      item.CheckedBy.findIndex((user) => user.ID === this.state.me.ID) !== -1
     );
   }
 
@@ -228,6 +230,6 @@ export class ChecklistComponent extends React.Component<
     const checklist = this.state.checklist;
     if (!checklist) return false;
 
-    return checklist.Items.every(item => item.CheckedBy.length > 0);
+    return checklist.Items.every((item) => item.CheckedBy.length > 0);
   }
 }

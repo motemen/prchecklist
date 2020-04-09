@@ -2,7 +2,7 @@
 /prchecklist.db
 /node_modules/
 /internal/
-coverage.out
-/coverage-all.*
+/coverage*
 /build/
 /.bin/
+.*
