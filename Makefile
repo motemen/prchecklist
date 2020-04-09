@@ -54,7 +54,10 @@ lint-go:
 	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
 
 lint-ts:
-	$(ESLINT) 'static/typescript/**/*.{ts,tsx}' --fix
+	$(ESLINT) 'static/typescript/**/*.{ts,tsx}'
+
+fix:
+	$(ESLINT) 'static/typescript/**/*.{ts,tsx}' --fix --quiet
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...
