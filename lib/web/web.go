@@ -2,12 +2,9 @@ package web
 
 import (
 	"context"
-	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/gob"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -215,36 +212,6 @@ func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
 }
 
 func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
-	forward := req.URL.Query().Get("forward")
-	forwardSig := req.URL.Query().Get("forward_sig")
-
-	if forward != "" && forwardSig != "" {
-		h := hmac.New(sha256.New, []byte(sessionSecret))
-		h.Write([]byte(forward))
-
-		sigBytes := make([]byte, 32)
-		_, err := hex.Decode(sigBytes, []byte(forwardSig))
-		if err != nil {
-			return err
-		}
-		if !hmac.Equal(h.Sum(nil), sigBytes) {
-			return errors.New("Signature invalid")
-		}
-
-		forwardURL, err := url.Parse(forward)
-		if err != nil {
-			return err
-		}
-
-		q := forwardURL.Query()
-		q.Set("code", req.URL.Query().Get("code"))
-		q.Set("state", req.URL.Query().Get("state"))
-		forwardURL.RawQuery = q.Encode()
-
-		http.Redirect(w, req, forwardURL.String(), http.StatusFound)
-		return nil
-	}
-
 	sess, err := web.sessionStore.Get(req, sessionName)
 	if err != nil {
 		return errors.Wrapf(err, "sessionStore.Get")
