@@ -123,11 +123,13 @@ func (web *Web) Handler() http.Handler {
 	router.Handle("/{owner}/{repo}/pull/{number}/{stage}", httpHandler(web.handleChecklist))
 	router.PathPrefix("/js/").Handler(http.FileServer(&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo}))
 
+	handler := http.Handler(router)
+
 	if behindProxy {
-		return handlers.ProxyHeaders(router)
+		handler = handlers.ProxyHeaders(handler)
 	}
 
-	return web.oauthForwarder.Wrap(router)
+	return web.oauthForwarder.Wrap(handler)
 }
 
 type httpError int
