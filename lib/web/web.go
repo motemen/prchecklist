@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/motemen/prchecklist/v2"
+	"github.com/motemen/prchecklist/v2/lib/oauthforwarder"
 	"github.com/motemen/prchecklist/v2/lib/usecase"
 )
 
@@ -74,12 +75,10 @@ type GitHubGateway interface {
 
 // Web is a web server implementation.
 type Web struct {
-	app          *usecase.Usecase
-	github       GitHubGateway
-	sessionStore sessions.Store
-
-	// TODO: write doc about it
-	oauthCallbackHost string
+	app            *usecase.Usecase
+	github         GitHubGateway
+	sessionStore   sessions.Store
+	oauthForwarder oauthforwarder.Forwarder
 }
 
 // New creates a new Web.
@@ -91,13 +90,26 @@ func New(app *usecase.Usecase, github GitHubGateway) *Web {
 		HttpOnly: true,
 	}
 
-	return &Web{
-		app:          app,
-		github:       github,
-		sessionStore: cookieStore,
-		// TODO be a flag variable
-		oauthCallbackHost: os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_HOST"),
+	// TODO: write doc about it
+	// TODO be a flag variable
+	oauthCallbackOrigin := os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_ORIGIN")
+	if oauthCallbackOrigin == "" {
+		// deprecated
+		oauthCallbackOrigin = "https://" + os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_HOST")
 	}
+	u, _ := url.Parse(oauthCallbackOrigin + "/auth/callback/forward")
+	forwarder := oauthforwarder.Forwarder{
+		CallbackURL: u,
+		Secret:      []byte(sessionSecret),
+	}
+
+	return &Web{
+		app:            app,
+		github:         github,
+		sessionStore:   cookieStore,
+		oauthForwarder: forwarder,
+	}
+
 }
 
 // Handler is the main logic of Web.
@@ -118,7 +130,7 @@ func (web *Web) Handler() http.Handler {
 		return handlers.ProxyHeaders(router)
 	}
 
-	return router
+	return web.oauthForwarder.Wrap(router)
 }
 
 type httpError int
@@ -177,19 +189,8 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	// XXX Special and ad-hoc implementation for review apps
-	if web.oauthCallbackHost != "" {
-		h := hmac.New(sha256.New, []byte(sessionSecret))
-		h.Write([]byte(callback.String()))
-
-		callback = &url.URL{
-			Scheme: callback.Scheme,
-			Host:   web.oauthCallbackHost,
-			Path:   callback.Path,
-			RawQuery: url.Values{
-				"forward":     {callback.String()},
-				"forward_sig": {fmt.Sprintf("%x", h.Sum(nil))},
-			}.Encode(),
-		}
+	if web.oauthForwarder.CallbackURL.Host != "" {
+		callback = web.oauthForwarder.CreateURL(callback.String())
 	}
 
 	authURL := web.github.AuthCodeURL(state, callback)

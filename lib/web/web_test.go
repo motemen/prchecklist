@@ -1,6 +1,7 @@
 package web
 
 import (
+	"os"
 	"testing"
 
 	"net/http"
@@ -9,7 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/motemen/go-nuts/httputil"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var noRedirectClient = http.Client{
@@ -80,13 +81,14 @@ func TestWeb_HandleAuth_forward(t *testing.T) {
 	}
 
 	mainApp := build()
+
+	mainAppURL, _ := url.Parse(mainApp.server.URL)
+	os.Setenv("PRCHECKLIST_OAUTH_CALLBACK_ORIGIN", mainAppURL.Scheme+"://"+mainAppURL.Host)
 	reviewApp := build()
+	os.Setenv("PRCHECKLIST_OAUTH_CALLBACK_ORIGIN", "")
 
 	defer mainApp.server.Close()
 	defer reviewApp.server.Close()
-
-	mainAppURL, _ := url.Parse(mainApp.server.URL)
-	reviewApp.web.oauthCallbackHost = mainAppURL.Host
 
 	reviewApp.github.EXPECT().AuthCodeURL(gomock.Any(), gomock.Any()).DoAndReturn(func(state string, redirectURI *url.URL) string {
 		return "http://github-auth-stub?redirect_uri=" + url.QueryEscape(redirectURI.String())
@@ -96,7 +98,7 @@ func TestWeb_HandleAuth_forward(t *testing.T) {
 
 	t.Run("GET /auth to review app redirects to main app", func(t *testing.T) {
 		resp, err := noRedirectClient.Get(reviewApp.server.URL + "/auth?return_to=/motemen/test-repository/pull/2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// 1. Location: header is a URL to GitHub OAuth authz page
 		// 2. with redirect_uri set to main app's auth page
@@ -105,49 +107,51 @@ func TestWeb_HandleAuth_forward(t *testing.T) {
 
 		// 1.
 		location, err := url.Parse(resp.Header.Get("Location"))
-		assert.NoError(t, err, "parsing Location")
+		require.NoError(t, err, "parsing Location")
+
+		t.Logf("Location: %s", location)
 
 		// 2.
 		redirectURI, err = url.Parse(location.Query().Get("redirect_uri"))
-		assert.NoError(t, err, "parsing redirect_uri")
-		assert.Equal(t,
-			mainApp.server.URL+"/auth/callback",
+		require.NoError(t, err, "parsing redirect_uri")
+		require.Equal(t,
+			mainApp.server.URL+"/auth/callback/forward",
 			"http://"+redirectURI.Host+redirectURI.Path,
 			"redirect_uri",
 		)
 
 		// 3.
-		forward, err := url.Parse(redirectURI.Query().Get("forward"))
-		assert.NoError(t, err, "parsing forward")
-		assert.Equal(t,
+		forward, err := url.Parse(redirectURI.Query().Get("to"))
+		require.NoError(t, err, "parsing forward")
+		require.Equal(t,
 			reviewApp.server.URL+"/auth/callback",
 			"http://"+forward.Host+forward.Path,
 			"forward",
 		)
 
 		// 4.
-		assert.Equal(t, "/motemen/test-repository/pull/2", forward.Query().Get("return_to"))
+		require.Equal(t, "/motemen/test-repository/pull/2", forward.Query().Get("return_to"))
 	})
 
 	t.Run("forward succeeds", func(t *testing.T) {
 		resp, err := noRedirectClient.Get(redirectURI.String() + "&code=STUBCODE")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		location, err := url.Parse(resp.Header.Get("Location"))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.Equal(t, "/motemen/test-repository/pull/2", location.Query().Get("return_to"))
-		assert.Equal(t, "STUBCODE", location.Query().Get("code"))
+		require.Equal(t, "/motemen/test-repository/pull/2", location.Query().Get("return_to"))
+		require.Equal(t, "STUBCODE", location.Query().Get("code"))
 	})
 
 	t.Run("forward fails with invalid signature", func(t *testing.T) {
 		invalidRedirectURI := *redirectURI
 		q := invalidRedirectURI.Query()
-		q.Set("forward_sig", "invalid")
+		q.Set("sig", "invalid")
 		invalidRedirectURI.RawQuery = q.Encode()
 
 		resp, err := noRedirectClient.Get(invalidRedirectURI.String() + "&code=STUBCODE")
-		assert.NoError(t, err)
-		assert.True(t, resp.StatusCode >= 400)
+		require.NoError(t, err)
+		require.True(t, resp.StatusCode >= 400)
 	})
 }
