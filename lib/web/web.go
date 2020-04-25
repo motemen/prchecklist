@@ -77,6 +77,9 @@ type Web struct {
 	app          *usecase.Usecase
 	github       GitHubGateway
 	sessionStore sessions.Store
+
+	// TODO: write doc about it
+	oauthCallbackHost string
 }
 
 // New creates a new Web.
@@ -92,6 +95,8 @@ func New(app *usecase.Usecase, github GitHubGateway) *Web {
 		app:          app,
 		github:       github,
 		sessionStore: cookieStore,
+		// TODO be a flag variable
+		oauthCallbackHost: os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_HOST"),
 	}
 }
 
@@ -172,13 +177,13 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	// XXX Special and ad-hoc implementation for review apps
-	if callbackHost := os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_HOST"); callbackHost != "" {
+	if web.oauthCallbackHost != "" {
 		h := hmac.New(sha256.New, []byte(sessionSecret))
 		h.Write([]byte(callback.String()))
 
 		callback = &url.URL{
 			Scheme: callback.Scheme,
-			Host:   callbackHost,
+			Host:   web.oauthCallbackHost,
 			Path:   callback.Path,
 			RawQuery: url.Values{
 				"forward":     {callback.String()},

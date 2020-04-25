@@ -7,7 +7,7 @@ package web
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	v2 "github.com/motemen/prchecklist/v2"
+	prchecklist "github.com/motemen/prchecklist/v2"
 	url "net/url"
 	reflect "reflect"
 )
@@ -50,10 +50,10 @@ func (mr *MockGitHubGatewayMockRecorder) AuthCodeURL(arg0, arg1 interface{}) *go
 }
 
 // AuthenticateUser mocks base method
-func (m *MockGitHubGateway) AuthenticateUser(arg0 context.Context, arg1 string) (*v2.GitHubUser, error) {
+func (m *MockGitHubGateway) AuthenticateUser(arg0 context.Context, arg1 string) (*prchecklist.GitHubUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AuthenticateUser", arg0, arg1)
-	ret0, _ := ret[0].(*v2.GitHubUser)
+	ret0, _ := ret[0].(*prchecklist.GitHubUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
