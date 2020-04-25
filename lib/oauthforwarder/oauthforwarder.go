@@ -9,6 +9,7 @@ import (
 	"net/url"
 )
 
+// Forwarder is the implementation root regarding OAuth callback forwarder.
 type Forwarder struct {
 	CallbackURL *url.URL
 	Secret      []byte
@@ -20,6 +21,7 @@ func (f *Forwarder) hashString(in string) []byte {
 	return h.Sum(nil)
 }
 
+// CreateURL creates URL to callback host which in success returns back to callback.
 func (f *Forwarder) CreateURL(callback string) *url.URL {
 	u := *f.CallbackURL
 	q := u.Query()
@@ -29,6 +31,7 @@ func (f *Forwarder) CreateURL(callback string) *url.URL {
 	return &u
 }
 
+// Wrap wraps an http.Handler which forwards client to original callback URL.
 func (f *Forwarder) Wrap(base http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if req.URL.Path != f.CallbackURL.Path {
