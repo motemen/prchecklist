@@ -2,12 +2,9 @@ package web
 
 import (
 	"context"
-	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/gob"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -26,6 +23,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/motemen/prchecklist/v2"
+	"github.com/motemen/prchecklist/v2/lib/oauthforwarder"
 	"github.com/motemen/prchecklist/v2/lib/usecase"
 )
 
@@ -74,9 +72,10 @@ type GitHubGateway interface {
 
 // Web is a web server implementation.
 type Web struct {
-	app          *usecase.Usecase
-	github       GitHubGateway
-	sessionStore sessions.Store
+	app            *usecase.Usecase
+	github         GitHubGateway
+	sessionStore   sessions.Store
+	oauthForwarder oauthforwarder.Forwarder
 }
 
 // New creates a new Web.
@@ -88,11 +87,26 @@ func New(app *usecase.Usecase, github GitHubGateway) *Web {
 		HttpOnly: true,
 	}
 
-	return &Web{
-		app:          app,
-		github:       github,
-		sessionStore: cookieStore,
+	// TODO: write doc about it
+	// TODO be a flag variable
+	oauthCallbackOrigin := os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_ORIGIN")
+	if oauthCallbackOrigin == "" {
+		// deprecated
+		oauthCallbackOrigin = "https://" + os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_HOST")
 	}
+	u, _ := url.Parse(oauthCallbackOrigin + "/auth/callback/forward")
+	forwarder := oauthforwarder.Forwarder{
+		CallbackURL: u,
+		Secret:      []byte(sessionSecret),
+	}
+
+	return &Web{
+		app:            app,
+		github:         github,
+		sessionStore:   cookieStore,
+		oauthForwarder: forwarder,
+	}
+
 }
 
 // Handler is the main logic of Web.
@@ -113,7 +127,7 @@ func (web *Web) Handler() http.Handler {
 		return handlers.ProxyHeaders(router)
 	}
 
-	return router
+	return web.oauthForwarder.Wrap(router)
 }
 
 type httpError int
@@ -172,19 +186,8 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	// XXX Special and ad-hoc implementation for review apps
-	if callbackHost := os.Getenv("PRCHECKLIST_OAUTH_CALLBACK_HOST"); callbackHost != "" {
-		h := hmac.New(sha256.New, []byte(sessionSecret))
-		h.Write([]byte(callback.String()))
-
-		callback = &url.URL{
-			Scheme: callback.Scheme,
-			Host:   callbackHost,
-			Path:   callback.Path,
-			RawQuery: url.Values{
-				"forward":     {callback.String()},
-				"forward_sig": {fmt.Sprintf("%x", h.Sum(nil))},
-			}.Encode(),
-		}
+	if web.oauthForwarder.CallbackURL.Host != "" {
+		callback = web.oauthForwarder.CreateURL(callback.String())
 	}
 
 	authURL := web.github.AuthCodeURL(state, callback)
@@ -209,36 +212,6 @@ func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
 }
 
 func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
-	forward := req.URL.Query().Get("forward")
-	forwardSig := req.URL.Query().Get("forward_sig")
-
-	if forward != "" && forwardSig != "" {
-		h := hmac.New(sha256.New, []byte(sessionSecret))
-		h.Write([]byte(forward))
-
-		sigBytes := make([]byte, 32)
-		_, err := hex.Decode(sigBytes, []byte(forwardSig))
-		if err != nil {
-			return err
-		}
-		if !hmac.Equal(h.Sum(nil), sigBytes) {
-			return errors.New("Signature invalid")
-		}
-
-		forwardURL, err := url.Parse(forward)
-		if err != nil {
-			return err
-		}
-
-		q := forwardURL.Query()
-		q.Set("code", req.URL.Query().Get("code"))
-		q.Set("state", req.URL.Query().Get("state"))
-		forwardURL.RawQuery = q.Encode()
-
-		http.Redirect(w, req, forwardURL.String(), http.StatusFound)
-		return nil
-	}
-
 	sess, err := web.sessionStore.Get(req, sessionName)
 	if err != nil {
 		return errors.Wrapf(err, "sessionStore.Get")

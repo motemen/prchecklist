@@ -436,12 +436,12 @@ func (g githubGateway) queryGraphQL(ctx context.Context, query string, variables
 	return nil
 }
 
-func (g githubGateway) AuthCodeURL(code string, redirectURI *url.URL) string {
+func (g githubGateway) AuthCodeURL(state string, redirectURI *url.URL) string {
 	opts := []oauth2.AuthCodeOption{}
 	if redirectURI != nil {
 		opts = append(opts, oauth2.SetAuthURLParam("redirect_uri", redirectURI.String()))
 	}
-	return g.oauth2Config.AuthCodeURL(code, opts...)
+	return g.oauth2Config.AuthCodeURL(state, opts...)
 }
 
 func (g githubGateway) newGitHubClient(base *http.Client) (*github.Client, error) {
