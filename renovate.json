@@ -1,4 +1,6 @@
 {
+  "timezone": "Asia/Tokyo",
+  "schedule": ["every weekend"],
   "extends": [
     "config:base",
     "group:definitelyTyped"
@@ -8,6 +10,10 @@
     {
       "updateTypes": ["patch"],
       "enabled": false
+    },
+    {
+      "depTypeList": ["devDependencies"],
+      "groupName": "devDependencies"
     }
   ]
 }
