@@ -1,3 +1,12 @@
+## [v2.5.0](https://github.com/motemen/prchecklist/compare/v2.4.2...v2.5.0) (2020-04-25)
+
+* OAuth support for review apps
+  * Oauth forward [#108](https://github.com/motemen/prchecklist/pull/108) ([motemen](https://github.com/motemen))
+  * fix review app sigs [#90](https://github.com/motemen/prchecklist/pull/90) ([motemen](https://github.com/motemen))
+  * support for review apps [#86](https://github.com/motemen/prchecklist/pull/86) ([motemen](https://github.com/motemen))
+* Module updates with Renovate
+  * [#87](https://github.com/motemen/prchecklist/pull/87), [#99](https://github.com/motemen/prchecklist/pull/99), [#100](https://github.com/motemen/prchecklist/pull/100), [#106](https://github.com/motemen/prchecklist/pull/106), [#104](https://github.com/motemen/prchecklist/pull/104), [#105](https://github.com/motemen/prchecklist/pull/105), [#103](https://github.com/motemen/prchecklist/pull/103), [#93](https://github.com/motemen/prchecklist/pull/93), [#94](https://github.com/motemen/prchecklist/pull/94), [#80](https://github.com/motemen/prchecklist/pull/80), [#76](https://github.com/motemen/prchecklist/pull/76), [#85](https://github.com/motemen/prchecklist/pull/85), [#84](https://github.com/motemen/prchecklist/pull/84), [#89](https://github.com/motemen/prchecklist/pull/89), [#91](https://github.com/motemen/prchecklist/pull/91), [#82](https://github.com/motemen/prchecklist/pull/82), [#81](https://github.com/motemen/prchecklist/pull/81), [#75](https://github.com/motemen/prchecklist/pull/75), [#92](https://github.com/motemen/prchecklist/pull/92), [#79](https://github.com/motemen/prchecklist/pull/79), [#78](https://github.com/motemen/prchecklist/pull/78), [#74](https://github.com/motemen/prchecklist/pull/74), [#73](https://github.com/motemen/prchecklist/pull/73), [#72](https://github.com/motemen/prchecklist/pull/72)
+
 ## [v2.4.2](https://github.com/motemen/prchecklist/compare/v2.4.1...v2.4.2) (2020-04-07)
 
 * use environment variables as a source of the version instead of a meta element [#71](https://github.com/motemen/prchecklist/pull/71) ([aereal](https://github.com/aereal))
