@@ -41,7 +41,7 @@
   "dependencies": {
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "uikit": "3.4.0"
+    "uikit": "3.4.2"
   },
   "scripts": {
     "test": "jest"

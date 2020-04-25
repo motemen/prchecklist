@@ -8054,10 +8054,10 @@ typescript@3.8.3:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.8.3.tgz#409eb8544ea0335711205869ec458ab109ee1061"
   integrity sha512-MYlEfn5VrLNsgudQTVJeNaQFUAI7DkhnOjdpAp4T+ku1TfQClewlbSuTVHiA+8skNBgaf02TL/kLOvig4y3G8w==
 
-uikit@3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/uikit/-/uikit-3.4.0.tgz#f1a72929944e5ed2082c84e226a9057a9c7828f9"
-  integrity sha512-P8m++iIv0fkc5G/bJ73Rt6Vah1Y0qwga3/i63ah41YvegHcSGRinX5FFjviimNhNU/hXUSCK1A68pJr7TlntIQ==
+uikit@3.4.2:
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/uikit/-/uikit-3.4.2.tgz#2e3d05d2e206e63c9b42a347927674117678acee"
+  integrity sha512-z5NH1s8sTMHjVQ+Exr2IKgPn/bG9f5PSK4HcTZaBlw3mF6f5UgefWIA3xKVsOtOeJSOQ2T8lk++59syRF5NwOw==
 
 union-value@^1.0.0:
   version "1.0.1"
