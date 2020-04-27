@@ -2,8 +2,6 @@ name: Test
 
 on:
   push:
-    branches:
-      - master
   pull_request:
 
 jobs:
@@ -45,7 +43,7 @@ jobs:
         make lint
 
     - run: |
-        make test
+        make build
 
     - run: |
-        make build
+        make test

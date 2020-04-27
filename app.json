@@ -1,8 +1,7 @@
 {
   "name": "prchecklist",
   "description": "",
-  "scripts": {
-  },
+  "scripts": {},
   "env": {
     "GITHUB_CLIENT_ID": {
       "required": true
@@ -25,11 +24,11 @@
       "quantity": 1
     }
   },
-  "addons": [
-    "heroku-postgresql",
-    "heroku-redis"
-  ],
+  "addons": ["heroku-redis"],
   "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    },
     {
       "url": "heroku/go"
     }

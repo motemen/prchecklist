@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# pre-compile script for Heroku
+
+set -e
+
+make lib/web/assets.go

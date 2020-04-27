@@ -5,4 +5,6 @@
 /coverage*
 /build/
 /.bin/
-.*
+*.env
+/lib/web/assets.go
+/static/js
