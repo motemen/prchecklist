@@ -61,8 +61,8 @@ fix:
 
 test: lib/web/web_mock_test.go
 	go vet . ./lib/...
-	go test -cover . ./lib/...
-	yarn test --coverage
+	go test -coverprofile=coverage.out . ./lib/...
+	yarn test --coverage --coverageDirectory=./coverage
 
 develop:
 	test "$$GITHUB_CLIENT_ID" && test "$$GITHUB_CLIENT_SECRET"
