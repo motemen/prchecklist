@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as API from "./api";
+import { EnvContext } from "./EnvContext";
 
 interface NavProps {
   logo?: JSX.Element;
@@ -7,23 +8,15 @@ interface NavProps {
   me?: API.GitHubUser;
 }
 
-interface NavState {
-  version: string;
-}
-
-export class NavComponent extends React.Component<NavProps, NavState> {
-  public componentDidMount() {
-    this.setState({
-      version: process.env.GIT_VERSION,
-    });
-  }
-
+export class NavComponent extends React.Component<NavProps> {
   public render() {
     return (
       <nav>
         <div className="logo">
           <strong>
-            {this.props.logo || `prchecklist ${this.state?.version}`}
+            <EnvContext.Consumer>
+              {(env) => this.props.logo || `prchecklist ${env.appVersion}`}
+            </EnvContext.Consumer>
           </strong>
         </div>
         <div className="stages">{this.props.stages}</div>

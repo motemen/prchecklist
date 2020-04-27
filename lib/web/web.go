@@ -43,7 +43,7 @@ var htmlContent = `<!DOCTYPE html>
 <html>
 <head>
   <meta name=viewport content="width=device-width">
-  <meta name="prchecklist version" content="` + prchecklist.Version + `">
+  <meta name="prchecklist-version" content="` + prchecklist.Version + `">
   <title>prchecklist</title>
 </head>
 <body>
