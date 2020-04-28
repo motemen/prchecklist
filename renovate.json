@@ -8,7 +8,7 @@
   "prConcurrentLimit": 5,
   "packageRules": [
     {
-      "updateTypes": ["patch"],
+      "updateTypes": ["patch", "digest"],
       "enabled": false
     },
     {
