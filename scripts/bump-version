@@ -4,6 +4,8 @@ set -e
 
 part=$1
 
+make lib/web/assets.go
+
 git diff --quiet && git diff --cached --quiet
 
 curr_version=$(gobump show -r)
