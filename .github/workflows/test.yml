@@ -48,8 +48,9 @@ jobs:
         make build
 
     - run: |
-        gcloud components install cloud-datastore-emulator --quiet
-        gcloud beta emulators datastore start --quiet &
+        export CLOUDSDK_CORE_DISABLE_PROMPTS=1
+        gcloud components install cloud-datastore-emulator
+        gcloud beta emulators datastore start &
         eval $(gcloud beta emulators datastore env-init)
         make test
 
