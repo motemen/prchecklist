@@ -106,7 +106,6 @@ func New(app *usecase.Usecase, github GitHubGateway) *Web {
 		sessionStore:   cookieStore,
 		oauthForwarder: forwarder,
 	}
-
 }
 
 // Handler is the main logic of Web.
@@ -188,7 +187,7 @@ func (web *Web) handleAuth(w http.ResponseWriter, req *http.Request) error {
 	}
 
 	// XXX Special and ad-hoc implementation for review apps
-	if web.oauthForwarder.CallbackURL.Host != "" {
+	if web.oauthForwarder.CallbackURL.Host != "" && web.oauthForwarder.CallbackURL.Host != callback.Host {
 		callback = web.oauthForwarder.CreateURL(callback.String())
 	}
 
