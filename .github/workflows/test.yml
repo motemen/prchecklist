@@ -49,7 +49,9 @@ jobs:
 
     - run: |
         export CLOUDSDK_CORE_DISABLE_PROMPTS=1
+        export CLOUDSDK_CORE_PROJECT=prchecklist-test
         gcloud info --run-diagnostics
+        docker run --rm -it -p 8081:8081 google/cloud-sdk gcloud beta emulators datastore start --project prchecklist-test --host-port 0.0.0.0:8081 &
         gcloud components install cloud-datastore-emulator
         gcloud beta emulators datastore start &
         eval $(gcloud beta emulators datastore env-init)
