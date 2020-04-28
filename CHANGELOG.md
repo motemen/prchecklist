@@ -1,3 +1,12 @@
+## [v2.6.0](https://github.com/motemen/prchecklist/compare/v2.5.0...v2.6.0) (2020-04-28)
+
+* check host [#116](https://github.com/motemen/prchecklist/pull/116) ([motemen](https://github.com/motemen))
+* Update devDependencies [#109](https://github.com/motemen/prchecklist/pull/109) ([renovate[bot]](https://github.com/apps/renovate))
+* Update dependency ts-loader to v7 [#110](https://github.com/motemen/prchecklist/pull/110) ([renovate[bot]](https://github.com/apps/renovate))
+* codecov [#115](https://github.com/motemen/prchecklist/pull/115) ([motemen](https://github.com/motemen))
+* Heroku build assets [#114](https://github.com/motemen/prchecklist/pull/114) ([motemen](https://github.com/motemen))
+* Fix version [#112](https://github.com/motemen/prchecklist/pull/112) ([motemen](https://github.com/motemen))
+
 ## [v2.5.0](https://github.com/motemen/prchecklist/compare/v2.4.2...v2.5.0) (2020-04-25)
 
 * OAuth support for review apps
