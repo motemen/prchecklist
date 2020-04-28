@@ -2,12 +2,14 @@ name: Test
 
 on:
   push:
+    branches:
+      - master
   pull_request:
 
 jobs:
 
-  build:
-    name: Build
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
 
@@ -16,6 +18,8 @@ jobs:
         go-version: 1.14
 
     - uses: actions/setup-node@v1.1.0
+
+    - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
 
     - uses: actions/checkout@v2
 
@@ -46,6 +50,15 @@ jobs:
         make build
 
     - run: |
+        gcloud components install cloud-datastore-emulator --quiet
+        gcloud components install beta --quiet
+
+    - run: |
+        gcloud beta emulators datastore start --project prchecklist-test &
+        curl http://localhost:8081 --silent --retry 30 --retry-connrefused --retry-delay 1
+
+    - run: |
+        eval $(gcloud beta emulators datastore env-init)
         make test
 
     - uses: codecov/codecov-action@v1.0.6
