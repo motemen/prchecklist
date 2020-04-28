@@ -47,3 +47,5 @@ jobs:
 
     - run: |
         make test
+
+    - uses: codecov/codecov-action@v1.0.6
