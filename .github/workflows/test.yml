@@ -49,7 +49,7 @@ jobs:
 
     - run: |
         gcloud components install cloud-datastore-emulator --quiet
-        gcloud beta emulators datastore start &
+        gcloud beta emulators datastore start --quiet &
         eval $(gcloud beta emulators datastore env-init)
         make test
 
