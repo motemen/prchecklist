@@ -48,19 +48,15 @@ jobs:
         make build
 
     - run: |
-        # export CLOUDSDK_CORE_DISABLE_PROMPTS=1
-        export CLOUDSDK_CORE_PROJECT=prchecklist-test
-        # gcloud info --run-diagnostics
         docker run --rm -p 8081:8081 google/cloud-sdk gcloud beta emulators datastore start --project prchecklist-test --host-port 0.0.0.0:8081 &
-        # gcloud components install cloud-datastore-emulator
-        # gcloud beta emulators datastore env-init
-        # gcloud beta emulators datastore start &
-        # eval $(gcloud beta emulators datastore env-init)
         export DATASTORE_DATASET=prchecklist-test
         export DATASTORE_EMULATOR_HOST=localhost:8081
         export DATASTORE_EMULATOR_HOST_PATH=localhost:8081/datastore
         export DATASTORE_HOST=http://localhost:8081
         export DATASTORE_PROJECT_ID=prchecklist-test
+        while ! curl --fail http://$DATASTORE_EMULATOR_HOST; do sleep 1; done
+
+    - run: |
         make test
 
     - uses: codecov/codecov-action@v1.0.6
