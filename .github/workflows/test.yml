@@ -48,7 +48,7 @@ jobs:
         make build
 
     - run: |
-        gcloud components install cloud-datastore-emulator
+        gcloud components install cloud-datastore-emulator --quiet
         gcloud beta emulators datastore start &
         eval $(gcloud beta emulators datastore env-init)
         make test
