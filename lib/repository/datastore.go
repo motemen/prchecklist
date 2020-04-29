@@ -83,12 +83,11 @@ func (r datastoreRepository) AddCheck(ctx context.Context, clRef prchecklist.Che
 		if bridge.checks == nil {
 			bridge.checks = prchecklist.Checks{}
 		}
-		log.Printf("%#v", bridge)
+
 		if bridge.checks.Add(key, user) == false {
 			log.Printf("%#v", bridge)
 			return nil
 		}
-		log.Printf("%#v", bridge)
 
 		_, err = r.client.Put(ctx, dbKey, &bridge)
 		return err
@@ -102,9 +101,13 @@ func (r datastoreRepository) RemoveCheck(ctx context.Context, clRef prchecklist.
 
 	_, err := r.client.RunInTransaction(ctx, func(tx *datastore.Transaction) error {
 		var bridge datastoreChecksBridge
-		err := r.client.Get(ctx, dbKey, &bridge.checks)
+		err := r.client.Get(ctx, dbKey, &bridge)
 		if err != nil && err != datastore.ErrNoSuchEntity {
-			return err
+			return errors.Wrapf(err, "Get %s", dbKey)
+		}
+
+		if bridge.checks == nil {
+			bridge.checks = prchecklist.Checks{}
 		}
 
 		if bridge.checks.Remove(key, user) == false {
@@ -112,7 +115,7 @@ func (r datastoreRepository) RemoveCheck(ctx context.Context, clRef prchecklist.
 		}
 
 		_, err = r.client.Put(ctx, dbKey, &bridge)
-		return err
+		return errors.Wrapf(err, "Put %s", dbKey)
 	})
 
 	return errors.WithStack(err)
