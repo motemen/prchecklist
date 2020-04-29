@@ -51,23 +51,14 @@ jobs:
 
     - run: |
         gcloud components install cloud-datastore-emulator --quiet
-
-    - run: |
         gcloud components install beta --quiet
 
     - run: |
-        gcloud beta emulators datastore start &
-        while ! curl --silent --fail http://localhost:8081; do sleep 1; done
+        gcloud beta emulators datastore start --project prchecklist-test &
+        curl http://localhost:8081 --retry 30 --retry-connrefused --retry-delay 1
 
     - run: |
-        gcloud beta emulators datastore env-init
-
-    - run: |
-        export DATASTORE_DATASET=prchecklist-test
-        export DATASTORE_EMULATOR_HOST=localhost:8081
-        export DATASTORE_EMULATOR_HOST_PATH=localhost:8081/datastore
-        export DATASTORE_HOST=http://localhost:8081
-        export DATASTORE_PROJECT_ID=prchecklist-test
+        eval $(gcloud beta emulators datastore env-init)
         make test
 
     - uses: codecov/codecov-action@v1.0.6
