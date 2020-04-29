@@ -19,6 +19,8 @@ jobs:
 
     - uses: actions/setup-node@v1.1.0
 
+    - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+
     - uses: actions/checkout@v2
 
     - id: yarn-cache-dir-path
@@ -48,8 +50,17 @@ jobs:
         make build
 
     - run: |
-        docker run --rm -p 8081:8081 google/cloud-sdk gcloud beta emulators datastore start --project prchecklist-test --host-port 0.0.0.0:8081 &
+        gcloud components install cloud-datastore-emulator --quiet
+
+    - run: |
+        gcloud components install beta --quiet
+
+    - run: |
+        gcloud beta emulators datastore start &
         while ! curl --silent --fail http://localhost:8081; do sleep 1; done
+
+    - run: |
+        gcloud beta emulators datastore env-init
 
     - run: |
         export DATASTORE_DATASET=prchecklist-test
