@@ -13,15 +13,9 @@ jobs:
     services:
       redis:
         image: redis
-        ports: 
-          - '6379:6379'
-      datastore-emulator:
-        image: motemen/datastore-emulator
         ports:
-          - '8081:8081'
-        options: |
-          --health-cmd 'curl --fail localhost:8081' --health-interval 1s --health-retries 10 --env CLOUDSDK_CORE_PROJECT=prchecklist-test
-       
+          - '6379:6379'
+
     steps:
 
     - uses: actions/setup-go@v1
@@ -61,7 +55,16 @@ jobs:
         make build
 
     - run: |
-        export TEST_REDIS_URL=redis://localhost:6379 DATASTORE_EMULATOR_HOST=localhost:8081 DATASTORE_PROJECT_ID=prchecklist-test
+        gcloud components install cloud-datastore-emulator --quiet
+        gcloud components install beta --quiet
+
+    - run: |
+        gcloud beta emulators datastore start --project prchecklist-test &
+        curl http://localhost:8081 --silent --retry 30 --retry-connrefused --retry-delay 1
+
+    - run: |
+        export TEST_REDIS_URL=redis://localhost:6379
+        eval $(gcloud beta emulators datastore env-init)
         make test
 
     - uses: codecov/codecov-action@v1.0.6
