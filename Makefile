@@ -1,5 +1,4 @@
 GOBINDATA     = go run github.com/a-urth/go-bindata/go-bindata
-GOX           = go run github.com/mitchellh/gox
 MOCKGEN       = go run github.com/golang/mock/mockgen
 REFLEX        = go run github.com/cespare/reflex
 GOCREDITS     = go run github.com/Songmu/gocredits/cmd/gocredits
@@ -10,12 +9,12 @@ WEBPACK          = yarn webpack
 WEBPACKDEVSERVER = yarn webpack-dev-server
 ESLINT           = yarn eslint
 
-GIT_VERSION := $(shell git describe --tags HEAD)
+VERSION := $(shell git describe --tags HEAD 2> /dev/null)
 
-ifeq ($(GIT_VERSION),)
+ifeq ($(VERSION),)
     GOLDFLAGS =
 else
-    GOLDFLAGS = -X github.com/motemen/prchecklist/v2.Version=$(GIT_VERSION)
+    GOLDFLAGS = -X github.com/motemen/prchecklist/v2.Version=$(VERSION)
 endif
 GOOSARCH  = linux/amd64
 
@@ -37,21 +36,14 @@ build: lib/web/assets.go
 	go build \
 	    $(BUILDFLAGS) \
 	    -ldflags "$(GOLDFLAGS)" \
-	    -i \
 	    -v \
-	    ./cmd/prchecklist
-
-xbuild: lib/web/assets.go
-	$(GOX) \
-	    -osarch $(GOOSARCH) \
-	    -output "build/{{.Dir}}_{{.OS}}_{{.Arch}}" \
-	    -ldflags "$(GOLDFLAGS)" \
 	    ./cmd/prchecklist
 
 lint: lint-go lint-ts
 
 lint-go:
 	$(GOLINT) -min_confidence=0.9 -set_exit_status . ./lib/...
+	go vet . ./lib/...
 
 lint-ts:
 	$(ESLINT) 'static/typescript/**/*.{ts,tsx}'
@@ -59,9 +51,15 @@ lint-ts:
 fix:
 	$(ESLINT) 'static/typescript/**/*.{ts,tsx}' --fix --quiet
 
-test: lib/web/web_mock_test.go
-	go vet . ./lib/...
+lib/mocks:
+	go generate -x ./lib/...
+
+test: test-go test-ts
+
+test-go: lib/mocks
 	go test -v -coverprofile=coverage.out . ./lib/...
+
+test-ts:
 	yarn test --coverage --coverageDirectory=./coverage
 
 develop:
@@ -74,13 +72,10 @@ lib/web/assets.go: static/js/bundle.js static/text/licenses
 	$(GOBINDATA) -pkg web -o $@ -prefix static/ -modtime 1 static/js static/text
 
 static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources)
-	env GIT_VERSION=$(GIT_VERSION) $(WEBPACK) --progress
+	$(WEBPACK) --progress
 
 static/text/licenses:
 	$(GOCREDITS) . > $@
-
-lib/web/web_mock_test.go: lib/web/web.go
-	$(MOCKGEN) -package web -destination $@ github.com/motemen/prchecklist/v2/lib/web GitHubGateway
 
 static/typescript/api-schema.ts: models.go node_modules/json-schema-to-typescript
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@
