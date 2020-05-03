@@ -19,8 +19,13 @@ jobs:
         image: motemen/datastore-emulator
         ports:
           - '8081:8081'
-        options: |
-          --env CLOUDSDK_CORE_PROJECT=prchecklist-test
+        env:
+          CLOUDSDK_CORE_PROJECT: prchecklist-test
+
+    env:
+      TEST_REDIS_URL: 'redis://localhost:6379'
+      DATASTORE_EMULATOR_HOST: 'localhost:8081'
+      DATASTORE_PROJECT_ID: prchecklist-test
 
     steps:
 
@@ -59,7 +64,6 @@ jobs:
         make build
 
     - run: |
-        export TEST_REDIS_URL=redis://localhost:6379 DATASTORE_EMULATOR_HOST=localhost:8081 DATASTORE_PROJECT_ID=prchecklist-test
         make test
 
     - uses: codecov/codecov-action@v1.0.6
