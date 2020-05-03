@@ -148,6 +148,8 @@ github.com/motemen/go-loghttp v0.0.0-20170804080138-974ac5ceac27 h1:uAI3rnOT1OSS
 github.com/motemen/go-loghttp v0.0.0-20170804080138-974ac5ceac27/go.mod h1:6eu9CfGt5kfrMVgeu9MfB9PRUnpc47I+udLswiTszI8=
 github.com/motemen/go-nuts v0.0.0-20190725124253-1d2432db96b0 h1:CnSVrlMNAZMWI1+uH6ldpXRv2pe7t50IQX448EJrJhw=
 github.com/motemen/go-nuts v0.0.0-20190725124253-1d2432db96b0/go.mod h1:vfh/NPxHgDwggXit20W1llPsXcz39xJ7I8vo7kVrOCk=
+github.com/motemen/prchecklist v0.14.1 h1:Yuh4Pw8hoJc/crZVPzf5nDYZs8BRxzsq/xtgMnIX/cE=
+github.com/motemen/prchecklist v2.2.2+incompatible h1:Sdip4kA2jg6dBtjHNINGZHRbdGAWi1fPcKspfgo4Ac8=
 github.com/ogier/pflag v0.0.1 h1:RW6JSWSu/RkSatfcLtogGfFgpim5p7ARQ10ECk5O750=
 github.com/ogier/pflag v0.0.1/go.mod h1:zkFki7tvTa0tafRvTBIZTvzYyAu6kQhPZFnshFFPE+g=
 github.com/patrickmn/go-cache v2.1.0+incompatible h1:HRMgzkcYKYpi3C8ajMPV8OFXaaRUnok+kx1WdO15EQc=
