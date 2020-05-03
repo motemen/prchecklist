@@ -19,6 +19,8 @@ jobs:
         image: motemen/datastore-emulator
         ports:
           - '8081:8081'
+        options: |
+          --env CLOUDSDK_CORE_PROJECT=prchecklist-test
 
     steps:
 
