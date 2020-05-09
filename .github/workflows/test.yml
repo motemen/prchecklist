@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     services:
       redis:
-        image: redis
+        image: redis:alpine
         ports:
           - '6379:6379'
       datastore-emulator:
-        image: motemen/datastore-emulator
+        image: motemen/datastore-emulator:alpine
         ports:
           - '8081:8081'
         env:
