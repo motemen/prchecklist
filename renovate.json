@@ -2,18 +2,19 @@
   "timezone": "Asia/Tokyo",
   "schedule": ["every weekend"],
   "extends": [
-    "config:base",
-    "group:definitelyTyped"
+    "config:base"
   ],
   "prConcurrentLimit": 5,
   "packageRules": [
     {
-      "updateTypes": ["patch", "digest"],
-      "enabled": false
-    },
-    {
       "depTypeList": ["devDependencies"],
       "groupName": "devDependencies"
+    },
+    {
+      "groupName": "definitelyTyped",
+      "packagePatterns": [
+        "^@types/"
+      ]
     }
   ]
 }
