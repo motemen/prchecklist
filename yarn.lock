@@ -8143,10 +8143,10 @@ typescript@3.9.2:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.2.tgz#64e9c8e9be6ea583c54607677dd4680a1cf35db9"
   integrity sha512-q2ktq4n/uLuNNShyayit+DTobV2ApPEo/6so68JaD5ojvc/6GClBipedB9zNWYxRSAlZXAe405Rlijzl6qDiSw==
 
-uikit@3.4.2:
-  version "3.4.2"
-  resolved "https://registry.yarnpkg.com/uikit/-/uikit-3.4.2.tgz#2e3d05d2e206e63c9b42a347927674117678acee"
-  integrity sha512-z5NH1s8sTMHjVQ+Exr2IKgPn/bG9f5PSK4HcTZaBlw3mF6f5UgefWIA3xKVsOtOeJSOQ2T8lk++59syRF5NwOw==
+uikit@3.4.6:
+  version "3.4.6"
+  resolved "https://registry.yarnpkg.com/uikit/-/uikit-3.4.6.tgz#39d59620aeb42d53ba905a67e99e2015d4aaaf9c"
+  integrity sha512-Se8DXGJ69NCxm8AQTok6I9aXxvklaBsdkr3REfbUorxeIQA6g96sPvzHCXrubqknoqEhH6npD14xtzxJGCvS8A==
 
 union-value@^1.0.0:
   version "1.0.1"
