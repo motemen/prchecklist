@@ -16,5 +16,6 @@
         "^@types/"
       ]
     }
-  ]
+  ],
+  "semanticCommits": true
 }
