@@ -66,4 +66,7 @@ jobs:
     - run: |
         make test
 
+    - run: |
+        make test-integration PRCHECKLIST_TEST_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+
     - uses: codecov/codecov-action@v1.0.6
