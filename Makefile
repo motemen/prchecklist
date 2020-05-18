@@ -54,11 +54,17 @@ fix:
 lib/mocks:
 	go generate -x ./lib/...
 
-test: test-go test-ts test-integration
+.PHONY: test
+test: test-unit test-integration
 
+.PHONY: test-unit
+test-unit: test-go test-ts
+
+.PHONY: test-go
 test-go: lib/mocks
 	go test -v -coverprofile=coverage.out . ./lib/...
 
+.PHONY: test-ts
 test-ts:
 	yarn test --coverage --coverageDirectory=./coverage
 

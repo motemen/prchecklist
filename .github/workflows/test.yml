@@ -64,7 +64,7 @@ jobs:
         make build
 
     - run: |
-        make test
+        make test-unit
 
     - run: |
         make test-integration PRCHECKLIST_TEST_GITHUB_TOKEN=${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
