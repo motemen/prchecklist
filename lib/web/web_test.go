@@ -1,3 +1,4 @@
+//go:generate go run github.com/golang/mock/mockgen -package web -destination web_mock_test.go github.com/motemen/prchecklist/v2/lib/web GitHubGateway
 package web
 
 import (

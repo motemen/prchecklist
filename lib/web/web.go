@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/oauth2"
+
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -68,6 +70,7 @@ func init() {
 type GitHubGateway interface {
 	AuthCodeURL(state string, redirectURI *url.URL) string
 	AuthenticateUser(ctx context.Context, code string) (*prchecklist.GitHubUser, error)
+	GetUserFromToken(ctx context.Context, token *oauth2.Token) (*prchecklist.GitHubUser, error)
 }
 
 // Web is a web server implementation.
@@ -121,6 +124,10 @@ func (web *Web) Handler() http.Handler {
 	router.Handle("/{owner}/{repo}/pull/{number}", httpHandler(web.handleChecklist))
 	router.Handle("/{owner}/{repo}/pull/{number}/{stage}", httpHandler(web.handleChecklist))
 	router.PathPrefix("/js/").Handler(http.FileServer(&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo}))
+
+	if testToken := os.Getenv("PRCHECKLIST_TEST_GITHUB_TOKEN"); testToken != "" {
+		router.Handle("/debug/auth-for-testing", web.mkHandlerDebugAuthTesting(testToken))
+	}
 
 	handler := http.Handler(router)
 
@@ -210,6 +217,38 @@ func makeRandomString() (string, error) {
 func (web *Web) handleIndex(w http.ResponseWriter, req *http.Request) error {
 	fmt.Fprint(w, htmlContent)
 	return nil
+}
+
+func (web *Web) mkHandlerDebugAuthTesting(testToken string) httpHandler {
+	return func(w http.ResponseWriter, req *http.Request) error {
+		ctx := prchecklist.RequestContext(req)
+		user, err := web.github.GetUserFromToken(ctx, &oauth2.Token{
+			AccessToken: testToken,
+		})
+		if err != nil {
+			return err
+		}
+
+		sess, err := web.sessionStore.Get(req, sessionName)
+		if err != nil {
+			return errors.Wrapf(err, "sessionStore.Get")
+		}
+
+		sess.Values[sessionKeyGitHubUser] = *user
+
+		err = web.app.AddUser(ctx, *user)
+		if err != nil {
+			return err
+		}
+
+		err = sess.Save(req, w)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintln(w, "OK")
+		return nil
+	}
 }
 
 func (web *Web) handleAuthCallback(w http.ResponseWriter, req *http.Request) error {
