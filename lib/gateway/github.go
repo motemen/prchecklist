@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v31/github"
 	graphqlquery "github.com/motemen/go-graphql-query"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
