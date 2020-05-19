@@ -54,13 +54,27 @@ fix:
 lib/mocks:
 	go generate -x ./lib/...
 
-test: test-go test-ts
+.PHONY: test
+test: test-unit test-integration
 
+.PHONY: test-unit
+test-unit: test-go test-ts
+
+.PHONY: test-go
 test-go: lib/mocks
 	go test -v -coverprofile=coverage.out . ./lib/...
 
+.PHONY: test-ts
 test-ts:
 	yarn test --coverage --coverageDirectory=./coverage
+
+.PHONY: test-integration
+test-integration:
+ifdef PRCHECKLIST_TEST_GITHUB_TOKEN
+	yarn jest -c ./integration/jest.config.js
+else
+	$(warning PRCHECKLIST_TEST_GITHUB_TOKEN is not set)
+endif
 
 develop:
 	test "$$GITHUB_CLIENT_ID" && test "$$GITHUB_CLIENT_SECRET"

@@ -8,6 +8,7 @@ import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	prchecklist "github.com/motemen/prchecklist/v2"
+	oauth2 "golang.org/x/oauth2"
 	url "net/url"
 	reflect "reflect"
 )
@@ -62,4 +63,19 @@ func (m *MockGitHubGateway) AuthenticateUser(arg0 context.Context, arg1 string) 
 func (mr *MockGitHubGatewayMockRecorder) AuthenticateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateUser", reflect.TypeOf((*MockGitHubGateway)(nil).AuthenticateUser), arg0, arg1)
+}
+
+// GetUserFromToken mocks base method
+func (m *MockGitHubGateway) GetUserFromToken(arg0 context.Context, arg1 *oauth2.Token) (*prchecklist.GitHubUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserFromToken", arg0, arg1)
+	ret0, _ := ret[0].(*prchecklist.GitHubUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserFromToken indicates an expected call of GetUserFromToken
+func (mr *MockGitHubGatewayMockRecorder) GetUserFromToken(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFromToken", reflect.TypeOf((*MockGitHubGateway)(nil).GetUserFromToken), arg0, arg1)
 }

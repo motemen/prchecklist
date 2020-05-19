@@ -49,7 +49,7 @@ func init() {
 
 // NewGitHub creates a new GitHub gateway.
 func NewGitHub() (*githubGateway, error) {
-	if githubClientID == "" || githubClientSecret == "" {
+	if (githubClientID == "" || githubClientSecret == "") && os.Getenv("PRCHECKLIST_TEST_GITHUB_TOKEN") == "" {
 		return nil, errors.New("gateway/github: both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set")
 	}
 
@@ -182,18 +182,18 @@ var (
 	recentPullRequestsQuery string
 )
 
-func init() {
-	b, err := graphqlquery.Build(&githubPullRequest{})
+func mustBuildGraphQLQuery(q interface{}) []byte {
+	b, err := graphqlquery.Build(q)
 	if err != nil {
 		panic(err)
 	}
-	pullRequestQuery = string(b)
 
-	b, err = graphqlquery.Build(&githubRecentPullRequests{})
-	if err != nil {
-		panic(err)
-	}
-	recentPullRequestsQuery = string(b)
+	return b
+}
+
+func init() {
+	pullRequestQuery = string(mustBuildGraphQLQuery(&githubPullRequest{}))
+	recentPullRequestsQuery = string(mustBuildGraphQLQuery(&githubRecentPullRequests{}))
 }
 
 func (g githubGateway) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
@@ -448,6 +448,7 @@ func (g githubGateway) newGitHubClient(base *http.Client) (*github.Client, error
 	client := github.NewClient(base)
 	if g.domain != "github.com" {
 		var err error
+		// TODO(motemen): parsing url can be done earlier
 		client.BaseURL, err = url.Parse("https://" + g.domain + "/api/v3/")
 		if err != nil {
 			return nil, err
@@ -462,6 +463,10 @@ func (g githubGateway) AuthenticateUser(ctx context.Context, code string) (*prch
 		return nil, err
 	}
 
+	return g.GetUserFromToken(ctx, token)
+}
+
+func (g githubGateway) GetUserFromToken(ctx context.Context, token *oauth2.Token) (*prchecklist.GitHubUser, error) {
 	client, err := g.newGitHubClient(
 		oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)),
 	)
