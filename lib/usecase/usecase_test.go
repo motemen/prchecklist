@@ -72,15 +72,7 @@ stages:
 	)
 }
 
-func TestUsecase_AddCheck(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	repo := repository_mock.NewMockCoreRepository(ctrl)
-	github := NewMockGitHubGateway(ctrl)
-
-	clRef := prchecklist.ChecklistRef{Owner: "test", Repo: "test", Number: 1, Stage: "default"}
-
+func setupMocks(clRef prchecklist.ChecklistRef, github *MockGitHubGateway, repo *repository_mock.MockCoreRepository) {
 	github.EXPECT().GetPullRequest(
 		gomock.Any(),
 		clRef,
@@ -110,6 +102,23 @@ func TestUsecase_AddCheck(t *testing.T) {
 		Number: 3,
 	}, context.Background(), nil)
 
+	repo.EXPECT().GetChecks(gomock.Any(), clRef).
+		Return(prchecklist.Checks{}, nil)
+
+	repo.EXPECT().GetUsers(gomock.Any(), gomock.Len(0)).
+		Return(map[int]prchecklist.GitHubUser{}, nil)
+}
+
+func TestUsecase_AddCheck(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clRef := prchecklist.ChecklistRef{Owner: "test", Repo: "test", Number: 1, Stage: "default"}
+	repo := repository_mock.NewMockCoreRepository(ctrl)
+	github := NewMockGitHubGateway(ctrl)
+
+	setupMocks(clRef, github, repo)
+
 	repo.EXPECT().AddCheck(
 		gomock.Any(),
 		clRef,
@@ -117,16 +126,44 @@ func TestUsecase_AddCheck(t *testing.T) {
 		gomock.Any(),
 	)
 
-	repo.EXPECT().GetChecks(gomock.Any(), clRef).
-		Return(prchecklist.Checks{}, nil)
-
-	repo.EXPECT().GetUsers(gomock.Any(), gomock.Len(0)).
-		Return(map[int]prchecklist.GitHubUser{}, nil)
-
 	app := New(github, repo)
 	ctx := context.Background()
 
 	cl, err := app.AddCheck(
+		ctx,
+		clRef,
+		2,
+		prchecklist.GitHubUser{
+			ID:    1,
+			Login: "test",
+		},
+	)
+
+	assert.NoError(t, err)
+	t.Log(cl)
+}
+
+func TestUsecase_RemoveCheck(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clRef := prchecklist.ChecklistRef{Owner: "test", Repo: "test", Number: 1, Stage: "default"}
+	repo := repository_mock.NewMockCoreRepository(ctrl)
+	github := NewMockGitHubGateway(ctrl)
+
+	setupMocks(clRef, github, repo)
+
+	repo.EXPECT().RemoveCheck(
+		gomock.Any(),
+		clRef,
+		"2",
+		gomock.Any(),
+	)
+
+	app := New(github, repo)
+	ctx := context.Background()
+
+	cl, err := app.RemoveCheck(
 		ctx,
 		clRef,
 		2,
