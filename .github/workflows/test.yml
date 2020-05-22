@@ -65,8 +65,12 @@ jobs:
 
     - run: |
         make test-unit
+      env:
+        PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
 
     - run: |
-        make test-integration PRCHECKLIST_TEST_GITHUB_TOKEN=${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
+        make test-integration
+      env:
+        PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
 
     - uses: codecov/codecov-action@v1.0.6

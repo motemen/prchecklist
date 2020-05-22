@@ -21,10 +21,13 @@ GOOSARCH  = linux/amd64
 bundled_sources = $(wildcard static/typescript/* static/scss/*)
 export GO111MODULE=on
 
+.PHONY: default
 default: build
 
+.PHONY: setup
 setup: setup-node
 
+.PHONY: setup-node
 setup-node:
 	yarn install --frozen-lockfile
 
@@ -32,6 +35,7 @@ node_modules/%: package.json
 	@$(MAKE) setup-node
 	@touch $@
 
+.PHONY: build
 build: lib/web/assets.go
 	go build \
 	    $(BUILDFLAGS) \
@@ -39,6 +43,7 @@ build: lib/web/assets.go
 	    -v \
 	    ./cmd/prchecklist
 
+.PHONY: lint
 lint: lint-go lint-ts
 
 lint-go:
@@ -76,6 +81,7 @@ else
 	$(warning PRCHECKLIST_TEST_GITHUB_TOKEN is not set)
 endif
 
+.PHONY: develop
 develop:
 	test "$$GITHUB_CLIENT_ID" && test "$$GITHUB_CLIENT_SECRET"
 	$(WEBPACKDEVSERVER) & \
@@ -93,5 +99,3 @@ static/text/licenses:
 
 static/typescript/api-schema.ts: models.go node_modules/json-schema-to-typescript
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@
-
-.PHONY: default build xbuild test lint develop setup setup-go setup-node
