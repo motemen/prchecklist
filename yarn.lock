@@ -798,7 +798,7 @@
   resolved "https://registry.yarnpkg.com/@types/events/-/events-3.0.0.tgz#2862f3f58a9a7f7c3e78d79f130dd4d71c25c2a7"
   integrity sha512-EaObqwIvayI5a8dCzhFrjKzVwKLxjoG9T6Ppd5CEo07LRKfQ8Yokw54r5+Wq7FaBQ+yXRvQAYPrHwya1/UFt9g==
 
-"@types/expect-puppeteer@^4.4.1":
+"@types/expect-puppeteer@4.4.1":
   version "4.4.1"
   resolved "https://registry.yarnpkg.com/@types/expect-puppeteer/-/expect-puppeteer-4.4.1.tgz#88588e4f1d8b4f60e8a9fa5736389cc85c9d2763"
   integrity sha512-PHqoQBIoFpiI6+bBEEetuoxqWx6UHpPzl4lK4bfZaP1FVRq7cKkRp4QPwJJSllwWgalFBhCwP88eMZf+QM1R2Q==
@@ -876,7 +876,7 @@
     "@types/istanbul-lib-coverage" "*"
     "@types/istanbul-lib-report" "*"
 
-"@types/jest-environment-puppeteer@^4.3.1":
+"@types/jest-environment-puppeteer@4.3.1":
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/@types/jest-environment-puppeteer/-/jest-environment-puppeteer-4.3.1.tgz#597d16fa0594a5daf1b3c08262bfbb011e146c2d"
   integrity sha512-e7G12WRw525gsiz7NW3tKY+YWyNR08r3QvyC31rzMrnn7CkyGbsiskBjnR3koY/6jwIASgxO5knm4xJQ1KtbQQ==
@@ -950,7 +950,7 @@
   resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.3.tgz#2ab0d5da2e5815f94b0b9d4b95d1e5f243ab2ca7"
   integrity sha512-KfRL3PuHmqQLOG+2tGpRO26Ctg+Cq1E01D2DMriKEATHgWLfeNDmq9e29Q9WIky0dQ3NPkd1mzYH8Lm936Z9qw==
 
-"@types/puppeteer@*", "@types/puppeteer@^2.1.0":
+"@types/puppeteer@*", "@types/puppeteer@2.1.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@types/puppeteer/-/puppeteer-2.1.0.tgz#31367580654632f87f86df565f1bde0533577401"
   integrity sha512-QIRQXl0VaSgnwOZ1LwxD321Tfb1jLOzCWuF2BrwjEkWq2IhxSicPOddUywLV7dRSO6mcU4sWKRdoGdci6gk0Aw==
@@ -5334,7 +5334,7 @@ jest-pnp-resolver@^1.2.1:
   resolved "https://registry.yarnpkg.com/jest-pnp-resolver/-/jest-pnp-resolver-1.2.1.tgz#ecdae604c077a7fbc70defb6d517c3c1c898923a"
   integrity sha512-pgFw2tm54fzgYvc/OHrnysABEObZCUNFnhjoRjaVOCN8NYc032/gVjPaHD4Aq6ApkSieWtfKAFQtmDKAmhupnQ==
 
-jest-puppeteer@^4.4.0:
+jest-puppeteer@4.4.0:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/jest-puppeteer/-/jest-puppeteer-4.4.0.tgz#4b906e638a5e3782ed865e7b673c82047b85952e"
   integrity sha512-ZaiCTlPZ07B9HW0erAWNX6cyzBqbXMM7d2ugai4epBDKpKvRDpItlRQC6XjERoJELKZsPziFGS0OhhUvTvQAXA==
@@ -6449,7 +6449,7 @@ normalize-path@^3.0.0:
   resolved "https://registry.yarnpkg.com/normalize-path/-/normalize-path-3.0.0.tgz#0dcd69ff23a1c9b11fd0978316644a0388216a65"
   integrity sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
 
-npm-run-all@^4.1.5:
+npm-run-all@4.1.5:
   version "4.1.5"
   resolved "https://registry.yarnpkg.com/npm-run-all/-/npm-run-all-4.1.5.tgz#04476202a15ee0e2e214080861bff12a51d98fba"
   integrity sha512-Oo82gJDAVcaMdi3nuoKFavkIHBRVqQ1qvMb+9LHk/cF4P6B2m8aP04hGf7oL6wZ9BuGwX1onlLhpuoofSyoQDQ==
@@ -7217,7 +7217,7 @@ punycode@^2.1.0, punycode@^2.1.1:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
 
-puppeteer@^3.0.4:
+puppeteer@3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-3.0.4.tgz#f445aae0a6732c65bbb90e963dcd6fd8fde0d780"
   integrity sha512-1QEb4tJXXbNId7WSHlcDkS3B4GklTIebKn8Y9D6B7tAdUjQncb+8QlTjbQsAgGX5dhRG32Qycuk5XKzJgLs0sg==
