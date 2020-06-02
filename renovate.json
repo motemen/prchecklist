@@ -21,5 +21,6 @@
       "enabled": false
     }
   ],
-  "semanticCommits": true
+  "semanticCommits": true,
+  "labels": ["renovate"]
 }
