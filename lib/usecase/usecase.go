@@ -190,8 +190,8 @@ func (u Usecase) AddCheck(ctx context.Context, clRef prchecklist.ChecklistRef, f
 		events := []notificationEvent{
 			addCheckEvent{checklist: checklist, item: checklist.Item(featNum), user: user},
 		}
-		if checklist.CompletedChecksOfUser(checklist.Item(featNum).User) {
-			events = append(events, completeChecksOfUserEvent{checklist: checklist, user: user})
+		if author := checklist.Item(featNum).User; checklist.CompletedChecksOfUser(author) {
+			events = append(events, completeChecksOfUserEvent{checklist: checklist, user: author})
 		}
 		if checklist.Completed() {
 			events = append(events, completeEvent{checklist: checklist})
