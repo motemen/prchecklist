@@ -70,7 +70,7 @@ func (e completeEvent) eventType() eventType { return eventTypeOnComplete }
 
 type completeChecksOfUserEvent struct {
 	checklist *prchecklist.Checklist
-	user      prchecklist.GitHubUser
+	user      prchecklist.GitHubUserSimple
 }
 
 func (e completeChecksOfUserEvent) slackMessageText(ctx context.Context) string {
