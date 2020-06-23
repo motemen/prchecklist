@@ -1,3 +1,25 @@
+## [v2.7.0](https://github.com/motemen/prchecklist/compare/v2.6.0...v2.7.0) (2020-06-23)
+
+* Fix
+  * Fix user of `on_complete_checks_of_user` event [#139](https://github.com/motemen/prchecklist/pull/139) ([mechairoi](https://github.com/mechairoi))
+  * Add renovate label to issues/pull requests that from Renovate [#138](https://github.com/motemen/prchecklist/pull/138) ([aereal](https://github.com/aereal))
+* Test
+  * test: Add tests usecase gateway [#134](https://github.com/motemen/prchecklist/pull/134) ([motemen](https://github.com/motemen))
+  * use puppeteer for testing [#132](https://github.com/motemen/prchecklist/pull/132) ([motemen](https://github.com/motemen))
+  * use env [#123](https://github.com/motemen/prchecklist/pull/123) ([motemen](https://github.com/motemen))
+  * add tests [#122](https://github.com/motemen/prchecklist/pull/122) ([motemen](https://github.com/motemen))
+* Update dependencies
+  * chore(deps): update devdependencies [#136](https://github.com/motemen/prchecklist/pull/136) ([renovate[bot]](https://github.com/apps/renovate))
+  * chore(deps): update definitelytyped [#129](https://github.com/motemen/prchecklist/pull/129) ([renovate[bot]](https://github.com/apps/renovate))
+  * chore(deps): update module yaml to v2.3.0 [#130](https://github.com/motemen/prchecklist/pull/130) ([renovate[bot]](https://github.com/apps/renovate))
+  * fix(deps): update dependency uikit to v3.4.6 [#124](https://github.com/motemen/prchecklist/pull/124) ([renovate[bot]](https://github.com/apps/renovate))
+  * chore(deps): update devdependencies [#125](https://github.com/motemen/prchecklist/pull/125) ([renovate[bot]](https://github.com/apps/renovate))
+  * chore(deps): update module cloud.google.com/go to v0.57.0 [#126](https://github.com/motemen/prchecklist/pull/126) ([renovate[bot]](https://github.com/apps/renovate))
+  * Update dependency json-schema-to-typescript to v9 [#121](https://github.com/motemen/prchecklist/pull/121) ([renovate[bot]](https://github.com/apps/renovate))
+  * Update devDependencies [#120](https://github.com/motemen/prchecklist/pull/120) ([renovate[bot]](https://github.com/apps/renovate))
+  * chore(deps): pin dependencies [#135](https://github.com/motemen/prchecklist/pull/135) ([renovate[bot]](https://github.com/apps/renovate))
+  * use go-github/v31 [#133](https://github.com/motemen/prchecklist/pull/133) ([motemen](https://github.com/motemen))
+
 ## [v2.6.0](https://github.com/motemen/prchecklist/compare/v2.5.0...v2.6.0) (2020-04-28)
 
 * check host [#116](https://github.com/motemen/prchecklist/pull/116) ([motemen](https://github.com/motemen))
