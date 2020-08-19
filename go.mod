@@ -15,13 +15,11 @@ require (
 	github.com/garyburd/redigo v1.6.0
 	github.com/golang/mock v1.4.3
 	github.com/google/go-github/v31 v31.0.0
-	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/schema v1.1.0
 	github.com/gorilla/sessions v1.2.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lestrrat-go/jspointer v0.0.0-20181205001929-82fadba7561c // indirect
 	github.com/lestrrat-go/jsref v0.0.0-20181205001954-1b590508f37d // indirect
 	github.com/lestrrat-go/pdebug v0.0.0-20200204225717-4d6bd78da58d // indirect
@@ -30,7 +28,7 @@ require (
 	github.com/motemen/go-generate-jsschema v0.0.0-20170921015939-f9efddabe75d // indirect
 	github.com/motemen/go-graphql-query v0.0.0-20190808105856-1e064957a3ee
 	github.com/motemen/go-loghttp v0.0.0-20170804080138-974ac5ceac27
-	github.com/motemen/go-nuts v0.0.0-20190725124253-1d2432db96b0
+	github.com/motemen/go-nuts v0.0.0-20200601065735-3df31f16cb2f
 	github.com/ogier/pflag v0.0.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
@@ -38,6 +36,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	golang.org/x/tools v0.0.0-20200501065659-ab2804fb9c9d
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
