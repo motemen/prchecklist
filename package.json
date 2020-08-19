@@ -6,7 +6,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/babel-core": "6.25.6",
-    "@types/eslint": "6.8.1",
+    "@types/eslint": "7.2.0",
     "@types/eslint-plugin-prettier": "3.1.0",
     "@types/expect-puppeteer": "4.4.3",
     "@types/jest": "25.2.3",
@@ -26,7 +26,7 @@
     "babel-preset-es2015": "6.24.1",
     "css-loader": "3.5.3",
     "dtsgenerator": "2.7.0",
-    "eslint": "6.8.0",
+    "eslint": "7.7.0",
     "eslint-plugin-prettier": "3.1.3",
     "eslint-plugin-react": "7.20.0",
     "jest": "25.5.4",
