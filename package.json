@@ -25,7 +25,7 @@
     "babel-core": "6.26.3",
     "babel-preset-es2015": "6.24.1",
     "css-loader": "3.5.3",
-    "dtsgenerator": "2.7.0",
+    "dtsgenerator": "3.3.0",
     "eslint": "6.8.0",
     "eslint-plugin-prettier": "3.1.3",
     "eslint-plugin-react": "7.20.0",
