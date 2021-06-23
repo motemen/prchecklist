@@ -1,0 +1,25 @@
+{
+  "core": {
+    "workingDir": ".reg",
+    "actualDir": "__screenshots__",
+    "thresholdRate": 0,
+    "addIgnore": true,
+    "ximgdiff": {
+      "invocationType": "client"
+    }
+  },
+  "plugins": {
+    "reg-keygen-git-hash-plugin": true,
+    "reg-notify-github-with-api-plugin": {
+      "githubUrl": "https://api.github.com/graphql",
+      "prComment": true,
+      "owner": "motemen",
+      "repository": "prchecklist",
+      "prCommentBehavior": "default",
+      "privateToken": "$GITHUB_TOKEN"
+    },
+    "reg-publish-s3-plugin": {
+      "bucketName": "$REG_S3_BUCKET_NAME"
+    }
+  }
+}
