@@ -63,14 +63,22 @@ jobs:
     - run: |
         make build
 
-    - run: |
+    - name: Test (unit)
+      run: |
         make test-unit
       env:
         PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
 
-    - run: |
-        make test-integration
+    - name: Test (integration)
+      run: |
+        mkdir integration-screenshots
+        TEST_SCREENSHOT_PATH=integration-screenshots make test-integration
       env:
         PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: integration-screenshots
+        path: integration-screenshots/
 
     - uses: codecov/codecov-action@v1.0.6
