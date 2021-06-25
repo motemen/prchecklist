@@ -89,7 +89,21 @@ jobs:
         name: integration-screenshots
         path: integration-screenshots/
 
+    # TODO: output URLs
     - run: |
         aws s3 sync ./integration-screenshots/ s3://motemen-public/transient/prchecklist/integration-screenshots/${{github.sha}}/
+
+    - uses: actions/github-script@v4
+      with:
+        script: |
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: [
+              '![](https://motemen-public.s3.ap-northeast-1.amazonaws.com/transient/prchecklist/integration-screenshots/${{github.sha}}/check-1.png)',
+              '![](https://motemen-public.s3.ap-northeast-1.amazonaws.com/transient/prchecklist/integration-screenshots/${{github.sha}}/check-2.png)'
+            ].join('')
+          })
 
     - uses: codecov/codecov-action@v1.0.6
