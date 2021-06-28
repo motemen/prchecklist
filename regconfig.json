@@ -11,7 +11,7 @@
   "plugins": {
     "reg-keygen-git-hash-plugin": true,
     "reg-notify-github-with-api-plugin": {
-      "githubUrl": "https://api.github.com",
+      "githubUrl": "https://api.github.com/graphql",
       "prComment": true,
       "owner": "motemen",
       "repository": "prchecklist",
