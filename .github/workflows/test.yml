@@ -93,5 +93,6 @@ jobs:
         yarn reg-suit run
       env:
         REG_S3_BUCKET_NAME: motemen-reg-suit
+        GITHUB_TOKEN: ${{ github.token }}
 
     - uses: codecov/codecov-action@v1.0.6
