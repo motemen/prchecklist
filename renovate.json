@@ -21,5 +21,6 @@
     }
   ],
   "semanticCommits": true,
-  "labels": ["renovate"]
+  "labels": ["renovate"],
+  "rebaseWhen": "never"
 }
