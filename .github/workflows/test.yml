@@ -33,26 +33,38 @@ jobs:
       with:
         go-version: 1.14
 
-    - uses: actions/setup-node@v1.4.4
+    - uses: actions/setup-node@v2
+      with:
+        node-version: 14
 
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn cache dir)"
 
-    - uses: actions/cache@v1
+    - name: Cache Yarn
+      uses: actions/cache@v1
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
 
-    - uses: actions/cache@v1
+    - name: Cache Go
+      uses: actions/cache@v1
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
+
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-1
 
     - run: |
         make setup
@@ -63,14 +75,28 @@ jobs:
     - run: |
         make build
 
-    - run: |
+    - name: Test (unit)
+      run: |
         make test-unit
       env:
         PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
 
-    - run: |
-        make test-integration
+    - name: Test (integration)
+      run: |
+        mkdir __screenshots__
+        TEST_SCREENSHOT_PATH=__screenshots__ make test-integration
       env:
         PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
+
+    - name: Run reg-suit
+      run: |
+        # workaround
+        git fetch -v origin HEAD
+        export REG_EXPECTED_KEY=$(git merge-base HEAD FETCH_HEAD)
+        export REG_ACTUAL_KEY=$(git rev-parse HEAD)
+        yarn reg-suit run
+      env:
+        REG_S3_BUCKET_NAME: motemen-reg-suit
+        GITHUB_TOKEN: ${{ github.token }}
 
     - uses: codecov/codecov-action@v1.0.6
