@@ -38,6 +38,8 @@ jobs:
         node-version: 14
 
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -90,6 +92,7 @@ jobs:
       run: |
         # workaround
         test -n "$GITHUB_HEAD_REF" && git checkout -B "${GITHUB_HEAD_REF#refs/heads}"
+        git fetch -v origin master:master
         yarn reg-suit run
       env:
         REG_S3_BUCKET_NAME: motemen-reg-suit
