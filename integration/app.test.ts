@@ -49,6 +49,7 @@ describe("prchecklist", () => {
       await el.click();
     }
 
+    await page.waitFor(1000);
     await maySaveScreenshot("03-pr-view-checked-all.png");
   });
 
