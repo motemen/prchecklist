@@ -91,8 +91,9 @@ jobs:
     - name: Run reg-suit
       run: |
         # workaround
-        test -n "$GITHUB_HEAD_REF" && git checkout -B "${GITHUB_HEAD_REF#refs/heads}"
-        git fetch -v origin master:master
+        git fetch -v origin HEAD
+        export REG_EXPECTED_KEY=$(git merge-base HEAD FETCH_HEAD)
+        export REG_ACTUAL_KEY=$(git rev-parse HEAD)
         yarn reg-suit run
       env:
         REG_S3_BUCKET_NAME: motemen-reg-suit
