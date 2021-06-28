@@ -13,7 +13,7 @@
     "reg-notify-github-with-api-plugin": {
       "prComment": true,
       "owner": "motemen",
-      "reopsitory": "prchecklist",
+      "repository": "prchecklist",
       "prCommentBehavior": "default",
       "privateToken": "$GITHUB_TOKEN"
     },
