@@ -23,7 +23,7 @@ describe("prchecklist", () => {
 
     if (screenshotPath) {
       await page.screenshot({
-        path: path.join(screenshotPath, "pr-view-unchecked.png"),
+        path: path.join(screenshotPath, "00-pr-view-unchecked.png"),
         fullPage: true,
       });
     }
@@ -40,7 +40,7 @@ describe("prchecklist", () => {
 
     if (screenshotPath) {
       await page.screenshot({
-        path: path.join(screenshotPath, "pr-view-checked-1.png"),
+        path: path.join(screenshotPath, "01-pr-view-checked-1.png"),
         fullPage: true,
       });
     }
