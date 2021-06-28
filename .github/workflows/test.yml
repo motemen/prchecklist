@@ -94,7 +94,12 @@ jobs:
         test -n "$GITHUB_HEAD_REF" && git checkout -B "${GITHUB_HEAD_REF#refs/heads}"
 
         git fetch -v origin HEAD
-        export REG_EXPECTED_KEY=$(git merge-base HEAD FETCH_HEAD)
+        merge_base=$(git merge-base HEAD FETCH_HEAD)
+        if [ "$merge_base" = "$(git rev-parse HEAD)" ]; then
+          merge_base=$(git rev-parse HEAD~1)
+        fi
+
+        export REG_EXPECTED_KEY=$merge_base
         export REG_ACTUAL_KEY=$(git rev-parse HEAD)
 
         yarn reg-suit run
