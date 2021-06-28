@@ -99,4 +99,4 @@ jobs:
         REG_S3_BUCKET_NAME: motemen-reg-suit
         GITHUB_TOKEN: ${{ github.token }}
 
-    - uses: codecov/codecov-action@v1.0.6
+    - uses: codecov/codecov-action@v1.5.2
