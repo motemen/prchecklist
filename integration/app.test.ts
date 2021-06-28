@@ -1,6 +1,6 @@
 import * as path from "path";
 
-jest.setTimeout(10000);
+jest.setTimeout(30 * 1000);
 
 describe("prchecklist", () => {
   const targetPath = "motemen/test-repository/pull/2";
@@ -9,6 +9,7 @@ describe("prchecklist", () => {
   beforeEach(async () => {
     await page.goto(`http://localhost:8080/debug/auth-for-testing`);
     await page.goto(`http://localhost:8080/${targetPath}`);
+    await page.waitForNavigation({ waitUntil: "networkidle2" });
   });
 
   it("check", async () => {
@@ -22,7 +23,7 @@ describe("prchecklist", () => {
 
     if (screenshotPath) {
       await page.screenshot({
-        path: path.join(screenshotPath, "check-1.png"),
+        path: path.join(screenshotPath, "pr-view-unchecked.png"),
         fullPage: true,
       });
     }
@@ -39,7 +40,7 @@ describe("prchecklist", () => {
 
     if (screenshotPath) {
       await page.screenshot({
-        path: path.join(screenshotPath, "check-2.png"),
+        path: path.join(screenshotPath, "pr-view-checked-1.png"),
         fullPage: true,
       });
     }

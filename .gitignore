@@ -7,3 +7,5 @@
 /.bin/
 *.env
 /static/js
+.reg
+/__screenshots__/
