@@ -89,7 +89,7 @@ jobs:
     - name: Run reg-suit
       run: |
         # workaround
-        git symbolic-ref -q HEAD || git checkout -B wip
+        test -n "$GITHUB_HEAD_REF" && git checkout -B ${"$GITHUB_HEAD_REF#refs/heads/"}
         yarn reg-suit run
       env:
         REG_S3_BUCKET_NAME: motemen-reg-suit
