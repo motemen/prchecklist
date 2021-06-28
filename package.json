@@ -38,7 +38,6 @@
     "puppeteer": "3.3.0",
     "react-test-renderer": "16.13.1",
     "reg-keygen-git-hash-plugin": "^0.10.16",
-    "reg-notify-github-plugin": "^0.10.16",
     "reg-notify-github-with-api-plugin": "^0.10.16",
     "reg-publish-s3-plugin": "^0.10.16",
     "reg-suit": "^0.10.16",

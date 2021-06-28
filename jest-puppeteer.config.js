@@ -1,7 +1,7 @@
-const debug = !!process.env['DEBUG'];
+const debug = !!process.env["DEBUG"];
 
-if (!process.env['PRCHECKLIST_TEST_GITHUB_TOKEN']) {
-  throw new Error('PRCHECKLIST_TEST_GITHUB_TOKEN must be set');
+if (!process.env["PRCHECKLIST_TEST_GITHUB_TOKEN"]) {
+  throw new Error("PRCHECKLIST_TEST_GITHUB_TOKEN must be set");
 }
 
 module.exports = {
@@ -12,5 +12,6 @@ module.exports = {
   server: {
     command: "PRCHECKLIST_DATASOURCE=bolt:$(mktemp) yarn run serve",
     port: 8080,
+    launchTimeout: 30 * 1000,
   },
-}
+};
