@@ -86,7 +86,10 @@ jobs:
       env:
         PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
 
-    - run: |
+    - name: Run reg-suit
+      run: |
+        # workaround
+        git symbolic-ref -q HEAD || git checkout ${GITHUB_REF#refs/heads/}
         yarn reg-suit run
       env:
         REG_S3_BUCKET_NAME: motemen-reg-suit
