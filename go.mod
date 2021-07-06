@@ -19,7 +19,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/schema v1.1.0
-	github.com/gorilla/sessions v1.2.0
+	github.com/gorilla/sessions v1.2.1
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lestrrat-go/jspointer v0.0.0-20181205001929-82fadba7561c // indirect
