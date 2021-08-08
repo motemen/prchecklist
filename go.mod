@@ -5,7 +5,6 @@ go 1.16
 require (
 	cloud.google.com/go v0.57.0 // indirect
 	cloud.google.com/go/datastore v1.1.0
-	github.com/Songmu/gocredits v0.2.0
 	github.com/boltdb/bolt v1.3.1
 	github.com/cespare/reflex v0.2.0
 	github.com/davecgh/go-spew v1.1.1 // indirect

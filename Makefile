@@ -1,6 +1,5 @@
 MOCKGEN       = go run github.com/golang/mock/mockgen
 REFLEX        = go run github.com/cespare/reflex
-GOCREDITS     = go run github.com/Songmu/gocredits/cmd/gocredits
 GOJSSCHEMAGEN = go run github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
 GOLINT        = go run golang.org/x/lint/golint
 
@@ -35,7 +34,7 @@ node_modules/%: package.json
 	@touch $@
 
 .PHONY: build
-build: static/js/bundle.js static/text/licenses
+build: static/js/bundle.js
 	go build \
 	    $(BUILDFLAGS) \
 	    -ldflags "$(GOLDFLAGS)" \
@@ -89,9 +88,6 @@ develop:
 
 static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources)
 	$(WEBPACK) --progress
-
-static/text/licenses:
-	$(GOCREDITS) . > $@
 
 static/typescript/api-schema.ts: models.go node_modules/json-schema-to-typescript
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@

@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -19,14 +18,12 @@ import (
 	"github.com/motemen/prchecklist/v2/lib/repository"
 	"github.com/motemen/prchecklist/v2/lib/usecase"
 	"github.com/motemen/prchecklist/v2/lib/web"
-	"github.com/motemen/prchecklist/v2/static"
 )
 
 var (
-	datasource   string
-	addr         string
-	showVersion  bool
-	showLicenses bool
+	datasource  string
+	addr        string
+	showVersion bool
 )
 
 const shutdownTimeout = 30 * time.Second
@@ -54,7 +51,6 @@ func init() {
 	}
 	flag.StringVar(&addr, "listen", ":"+port, "`address` to listen")
 	flag.BoolVar(&showVersion, "version", false, "show version information")
-	flag.BoolVar(&showLicenses, "licenses", false, "show license notifications")
 }
 
 func main() {
@@ -64,13 +60,6 @@ func main() {
 
 	if showVersion {
 		fmt.Printf("prchecklist %s\n", prchecklist.Version)
-		os.Exit(0)
-	}
-
-	if showLicenses {
-		f, _ := static.Assets.Open("text/licenses")
-		b, _ := ioutil.ReadAll(f)
-		fmt.Println(string(b))
 		os.Exit(0)
 	}
 
