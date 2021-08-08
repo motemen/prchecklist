@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"github.com/motemen/prchecklist/v2/lib/repository"
 	"github.com/motemen/prchecklist/v2/lib/usecase"
 	"github.com/motemen/prchecklist/v2/lib/web"
+	"github.com/motemen/prchecklist/v2/static"
 )
 
 var (
@@ -39,7 +41,7 @@ func getenv(key, def string) string {
 }
 
 func init() {
-	var defaultDatasource = "bolt:./prchecklist.db"
+	defaultDatasource := "bolt:./prchecklist.db"
 	if os.Getenv("GOOGLE_CLOUD_PROJECT") != "" {
 		defaultDatasource = "datastore:" + os.Getenv("GOOGLE_CLOUD_PROJECT")
 	}
@@ -66,7 +68,8 @@ func main() {
 	}
 
 	if showLicenses {
-		b := web.MustAsset("text/licenses")
+		f, _ := static.Assets.Open("text/licenses")
+		b, _ := ioutil.ReadAll(f)
 		fmt.Println(string(b))
 		os.Exit(0)
 	}

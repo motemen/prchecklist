@@ -17,7 +17,6 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -27,6 +26,7 @@ import (
 	"github.com/motemen/prchecklist/v2"
 	"github.com/motemen/prchecklist/v2/lib/oauthforwarder"
 	"github.com/motemen/prchecklist/v2/lib/usecase"
+	"github.com/motemen/prchecklist/v2/static"
 )
 
 var (
@@ -123,7 +123,7 @@ func (web *Web) Handler() http.Handler {
 	router.Handle("/api/check", httpHandler(web.handleAPICheck)).Methods("PUT", "DELETE")
 	router.Handle("/{owner}/{repo}/pull/{number}", httpHandler(web.handleChecklist))
 	router.Handle("/{owner}/{repo}/pull/{number}/{stage}", httpHandler(web.handleChecklist))
-	router.PathPrefix("/js/").Handler(http.FileServer(&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo}))
+	router.PathPrefix("/js/").Handler(http.FileServer(http.FS(static.Assets)))
 
 	if testToken := os.Getenv("PRCHECKLIST_TEST_GITHUB_TOKEN"); testToken != "" {
 		router.Handle("/debug/auth-for-testing", web.mkHandlerDebugAuthTesting(testToken))

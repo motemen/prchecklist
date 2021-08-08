@@ -1,4 +1,3 @@
-GOBINDATA     = go run github.com/a-urth/go-bindata/go-bindata
 MOCKGEN       = go run github.com/golang/mock/mockgen
 REFLEX        = go run github.com/cespare/reflex
 GOCREDITS     = go run github.com/Songmu/gocredits/cmd/gocredits
@@ -36,7 +35,7 @@ node_modules/%: package.json
 	@touch $@
 
 .PHONY: build
-build: lib/web/assets.go
+build: static/js/bundle.js static/text/licenses
 	go build \
 	    $(BUILDFLAGS) \
 	    -ldflags "$(GOLDFLAGS)" \
@@ -87,9 +86,6 @@ develop:
 	$(WEBPACKDEVSERVER) & \
 	    { $(REFLEX) -r '\.go\z' -R node_modules -s -- \
 	      sh -c 'make build && ./prchecklist --listen localhost:8081'; }
-
-lib/web/assets.go: static/js/bundle.js static/text/licenses
-	$(GOBINDATA) -pkg web -o $@ -prefix static/ -modtime 1 static/js static/text
 
 static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources)
 	$(WEBPACK) --progress
