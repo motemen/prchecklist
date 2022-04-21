@@ -9757,10 +9757,10 @@ typescript@3.9.5:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.5.tgz#586f0dba300cde8be52dd1ac4f7e1009c1b13f36"
   integrity sha512-hSAifV3k+i6lEoCJ2k6R2Z/rp/H3+8sdmcn5NrS3/3kE7+RyZXm9aqvxWqjEXHAd8b0pShatpcdMTvEdvAJltQ==
 
-uikit@3.7.0:
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/uikit/-/uikit-3.7.0.tgz#1ec777ac547010d980f0c430249289080fa5371c"
-  integrity sha512-N0xluQ380EHey26toMmNA4H2YLtvVRHMaYksG31qDxW2VaAAf9i0Q0aT82zeMdrK2Tx9sqnHz6GaOMTIYYM0ZQ==
+uikit@3.13.10:
+  version "3.13.10"
+  resolved "https://registry.yarnpkg.com/uikit/-/uikit-3.13.10.tgz#cb69a6a734f3442a5861648043dd59476cef8b89"
+  integrity sha512-kxSPDT7HiwiQW3e++V8LfIe7/E1L5viPXH4P2yxyDIaU6CP1gWh2Ggy6skc/ziZNlY3CqI2JJkOU2/5zd+NaVw==
 
 unbzip2-stream@^1.3.3:
   version "1.4.2"
