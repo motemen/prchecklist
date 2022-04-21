@@ -10,7 +10,7 @@ require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/cespare/reflex v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/elazarl/go-bindata-assetfs v1.0.0
+	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/garyburd/redigo v1.6.0
 	github.com/golang/mock v1.6.0
