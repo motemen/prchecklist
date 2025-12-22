@@ -141,6 +141,7 @@ type githubPullRequest struct {
 	}
 }
 
+// Deprecated: githubRecentPullRequests is replaced by paginated queries
 type githubRecentPullRequests struct {
 	Viewer struct {
 		Repositories struct {
@@ -162,12 +163,70 @@ type githubRecentPullRequests struct {
 	}
 }
 
+// githubViewerRepositories is used for paginating through viewer's repositories
+type githubViewerRepositories struct {
+	GraphQLArguments struct {
+		After string `graphql:"$reposAfter"`
+	}
+	Viewer struct {
+		Repositories struct {
+			Edges []struct {
+				Node struct {
+					NameWithOwner string
+					Owner         struct {
+						Login string
+					}
+					Name string
+				}
+			}
+			PageInfo struct {
+				HasNextPage bool
+				EndCursor   string
+			}
+		} `graphql:"(first: 100, after: $reposAfter, orderBy: {field: PUSHED_AT, direction: DESC}, affiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR])"`
+	}
+}
+
+// githubRepoPullRequests is used for paginating through a repository's pull requests
+type githubRepoPullRequests struct {
+	GraphQLArguments struct {
+		Owner      string `graphql:"$owner,notnull"`
+		Name       string `graphql:"$name,notnull"`
+		PullsAfter string `graphql:"$pullsAfter"`
+	}
+	Repository *struct {
+		PullRequests struct {
+			Edges []struct {
+				Node struct {
+					Title  string
+					Number int
+					URL    string
+				}
+			}
+			PageInfo struct {
+				HasNextPage bool
+				EndCursor   string
+			}
+		} `graphql:"(first: 100, after: $pullsAfter, orderBy: {field: UPDATED_AT, direction: DESC}, baseRefName: \"master\")"`
+	}
+}
+
 type githubPullRequsetVars struct {
 	Owner        string `json:"owner"`
 	Repo         string `json:"repo"`
 	Number       int    `json:"number"`
 	IsBase       bool   `json:"isBase"`
 	CommitsAfter string `json:"commitsAfter,omitempty"`
+}
+
+type viewerRepositoriesVars struct {
+	ReposAfter string `json:"reposAfter,omitempty"`
+}
+
+type repoPullRequestsVars struct {
+	Owner      string `json:"owner"`
+	Name       string `json:"name"`
+	PullsAfter string `json:"pullsAfter,omitempty"`
 }
 
 type graphQLResult struct {
@@ -178,8 +237,10 @@ type graphQLResult struct {
 }
 
 var (
-	pullRequestQuery        string
-	recentPullRequestsQuery string
+	pullRequestQuery             string
+	recentPullRequestsQuery      string // Deprecated: replaced by paginated queries
+	viewerRepositoriesQuery      string
+	repositoryPullRequestsQuery  string
 )
 
 func mustBuildGraphQLQuery(q interface{}) []byte {
@@ -194,6 +255,8 @@ func mustBuildGraphQLQuery(q interface{}) []byte {
 func init() {
 	pullRequestQuery = string(mustBuildGraphQLQuery(&githubPullRequest{}))
 	recentPullRequestsQuery = string(mustBuildGraphQLQuery(&githubRecentPullRequests{}))
+	viewerRepositoriesQuery = string(mustBuildGraphQLQuery(&githubViewerRepositories{}))
+	repositoryPullRequestsQuery = string(mustBuildGraphQLQuery(&githubRepoPullRequests{}))
 }
 
 func (g githubGateway) GetBlob(ctx context.Context, ref prchecklist.ChecklistRef, sha string) ([]byte, error) {
@@ -291,28 +354,79 @@ func (g githubGateway) GetPullRequest(ctx context.Context, ref prchecklist.Check
 	return pullReq, contextWithRepoAccessRight(ctx, ref), nil
 }
 
+// GetRecentPullRequests retrieves all pull requests with baseRefName "master"
+// from all repositories the viewer has access to.
+// This function uses cursor-based pagination to fetch all repositories and all PRs,
+// removing the previous hard-coded limits of 10 repositories and 5 PRs per repository.
+//
+// Performance consideration: For users with access to many repositories or PRs,
+// this can result in many API calls. If needed, pagination limits can be made
+// configurable via environment variables (e.g., MAX_REPOS, MAX_PRS_PER_REPO).
 func (g githubGateway) GetRecentPullRequests(ctx context.Context) (map[string][]*prchecklist.PullRequest, error) {
-	var result githubRecentPullRequests
-	err := g.queryGraphQL(ctx, recentPullRequestsQuery, nil, &result)
-	if err != nil {
-		return nil, err
-	}
-
 	pullRequests := map[string][]*prchecklist.PullRequest{}
-	for _, edge := range result.Viewer.Repositories.Edges {
-		repo := edge.Node
-		if len(repo.PullRequests.Edges) == 0 {
-			continue
+
+	// Paginate through all viewer's repositories
+	reposAfter := ""
+	for {
+		var reposResult githubViewerRepositories
+		err := g.queryGraphQL(ctx, viewerRepositoriesQuery, viewerRepositoriesVars{
+			ReposAfter: reposAfter,
+		}, &reposResult)
+		if err != nil {
+			return nil, err
 		}
-		pullRequests[repo.NameWithOwner] = make([]*prchecklist.PullRequest, len(repo.PullRequests.Edges))
-		for i, edge := range repo.PullRequests.Edges {
-			pullReq := edge.Node
-			pullRequests[repo.NameWithOwner][i] = &prchecklist.PullRequest{
-				Title:  pullReq.Title,
-				URL:    pullReq.URL,
-				Number: pullReq.Number,
+
+		// For each repository, paginate through all pull requests
+		for _, repoEdge := range reposResult.Viewer.Repositories.Edges {
+			repo := repoEdge.Node
+			
+			// Paginate through pull requests for this repository
+			pullsAfter := ""
+			var repoPRs []*prchecklist.PullRequest
+			for {
+				var prsResult githubRepoPullRequests
+				err := g.queryGraphQL(ctx, repositoryPullRequestsQuery, repoPullRequestsVars{
+					Owner:      repo.Owner.Login,
+					Name:       repo.Name,
+					PullsAfter: pullsAfter,
+				}, &prsResult)
+				if err != nil {
+					return nil, err
+				}
+
+				// Check if repository was found
+				if prsResult.Repository == nil {
+					break
+				}
+
+				// Collect pull requests from this page
+				for _, prEdge := range prsResult.Repository.PullRequests.Edges {
+					pr := prEdge.Node
+					repoPRs = append(repoPRs, &prchecklist.PullRequest{
+						Title:  pr.Title,
+						URL:    pr.URL,
+						Number: pr.Number,
+					})
+				}
+
+				// Check if there are more pages
+				if !prsResult.Repository.PullRequests.PageInfo.HasNextPage {
+					break
+				}
+				pullsAfter = prsResult.Repository.PullRequests.PageInfo.EndCursor
+			}
+
+			// Add to result if there are any PRs for this repo
+			if len(repoPRs) > 0 {
+				pullRequests[repo.NameWithOwner] = repoPRs
 			}
 		}
+
+		// Check if there are more repository pages
+		if !reposResult.Viewer.Repositories.PageInfo.HasNextPage {
+			break
+		}
+		reposAfter = reposResult.Viewer.Repositories.PageInfo.EndCursor
 	}
 
 	return pullRequests, nil
