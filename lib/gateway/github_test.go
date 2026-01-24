@@ -51,11 +51,14 @@ func TestGitHub_GetPullRequest_MoreThan100Commits(t *testing.T) {
 	)
 	ctx = context.WithValue(ctx, prchecklist.ContextKeyHTTPClient, cli)
 
-	// openengsb/openengsb PR #509 has 134 commits
+	// 250 commits
+	//   https://github.com/phpbb/phpbb/pull/992
+	//   https://github.com/CesiumGS/cesium/pull/286
+	//   https://github.com/cappuccino/cappuccino/pull/2068
 	pullReq, _, err := gw.GetPullRequest(ctx, prchecklist.ChecklistRef{
-		Owner:  "openengsb",
-		Repo:   "openengsb",
-		Number: 509,
+		Owner:  "phpbb",
+		Repo:   "phpbb",
+		Number: 992,
 	}, true)
 	assert.NoError(t, err)
 	assert.NotNil(t, pullReq)
@@ -65,7 +68,7 @@ func TestGitHub_GetPullRequest_MoreThan100Commits(t *testing.T) {
 
 	// Use REST API to verify the exact commit count
 	restClient := github.NewClient(cli)
-	restPR, _, err := restClient.PullRequests.Get(ctx, "openengsb", "openengsb", 509)
+	restPR, _, err := restClient.PullRequests.Get(ctx, "phpbb", "phpbb", 992)
 	assert.NoError(t, err)
 	assert.NotNil(t, restPR)
 
