@@ -25,6 +25,9 @@ const (
 	cacheDurationPullReqBase = 30 * time.Second
 	cacheDurationPullReqFeat = 5 * time.Minute
 	cacheDurationBlob        = cache.NoExpiration
+	// https://docs.github.com/ja/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api
+	// https://docs.github.com/ja/rest/pulls/pulls?apiVersion=2022-11-28#list-commits-on-a-pull-request
+	apiLimitationMaxNumberOfCommits = 250
 )
 
 var (
@@ -162,7 +165,7 @@ type githubRecentPullRequests struct {
 	}
 }
 
-type githubPullRequsetVars struct {
+type githubPullRequestVars struct {
 	Owner        string `json:"owner"`
 	Repo         string `json:"repo"`
 	Number       int    `json:"number"`
@@ -320,7 +323,7 @@ func (g githubGateway) GetRecentPullRequests(ctx context.Context) (map[string][]
 
 func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {
 	var qr githubPullRequest
-	err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
+	err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequestVars{
 		Owner:  ref.Owner,
 		Repo:   ref.Repo,
 		Number: ref.Number,
@@ -368,7 +371,7 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 	}
 
 	for {
-		if len(pullReq.Commits) >= 250 {
+		if len(pullReq.Commits) >= apiLimitationMaxNumberOfCommits {
 			gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
 			if err != nil {
 				return nil, err
@@ -395,10 +398,10 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 				if err != nil {
 					return nil, err
 				}
-				for _, c := range commits {
+				for _, commit := range commits {
 					allCommits = append(allCommits, prchecklist.Commit{
-						Message: c.GetCommit().GetMessage(),
-						Oid:     c.GetSHA(),
+						Message: commit.GetCommit().GetMessage(),
+						Oid:     commit.GetSHA(),
 					})
 					if len(allCommits) == targetCount {
 						break
@@ -410,6 +413,7 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 				opt.Page = resp.NextPage
 			}
 
+			// order by createdAt asc
 			for i, j := 0, len(allCommits)-1; i < j; i, j = i+1, j-1 {
 				allCommits[i], allCommits[j] = allCommits[j], allCommits[i]
 			}
@@ -422,7 +426,7 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 			break
 		}
 
-		err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
+		err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequestVars{
 			Owner:        ref.Owner,
 			Repo:         ref.Repo,
 			Number:       ref.Number,
