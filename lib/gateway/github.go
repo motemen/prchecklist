@@ -368,6 +368,55 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 	}
 
 	for {
+		if len(pullReq.Commits) >= 250 {
+			gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
+			if err != nil {
+				return nil, err
+			}
+
+			restPR, _, err := gh.PullRequests.Get(ctx, ref.Owner, ref.Repo, ref.Number)
+			if err != nil {
+				return nil, err
+			}
+
+			targetCount := restPR.GetCommits()
+			headSHA := restPR.GetHead().GetSHA()
+
+			opt := &github.CommitsListOptions{
+				SHA: headSHA,
+				ListOptions: github.ListOptions{
+					PerPage: 100,
+				},
+			}
+
+			var allCommits []prchecklist.Commit
+			for len(allCommits) < targetCount {
+				commits, resp, err := gh.Repositories.ListCommits(ctx, ref.Owner, ref.Repo, opt)
+				if err != nil {
+					return nil, err
+				}
+				for _, c := range commits {
+					allCommits = append(allCommits, prchecklist.Commit{
+						Message: c.GetCommit().GetMessage(),
+						Oid:     c.GetSHA(),
+					})
+					if len(allCommits) == targetCount {
+						break
+					}
+				}
+				if resp.NextPage == 0 || len(allCommits) == targetCount {
+					break
+				}
+				opt.Page = resp.NextPage
+			}
+
+			for i, j := 0, len(allCommits)-1; i < j; i, j = i+1, j-1 {
+				allCommits[i], allCommits[j] = allCommits[j], allCommits[i]
+			}
+			pullReq.Commits = allCommits
+			break
+		}
+
 		pageInfo := qr.Repository.PullRequest.Commits.PageInfo
 		if !pageInfo.HasNextPage {
 			break
