@@ -429,7 +429,8 @@ func (g githubGateway) getCommitsByListCommits(ctx context.Context, ref prcheckl
 		opt.Page = resp.NextPage
 	}
 
-	// order by createdAt asc
+	// ListCommits returns commits in reverse order by createdAt,
+	// so that reverse the slice to make it in the same order as GraphQL API returns.
 	for i, j := 0, len(allCommits)-1; i < j; i, j = i+1, j-1 {
 		allCommits[i], allCommits[j] = allCommits[j], allCommits[i]
 	}
