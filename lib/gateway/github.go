@@ -25,6 +25,9 @@ const (
 	cacheDurationPullReqBase = 30 * time.Second
 	cacheDurationPullReqFeat = 5 * time.Minute
 	cacheDurationBlob        = cache.NoExpiration
+	// https://docs.github.com/ja/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api
+	// https://docs.github.com/ja/rest/pulls/pulls?apiVersion=2022-11-28#list-commits-on-a-pull-request
+	apiLimitationMaxNumberOfCommits = 250
 )
 
 var (
@@ -162,7 +165,7 @@ type githubRecentPullRequests struct {
 	}
 }
 
-type githubPullRequsetVars struct {
+type githubPullRequestVars struct {
 	Owner        string `json:"owner"`
 	Repo         string `json:"repo"`
 	Number       int    `json:"number"`
@@ -320,7 +323,7 @@ func (g githubGateway) GetRecentPullRequests(ctx context.Context) (map[string][]
 
 func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.ChecklistRef, isBase bool) (*prchecklist.PullRequest, error) {
 	var qr githubPullRequest
-	err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
+	err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequestVars{
 		Owner:  ref.Owner,
 		Repo:   ref.Repo,
 		Number: ref.Number,
@@ -367,27 +370,72 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 		}
 	}
 
-	for {
-		pageInfo := qr.Repository.PullRequest.Commits.PageInfo
-		if !pageInfo.HasNextPage {
-			break
-		}
+	if qr.Repository.PullRequest.Commits.TotalCount < apiLimitationMaxNumberOfCommits {
+		return pullReq, nil
+	}
 
-		err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequsetVars{
-			Owner:        ref.Owner,
-			Repo:         ref.Repo,
-			Number:       ref.Number,
-			IsBase:       isBase,
-			CommitsAfter: pageInfo.EndCursor,
-		}, &qr)
-		if err != nil {
-			return nil, err
-		}
+	// when PR commits count more than apiLimitationMaxNumberOfCommits, then fetch commits with REST API because of GraphQL API limitation.
+	allCommits, listCommitsErr := g.getCommitsByListCommits(ctx, ref)
+	if listCommitsErr != nil {
+		return pullReq, listCommitsErr
+	}
 
-		pullReq.Commits = append(pullReq.Commits, graphqlResultToCommits(qr)...)
+	if len(allCommits) > 0 {
+		pullReq.Commits = allCommits
 	}
 
 	return pullReq, nil
+}
+
+func (g githubGateway) getCommitsByListCommits(ctx context.Context, ref prchecklist.ChecklistRef) ([]prchecklist.Commit, error) {
+	gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
+	if err != nil {
+		return []prchecklist.Commit{}, err
+	}
+
+	restPR, _, err := gh.PullRequests.Get(ctx, ref.Owner, ref.Repo, ref.Number)
+	if err != nil {
+		return []prchecklist.Commit{}, err
+	}
+
+	targetCount := restPR.GetCommits()
+	headSHA := restPR.GetHead().GetSHA()
+
+	opt := &github.CommitsListOptions{
+		SHA: headSHA,
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+		},
+	}
+
+	var allCommits []prchecklist.Commit
+	for len(allCommits) < targetCount {
+		commits, resp, err := gh.Repositories.ListCommits(ctx, ref.Owner, ref.Repo, opt)
+		if err != nil {
+			return []prchecklist.Commit{}, err
+		}
+		for _, commit := range commits {
+			allCommits = append(allCommits, prchecklist.Commit{
+				Message: commit.GetCommit().GetMessage(),
+				Oid:     commit.GetSHA(),
+			})
+			if len(allCommits) == targetCount {
+				break
+			}
+		}
+		if resp.NextPage == 0 || len(allCommits) == targetCount {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	// ListCommits returns commits in reverse order by createdAt,
+	// so that reverse the slice to make it in the same order as GraphQL API returns.
+	for i, j := 0, len(allCommits)-1; i < j; i, j = i+1, j-1 {
+		allCommits[i], allCommits[j] = allCommits[j], allCommits[i]
+	}
+
+	return allCommits, nil
 }
 
 func (g githubGateway) graphqlEndpoint() string {
