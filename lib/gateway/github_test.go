@@ -35,7 +35,7 @@ func TestGitHub_GetPullRequest(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestGitHub_GetPullRequest_MoreThan100Commits(t *testing.T) {
+func TestGitHub_GetPullRequest_MoreThan250Commits(t *testing.T) {
 	token := os.Getenv("PRCHECKLIST_TEST_GITHUB_TOKEN")
 	if token == "" {
 		t.Skipf("PRCHECKLIST_TEST_GITHUB_TOKEN not set")
@@ -63,8 +63,8 @@ func TestGitHub_GetPullRequest_MoreThan100Commits(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, pullReq)
 
-	// Verify that we got more than 100 commits (pagination working)
-	assert.Greater(t, len(pullReq.Commits), 100, "Expected more than 100 commits to verify pagination is working")
+	// Verify that we got more than 250 commits (pagination working)
+	assert.Greater(t, len(pullReq.Commits), 250, "Expected more than 250 commits to verify pagination is working")
 
 	// Use REST API to verify the exact commit count
 	restClient := github.NewClient(cli)
