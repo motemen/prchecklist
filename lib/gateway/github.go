@@ -370,74 +370,54 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 		}
 	}
 
-	for {
-		if len(pullReq.Commits) >= apiLimitationMaxNumberOfCommits {
-			gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
-			if err != nil {
-				return nil, err
-			}
-
-			restPR, _, err := gh.PullRequests.Get(ctx, ref.Owner, ref.Repo, ref.Number)
-			if err != nil {
-				return nil, err
-			}
-
-			targetCount := restPR.GetCommits()
-			headSHA := restPR.GetHead().GetSHA()
-
-			opt := &github.CommitsListOptions{
-				SHA: headSHA,
-				ListOptions: github.ListOptions{
-					PerPage: 100,
-				},
-			}
-
-			var allCommits []prchecklist.Commit
-			for len(allCommits) < targetCount {
-				commits, resp, err := gh.Repositories.ListCommits(ctx, ref.Owner, ref.Repo, opt)
-				if err != nil {
-					return nil, err
-				}
-				for _, commit := range commits {
-					allCommits = append(allCommits, prchecklist.Commit{
-						Message: commit.GetCommit().GetMessage(),
-						Oid:     commit.GetSHA(),
-					})
-					if len(allCommits) == targetCount {
-						break
-					}
-				}
-				if resp.NextPage == 0 || len(allCommits) == targetCount {
-					break
-				}
-				opt.Page = resp.NextPage
-			}
-
-			// order by createdAt asc
-			for i, j := 0, len(allCommits)-1; i < j; i, j = i+1, j-1 {
-				allCommits[i], allCommits[j] = allCommits[j], allCommits[i]
-			}
-			pullReq.Commits = allCommits
-			break
-		}
-
-		pageInfo := qr.Repository.PullRequest.Commits.PageInfo
-		if !pageInfo.HasNextPage {
-			break
-		}
-
-		err := g.queryGraphQL(ctx, pullRequestQuery, githubPullRequestVars{
-			Owner:        ref.Owner,
-			Repo:         ref.Repo,
-			Number:       ref.Number,
-			IsBase:       isBase,
-			CommitsAfter: pageInfo.EndCursor,
-		}, &qr)
+	// when PR commits count more than apiLimitationMaxNumberOfCommits, then fetch commits with REST API because of GraphQL API limitation.
+	if qr.Repository.PullRequest.Commits.TotalCount >= apiLimitationMaxNumberOfCommits {
+		gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
 		if err != nil {
 			return nil, err
 		}
 
-		pullReq.Commits = append(pullReq.Commits, graphqlResultToCommits(qr)...)
+		restPR, _, err := gh.PullRequests.Get(ctx, ref.Owner, ref.Repo, ref.Number)
+		if err != nil {
+			return nil, err
+		}
+
+		targetCount := restPR.GetCommits()
+		headSHA := restPR.GetHead().GetSHA()
+
+		opt := &github.CommitsListOptions{
+			SHA: headSHA,
+			ListOptions: github.ListOptions{
+				PerPage: 100,
+			},
+		}
+
+		var allCommits []prchecklist.Commit
+		for len(allCommits) < targetCount {
+			commits, resp, err := gh.Repositories.ListCommits(ctx, ref.Owner, ref.Repo, opt)
+			if err != nil {
+				return nil, err
+			}
+			for _, commit := range commits {
+				allCommits = append(allCommits, prchecklist.Commit{
+					Message: commit.GetCommit().GetMessage(),
+					Oid:     commit.GetSHA(),
+				})
+				if len(allCommits) == targetCount {
+					break
+				}
+			}
+			if resp.NextPage == 0 || len(allCommits) == targetCount {
+				break
+			}
+			opt.Page = resp.NextPage
+		}
+
+		// order by createdAt asc
+		for i, j := 0, len(allCommits)-1; i < j; i, j = i+1, j-1 {
+			allCommits[i], allCommits[j] = allCommits[j], allCommits[i]
+		}
+		pullReq.Commits = allCommits
 	}
 
 	return pullReq, nil
