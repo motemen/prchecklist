@@ -90,8 +90,13 @@ jobs:
         PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
 
     - name: Run reg-suit
-      if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
       run: |
+        # Skip if AWS credentials are not configured
+        if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+          echo "Skipping reg-suit: AWS credentials not available"
+          exit 0
+        fi
+        
         # workaround for reg-notify-github-with-api-plugin
         test -n "$GITHUB_HEAD_REF" && git checkout -B "${GITHUB_HEAD_REF#refs/heads}"
 
@@ -106,6 +111,7 @@ jobs:
 
         yarn reg-suit run
       env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         REG_S3_BUCKET_NAME: motemen-reg-suit
         GITHUB_TOKEN: ${{ github.token }}
 
