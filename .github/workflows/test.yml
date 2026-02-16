@@ -61,6 +61,7 @@ jobs:
           ${{ runner.os }}-go-
 
     - uses: aws-actions/configure-aws-credentials@v1
+      continue-on-error: true
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -89,6 +90,7 @@ jobs:
         PRCHECKLIST_TEST_GITHUB_TOKEN: ${{ secrets.PRCHECKLIST_TEST_GITHUB_TOKEN }}
 
     - name: Run reg-suit
+      if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
       run: |
         # workaround for reg-notify-github-with-api-plugin
         test -n "$GITHUB_HEAD_REF" && git checkout -B "${GITHUB_HEAD_REF#refs/heads}"
