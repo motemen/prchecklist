@@ -2,16 +2,16 @@ FROM golang:1.26
 
 WORKDIR /app
 
-# Install Node.js 24.x and Yarn using NodeSource and official Yarn repository
+# Install Node.js 24.x using NodeSource
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN \
     curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    apt-get update && \
-    apt-get install --no-install-recommends -yq nodejs yarn && \
+    apt-get install --no-install-recommends -yq nodejs && \
     apt-get clean && \
     rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+
+# Install Yarn using corepack (included with Node.js 16.10+)
+RUN corepack enable && corepack prepare yarn@stable --activate
 
 COPY go.mod go.sum ./
 RUN go mod download
