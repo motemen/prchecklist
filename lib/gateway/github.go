@@ -28,7 +28,9 @@ const (
 	cacheDurationBlob        = cache.NoExpiration
 	// https://docs.github.com/ja/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api
 	// https://docs.github.com/ja/rest/pulls/pulls?apiVersion=2022-11-28#list-commits-on-a-pull-request
-	apiLimitationMaxNumberOfCommits = 250
+	graphqlApiLimitationMaxNumberOfCommits = 250
+	// https://docs.github.com/en/rest/commits/commits?apiVersion=2026-03-10#compare-two-commits
+	restApiLimitationMaxNumberOfPerPage = 100
 )
 
 var (
@@ -391,7 +393,7 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 		pullReq.Commits = append(pullReq.Commits, graphqlResultToCommits(qr)...)
 	}
 
-	if qr.Repository.PullRequest.Commits.TotalCount < apiLimitationMaxNumberOfCommits {
+	if qr.Repository.PullRequest.Commits.TotalCount < graphqlApiLimitationMaxNumberOfCommits {
 		return pullReq, nil
 	}
 
@@ -430,7 +432,7 @@ func (g githubGateway) getCommitsByCompareCommits(ctx context.Context, ref prche
 	// Pagination loop to fetch all commits
 	for page := 1; ; page++ {
 		listOptions := &github.ListOptions{
-			PerPage: apiLimitationMaxNumberOfCommits,
+			PerPage: restApiLimitationMaxNumberOfPerPage,
 			Page:    page,
 		}
 		compare, _, err := gh.Repositories.CompareCommits(ctx, ref.Owner, ref.Repo, baseSHA, headSHA, listOptions)
@@ -446,7 +448,7 @@ func (g githubGateway) getCommitsByCompareCommits(ctx context.Context, ref prche
 		}
 
 		// If we got fewer commits than PerPage, this is the last page
-		if len(compare.Commits) < apiLimitationMaxNumberOfCommits {
+		if len(compare.Commits) < listOptions.PerPage {
 			break
 		}
 	}
