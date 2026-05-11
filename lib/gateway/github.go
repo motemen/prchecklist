@@ -13,7 +13,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/v31/github"
+	"github.com/google/go-github/v85/github"
 	graphqlquery "github.com/motemen/go-graphql-query"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
@@ -28,7 +28,9 @@ const (
 	cacheDurationBlob        = cache.NoExpiration
 	// https://docs.github.com/ja/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api
 	// https://docs.github.com/ja/rest/pulls/pulls?apiVersion=2022-11-28#list-commits-on-a-pull-request
-	apiLimitationMaxNumberOfCommits = 250
+	graphqlApiLimitationMaxNumberOfCommits = 250
+	// https://docs.github.com/en/rest/commits/commits?apiVersion=2026-03-10#compare-two-commits
+	restApiLimitationMaxNumberOfPerPage = 100
 )
 
 var (
@@ -391,26 +393,27 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 		pullReq.Commits = append(pullReq.Commits, graphqlResultToCommits(qr)...)
 	}
 
-	if qr.Repository.PullRequest.Commits.TotalCount < apiLimitationMaxNumberOfCommits {
+	if qr.Repository.PullRequest.Commits.TotalCount < graphqlApiLimitationMaxNumberOfCommits {
 		return pullReq, nil
 	}
 
 	// when PR commits count more than apiLimitationMaxNumberOfCommits, then fetch commits with REST API because of GraphQL API limitation.
-	allCommits, listCommitsErr := g.getCommitsByListCommits(ctx, ref)
-	if listCommitsErr != nil {
-		return pullReq, listCommitsErr
+	compareCommits, compareCommitsErr := g.getCommitsByCompareCommits(ctx, ref)
+	if compareCommitsErr != nil {
+		return pullReq, compareCommitsErr
 	}
 
-	if len(allCommits) == 0 {
-		log.Printf("warning: getCommitsByListCommits returned empty commits list, fallback to GraphQL API commits list\n")
+	if len(compareCommits) > 0 {
+		pullReq.Commits = compareCommits
 		return pullReq, nil
 	}
 
-	pullReq.Commits = allCommits
+	log.Printf("warning: fallback to GraphQL API commits list\n")
+
 	return pullReq, nil
 }
 
-func (g githubGateway) getCommitsByListCommits(ctx context.Context, ref prchecklist.ChecklistRef) ([]prchecklist.Commit, error) {
+func (g githubGateway) getCommitsByCompareCommits(ctx context.Context, ref prchecklist.ChecklistRef) ([]prchecklist.Commit, error) {
 	gh, err := g.newGitHubClient(prchecklist.ContextClient(ctx))
 	if err != nil {
 		return []prchecklist.Commit{}, err
@@ -421,41 +424,33 @@ func (g githubGateway) getCommitsByListCommits(ctx context.Context, ref prcheckl
 		return []prchecklist.Commit{}, err
 	}
 
-	targetCount := restPR.GetCommits()
+	baseSHA := restPR.GetBase().GetSHA()
 	headSHA := restPR.GetHead().GetSHA()
 
-	opt := &github.CommitsListOptions{
-		SHA: headSHA,
-		ListOptions: github.ListOptions{
-			PerPage: 100,
-		},
-	}
+	allCommits := make([]prchecklist.Commit, 0)
 
-	var allCommits []prchecklist.Commit
-	for len(allCommits) < targetCount {
-		commits, resp, err := gh.Repositories.ListCommits(ctx, ref.Owner, ref.Repo, opt)
+	// Pagination loop to fetch all commits
+	for page := 1; ; page++ {
+		listOptions := &github.ListOptions{
+			PerPage: restApiLimitationMaxNumberOfPerPage,
+			Page:    page,
+		}
+		compare, _, err := gh.Repositories.CompareCommits(ctx, ref.Owner, ref.Repo, baseSHA, headSHA, listOptions)
 		if err != nil {
 			return []prchecklist.Commit{}, err
 		}
-		for _, commit := range commits {
+
+		for _, commit := range compare.Commits {
 			allCommits = append(allCommits, prchecklist.Commit{
 				Message: commit.GetCommit().GetMessage(),
 				Oid:     commit.GetSHA(),
 			})
-			if len(allCommits) == targetCount {
-				break
-			}
 		}
-		if resp.NextPage == 0 || len(allCommits) == targetCount {
+
+		// If we got fewer commits than PerPage, this is the last page
+		if len(compare.Commits) < listOptions.PerPage {
 			break
 		}
-		opt.Page = resp.NextPage
-	}
-
-	// ListCommits returns commits in reverse order by createdAt,
-	// so that reverse the slice to make it in the same order as GraphQL API returns.
-	for i, j := 0, len(allCommits)-1; i < j; i, j = i+1, j-1 {
-		allCommits[i], allCommits[j] = allCommits[j], allCommits[i]
 	}
 
 	return allCommits, nil
@@ -564,7 +559,7 @@ func (g githubGateway) SetRepositoryStatusAs(ctx context.Context, owner, repo, r
 		return err
 	}
 
-	status := &github.RepoStatus{
+	status := github.RepoStatus{
 		State:     &state,
 		Context:   &contextName,
 		TargetURL: &targetURL,
