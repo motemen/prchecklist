@@ -1,3 +1,8 @@
+## [v2.9.0](https://github.com/motemen/prchecklist/compare/v2.8.1...v2.9.0) (2026-05-11)
+
+* Fix gateway get commits by list commits [#238](https://github.com/motemen/prchecklist/pull/238) ([yokazawa](https://github.com/yokazawa))
+* chore(deps): replace dependency npm-run-all with npm-run-all2 5.0.0 [#235](https://github.com/motemen/prchecklist/pull/235) ([renovate[bot]](https://github.com/apps/renovate))
+
 ## [v2.8.1](https://github.com/motemen/prchecklist/compare/v2.8.0...v2.8.1) (2026-03-12)
 
 * upgrade modules [#234](https://github.com/motemen/prchecklist/pull/234) ([motemen](https://github.com/motemen))
