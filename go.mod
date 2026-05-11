@@ -37,6 +37,13 @@ require (
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
+	github.com/lestrrat-go/jspointer v0.0.0-20181205001929-82fadba7561c // indirect
+	github.com/lestrrat-go/jsref v0.0.0-20211028120858-c0bcbb5abf20 // indirect
+	github.com/lestrrat-go/option v1.0.0 // indirect
+	github.com/lestrrat-go/pdebug v0.0.0-20210111095411-35b07dbf089b // indirect
+	github.com/lestrrat-go/structinfo v0.0.0-20210312050401-7f8bd69d6acb // indirect
+	github.com/lestrrat/go-jsschema v0.0.0-20181205002244-5c81c58ffcc3 // indirect
+	github.com/motemen/go-generate-jsschema v0.0.0-20170921015939-f9efddabe75d // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.opencensus.io v0.22.3 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
@@ -53,3 +60,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 )
+
+tool github.com/motemen/go-generate-jsschema/cmd/gojsschemagen

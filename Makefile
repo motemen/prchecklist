@@ -2,7 +2,7 @@ GOBINDATA     = go run github.com/a-urth/go-bindata/go-bindata
 MOCKGEN       = go run github.com/golang/mock/mockgen
 REFLEX        = go run github.com/cespare/reflex
 GOCREDITS     = go run github.com/Songmu/gocredits/cmd/gocredits
-GOJSSCHEMAGEN = go run github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
+GOJSSCHEMAGEN = go tool gojsschemagen
 GOLINT        = go run golang.org/x/lint/golint
 
 WEBPACK          = yarn webpack
