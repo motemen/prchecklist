@@ -1,9 +1,9 @@
-GOBINDATA     = go run github.com/a-urth/go-bindata/go-bindata
-MOCKGEN       = go run github.com/golang/mock/mockgen
-REFLEX        = go run github.com/cespare/reflex
-GOCREDITS     = go run github.com/Songmu/gocredits/cmd/gocredits
+GOBINDATA     = go tool go-bindata
+MOCKGEN       = go tool mockgen
+REFLEX        = go tool reflex
+GOCREDITS     = go tool gocredits
 GOJSSCHEMAGEN = go tool gojsschemagen
-GOLINT        = go run golang.org/x/lint/golint
+GOLINT        = go tool golint
 
 WEBPACK          = yarn webpack
 WEBPACKDEVSERVER = yarn webpack-dev-server
@@ -95,7 +95,7 @@ static/js/bundle.js: static/typescript/api-schema.ts $(bundled_sources)
 	$(WEBPACK) --progress
 
 static/text/licenses:
-	$(GOCREDITS) . > $@
+	$(GOCREDITS) -skip-missing . > $@
 
 static/typescript/api-schema.ts: models.go node_modules/json-schema-to-typescript
 	$(GOJSSCHEMAGEN) $< | ./scripts/json-schema-to-typescript > $@

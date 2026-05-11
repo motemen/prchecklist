@@ -28,8 +28,13 @@ require (
 require (
 	cloud.google.com/go v0.57.0 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/Songmu/gocredits v0.4.0 // indirect
+	github.com/a-urth/go-bindata v0.0.0-20180209162145-df38da164efc // indirect
+	github.com/cespare/reflex v0.3.2 // indirect
+	github.com/creack/pty v1.1.24 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
@@ -37,6 +42,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/lestrrat-go/jspointer v0.0.0-20181205001929-82fadba7561c // indirect
 	github.com/lestrrat-go/jsref v0.0.0-20211028120858-c0bcbb5abf20 // indirect
 	github.com/lestrrat-go/option v1.0.0 // indirect
@@ -44,12 +50,13 @@ require (
 	github.com/lestrrat-go/structinfo v0.0.0-20210312050401-7f8bd69d6acb // indirect
 	github.com/lestrrat/go-jsschema v0.0.0-20181205002244-5c81c58ffcc3 // indirect
 	github.com/motemen/go-generate-jsschema v0.0.0-20170921015939-f9efddabe75d // indirect
+	github.com/ogier/pflag v0.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.opencensus.io v0.22.3 // indirect
-	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
+	golang.org/x/lint v0.0.0-20241112194109-818c5a804067 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
-	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/api v0.22.0 // indirect
@@ -61,4 +68,11 @@ require (
 	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 )
 
-tool github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
+tool (
+	github.com/Songmu/gocredits/cmd/gocredits
+	github.com/a-urth/go-bindata/go-bindata
+	github.com/cespare/reflex
+	github.com/golang/mock/mockgen
+	github.com/motemen/go-generate-jsschema/cmd/gojsschemagen
+	golang.org/x/lint/golint
+)
