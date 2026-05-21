@@ -1,6 +1,6 @@
 module github.com/motemen/prchecklist/v2
 
-go 1.26
+go 1.25.0
 
 require (
 	cloud.google.com/go/datastore v1.1.0
