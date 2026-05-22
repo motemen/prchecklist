@@ -20,7 +20,7 @@ export class ChecklistComponent extends React.Component<
   constructor(props: ChecklistProps) {
     super(props);
 
-    this.state = { loading: false };
+    this.state = { loading: false, showSelfOnly: false };
 
     API.getChecklist(props.checklistRef)
       .then((data) => {
@@ -63,6 +63,12 @@ export class ChecklistComponent extends React.Component<
     if (!checklist) {
       return <section>Loading...</section>;
     }
+    let checklistItems = checklist.Items;
+    if (this.state.showSelfOnly) {
+      checklistItems = checklist.Items.filter((item) => {
+        item.User.ID === this.state.me.ID;
+      }
+    }
 
     const stages = this.checklistStages();
 
@@ -93,6 +99,8 @@ export class ChecklistComponent extends React.Component<
             ) : null
           }
           me={this.state.me}
+          showSelfOnly={this.state.showSelfOnly}
+          handleOnChangeSelfOnly={this.handleOnChangeSelfOnly}
         />
         <h1>
           <span className="title">
@@ -101,7 +109,7 @@ export class ChecklistComponent extends React.Component<
         </h1>
         <div id="checklist-items" className="items">
           <ul>
-            {checklist.Items.map((item) => {
+            {checklistItems.map((item) => {
               return (
                 <li key={`item-${item.Number}`}>
                   <div className="check">
@@ -210,6 +218,10 @@ export class ChecklistComponent extends React.Component<
 
   private handleOnSelectStage = (ev: React.ChangeEvent<HTMLSelectElement>) => {
     this.navigateToStage(ev.target.value);
+  };
+
+  private handleOnChangeSelfOnly = (ev: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ showSelfOnly: ev.target.checked });
   };
 
   private itemIsCheckedByMe(item: API.ChecklistItem): boolean {
