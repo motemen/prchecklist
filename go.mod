@@ -9,7 +9,7 @@ require (
 	github.com/garyburd/redigo v1.6.0
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v85 v85.0.0
-	github.com/gorilla/handlers v1.5.1
+	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.4.1
 	github.com/gorilla/sessions v1.2.0
@@ -33,7 +33,7 @@ require (
 	github.com/cespare/reflex v0.3.2 // indirect
 	github.com/creack/pty v1.1.24 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/felixge/httpsnoop v1.0.1 // indirect
+	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.0 // indirect
