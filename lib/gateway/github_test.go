@@ -42,6 +42,53 @@ func TestGitHub_GetPullRequest(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGitHub_GetPullRequest_ReturnsLabels(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/graphql", func(w http.ResponseWriter, r *http.Request) {
+		res := map[string]interface{}{
+			"data": map[string]interface{}{
+				"repository": map[string]interface{}{
+					"isPrivate": false,
+					"pullRequest": map[string]interface{}{
+						"url":    "http://example.com/2",
+						"title":  "feature",
+						"number": 2,
+						"author": map[string]interface{}{
+							"login": "author",
+						},
+						"assignees": map[string]interface{}{
+							"edges": []interface{}{},
+						},
+						"labels": map[string]interface{}{
+							"nodes": []interface{}{
+								map[string]interface{}{"name": "no-qa"},
+								map[string]interface{}{"name": "bug"},
+							},
+						},
+					},
+				},
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(res)
+	})
+
+	ts := httptest.NewTLSServer(mux)
+	defer ts.Close()
+
+	u, _ := url.Parse(ts.URL)
+	g := githubGateway{
+		domain: u.Host,
+	}
+
+	ctx := context.WithValue(context.Background(), prchecklist.ContextKeyHTTPClient, ts.Client())
+
+	pr, err := g.getPullRequest(ctx, prchecklist.ChecklistRef{Owner: "o", Repo: "r", Number: 2}, false)
+
+	require.NoError(t, err)
+	assert.Equal(t, []string{"no-qa", "bug"}, pr.Labels)
+}
+
 func TestGitHub_GetPullRequest_UsesCompareCommitsWhenTooManyCommits(t *testing.T) {
 	mux := http.NewServeMux()
 

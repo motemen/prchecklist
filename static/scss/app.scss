@@ -89,6 +89,15 @@ nav .logo {
             @extend .uk-text-muted;
             line-height: inherit;
         }
+        > .skipped-mark {
+            @extend .uk-text-small;
+            @extend .uk-text-muted;
+            line-height: inherit;
+            margin: 0 0.5em;
+        }
+        &.skipped .title {
+            @extend .uk-text-muted;
+        }
     }
     .check .checkbox {
         border: 0;

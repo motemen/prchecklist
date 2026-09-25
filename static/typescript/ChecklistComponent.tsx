@@ -103,7 +103,10 @@ export class ChecklistComponent extends React.Component<
           <ul>
             {checklist.Items.map((item) => {
               return (
-                <li key={`item-${item.Number}`}>
+                <li
+                  key={`item-${item.Number}`}
+                  className={item.Skipped ? "skipped" : undefined}
+                >
                   <div className="check">
                     <button
                       className={`checkbox material-icons ${
@@ -120,6 +123,9 @@ export class ChecklistComponent extends React.Component<
                   <div className="title" title={item.Title}>
                     {item.Title}
                   </div>{" "}
+                  {item.Skipped ? (
+                    <div className="skipped-mark">skipped</div>
+                  ) : null}
                   <div className="user">@{item.User.Login}</div>{" "}
                   <div className="checkedby">
                     {item.CheckedBy.map((user) => {
@@ -230,6 +236,8 @@ export class ChecklistComponent extends React.Component<
     const checklist = this.state.checklist;
     if (!checklist) return false;
 
-    return checklist.Items.every((item) => item.CheckedBy.length > 0);
+    return checklist.Items.every(
+      (item) => item.Skipped || item.CheckedBy.length > 0
+    );
   }
 }

@@ -67,6 +67,7 @@ export function getChecklist(
         },
       ],
       ConfigBlobID: "b85e23e129e68bcf5677dd17860fa90d654a95d8",
+      Labels: [],
       Stage: "qa",
       Items: [
         {
@@ -80,6 +81,8 @@ export function getChecklist(
           User: { Login: "motemen" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: [],
+          Skipped: false,
           CheckedBy: [
             {
               ID: 8465,
@@ -99,6 +102,8 @@ export function getChecklist(
           User: { Login: "motemen" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: ["no-qa"],
+          Skipped: true,
           CheckedBy: [],
         },
         {
@@ -112,6 +117,8 @@ export function getChecklist(
           User: { Login: "motemen" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: [],
+          Skipped: false,
           CheckedBy: [
             {
               ID: 8465,
@@ -131,6 +138,8 @@ export function getChecklist(
           User: { Login: "werckerbot" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: [],
+          Skipped: false,
           CheckedBy: [],
         },
         {
@@ -144,11 +153,16 @@ export function getChecklist(
           User: { Login: "motemen" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: [],
+          Skipped: false,
           CheckedBy: [],
         },
       ],
       Config: {
         Stages: ["qa", "production"],
+        Skip: {
+          Labels: [{ Name: "no-qa", Stages: [] }],
+        },
         Notification: {
           Events: {
             OnComplete: ["default"],

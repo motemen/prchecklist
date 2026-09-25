@@ -35,6 +35,12 @@ notification:
       url: https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX
     ch_check:
       url: https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX
+skip:
+  labels:
+    - name: no-check-needed
+    - name: no-production-check-needed
+      stages:
+        - production
 ~~~
 
 This configuration says:
@@ -42,6 +48,7 @@ This configuration says:
 - This repository has two stages (qa, production), which means two checklists are created for each release pull requests,
 - And when a checklist item is checked, a Slack notification is sent,
 - And when a checklist is completed, a Slack notification is sent to another Slack channel.
+- And the items for feature pull requests labeled `no-check-needed` are skipped on all the stages, and the ones labeled `no-production-check-needed` are skipped only on the production stage. Skipped items are not required to be checked for the checklist to be completed.
 
 ## Development
 

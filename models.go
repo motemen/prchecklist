@@ -34,20 +34,20 @@ type Checklist struct {
 	Config *ChecklistConfig
 }
 
-// Completed returns whether all the items are checked by any user.
+// Completed returns whether all the items except skipped ones are checked by any user.
 func (c Checklist) Completed() bool {
 	for _, item := range c.Items {
-		if len(item.CheckedBy) == 0 {
+		if !item.Skipped && len(item.CheckedBy) == 0 {
 			return false
 		}
 	}
 	return true
 }
 
-// CompletedChecksOfUser returns whether all the items of user are checked by any user.
+// CompletedChecksOfUser returns whether all the items of user except skipped ones are checked by any user.
 func (c Checklist) CompletedChecksOfUser(user GitHubUserSimple) bool {
 	for _, item := range c.Items {
-		if len(item.CheckedBy) == 0 && item.User.Login == user.Login {
+		if !item.Skipped && len(item.CheckedBy) == 0 && item.User.Login == user.Login {
 			return false
 		}
 	}
@@ -84,7 +84,11 @@ func (c Checklist) String() string {
 // ChecklistConfig is a configuration object for the repository,
 // which is specified by prchecklist.yml on the top of the repository.
 type ChecklistConfig struct {
-	Stages       []string
+	Stages []string
+	// Skip specifies the items that do not need to be checked.
+	Skip struct {
+		Labels []SkipLabel
+	}
 	Notification struct {
 		Events struct {
 			OnComplete             []string `yaml:"on_complete"`                // channel names
@@ -96,12 +100,55 @@ type ChecklistConfig struct {
 	}
 }
 
+// SkipLabel specifies a label of feature pull requests
+// whose checklist items do not need to be checked.
+// If Stages is empty, the label applies to all the stages.
+type SkipLabel struct {
+	Name   string
+	Stages []string
+}
+
+// appliesTo returns whether the SkipLabel applies to the stage.
+func (l SkipLabel) appliesTo(stage string) bool {
+	if len(l.Stages) == 0 {
+		return true
+	}
+	for _, s := range l.Stages {
+		if s == stage {
+			return true
+		}
+	}
+	return false
+}
+
+// ShouldSkip returns whether a feature pull request labeled with labels
+// does not need to be checked on the stage.
+func (c *ChecklistConfig) ShouldSkip(labels []string, stage string) bool {
+	if c == nil {
+		return false
+	}
+	for _, skipLabel := range c.Skip.Labels {
+		if !skipLabel.appliesTo(stage) {
+			continue
+		}
+		for _, label := range labels {
+			if label == skipLabel.Name {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // ChecklistItem is a checklist item, which belongs to a Checklist
 // and can be checked by multiple GitHubUsers.
 type ChecklistItem struct {
 	// the "feature" pull request corresponds to this item
 	*PullRequest
 	CheckedBy []GitHubUser
+	// Skipped is true when the item does not need to be checked,
+	// according to the Skip configuration.
+	Skipped bool
 }
 
 // Checks is a value object obtained by repository.Repositor.GetChecks,
@@ -173,6 +220,7 @@ type PullRequest struct {
 	Number    int
 	IsPrivate bool
 	User      GitHubUserSimple
+	Labels    []string
 
 	// Filled for "base" pull reqs
 	Commits      []Commit
