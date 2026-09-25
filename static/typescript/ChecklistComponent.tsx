@@ -99,6 +99,12 @@ export class ChecklistComponent extends React.Component<
             <a href={checklist.URL}>#{checklist.Number}</a> {checklist.Title}
           </span>
         </h1>
+        {this.skippedCount() > 0 ? (
+          <p className="skipped-summary">
+            {this.skippedCount()} of {checklist.Items.length} items are skipped
+            and do not need to be checked
+          </p>
+        ) : null}
         <div id="checklist-items" className="items">
           <ul>
             {checklist.Items.map((item) => {
@@ -120,12 +126,17 @@ export class ChecklistComponent extends React.Component<
                   <div className="number">
                     <a href={item.URL}>#{item.Number}</a>
                   </div>{" "}
+                  {item.Skipped ? (
+                    <div
+                      className="skipped-mark"
+                      title={this.skipLabelsOf(item).join(", ")}
+                    >
+                      skipped
+                    </div>
+                  ) : null}
                   <div className="title" title={item.Title}>
                     {item.Title}
                   </div>{" "}
-                  {item.Skipped ? (
-                    <div className="skipped-mark">skipped</div>
-                  ) : null}
                   <div className="user">@{item.User.Login}</div>{" "}
                   <div className="checkedby">
                     {item.CheckedBy.map((user) => {
@@ -230,6 +241,30 @@ export class ChecklistComponent extends React.Component<
     }
 
     return [];
+  }
+
+  private skippedCount(): number {
+    const checklist = this.state.checklist;
+    if (!checklist) return 0;
+
+    return checklist.Items.filter((item) => item.Skipped).length;
+  }
+
+  // skipLabelsOf returns the labels of the item that made it skipped on the stage.
+  private skipLabelsOf(item: API.ChecklistItem): string[] {
+    const checklist = this.state.checklist;
+    const skipLabels =
+      (checklist && checklist.Config && checklist.Config.Skip.Labels) || [];
+    const stage = this.props.checklistRef.Stage;
+    return skipLabels
+      .filter(
+        (label) =>
+          !label.Stages ||
+          label.Stages.length === 0 ||
+          label.Stages.includes(stage)
+      )
+      .map((label) => label.Name)
+      .filter((name) => (item.Labels || []).includes(name));
   }
 
   private completed(): boolean {

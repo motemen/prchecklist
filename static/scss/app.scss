@@ -71,6 +71,11 @@ nav .logo {
     margin-bottom: 10px;
 }
 
+.skipped-summary {
+    @extend .uk-text-small;
+    @extend .uk-text-muted;
+}
+
 #checklist-items {
     li {
         @extend .uk-grid;
@@ -90,13 +95,19 @@ nav .logo {
             line-height: inherit;
         }
         > .skipped-mark {
-            @extend .uk-text-small;
-            @extend .uk-text-muted;
-            line-height: inherit;
-            margin: 0 0.5em;
+            @extend .uk-label;
+            align-self: center;
+            margin-left: 0.5em;
+            background-color: $global-muted-color;
+            text-transform: uppercase;
+            cursor: help;
         }
-        &.skipped .title {
-            @extend .uk-text-muted;
+        &.skipped {
+            background-color: $global-muted-background;
+            box-shadow: inset 4px 0 0 $global-muted-color;
+            .title, .number a {
+                @extend .uk-text-muted;
+            }
         }
     }
     .check .checkbox {
