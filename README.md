@@ -45,7 +45,7 @@ This configuration says:
 
 ## Development
 
-Requires [Go][] and [yarn][].
+Requires [Go][] and [pnpm][].
 
 Register an OAuth application [on GitHub](https://github.com/settings/applications/new), with callback URL configured as `http://localhost:8080/auth/callback`. Set OAuth client ID/secret as `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` environment variables respectively.
 
@@ -57,7 +57,7 @@ Register an OAuth application [on GitHub](https://github.com/settings/applicatio
     $ make # builds "prchecklist" stand-alone binary
 
 [Go]: https://golang.org/
-[yarn]: https://yarnpkg.com/
+[pnpm]: https://pnpm.io/
 
 ## Author
 

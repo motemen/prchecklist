@@ -5,9 +5,9 @@ GOCREDITS     = go tool gocredits
 GOJSSCHEMAGEN = go tool gojsschemagen
 GOLINT        = go tool golint
 
-WEBPACK          = yarn webpack
-WEBPACKDEVSERVER = yarn webpack-dev-server
-ESLINT           = yarn eslint
+WEBPACK          = pnpm exec webpack
+WEBPACKDEVSERVER = pnpm exec webpack-dev-server
+ESLINT           = pnpm exec eslint
 
 VERSION := $(shell git describe --tags HEAD 2> /dev/null)
 
@@ -29,7 +29,7 @@ setup: setup-node
 
 .PHONY: setup-node
 setup-node:
-	yarn install --frozen-lockfile
+	pnpm install --frozen-lockfile
 
 node_modules/%: package.json
 	@$(MAKE) setup-node
@@ -71,12 +71,12 @@ test-go: lib/mocks
 
 .PHONY: test-ts
 test-ts:
-	yarn test --coverage --coverageDirectory=./coverage
+	pnpm test --coverage --coverageDirectory=./coverage
 
 .PHONY: test-integration
 test-integration:
 ifdef PRCHECKLIST_TEST_GITHUB_TOKEN
-	yarn jest -c ./integration/jest.config.js
+	pnpm exec jest -c ./integration/jest.config.js
 else
 	$(warning PRCHECKLIST_TEST_GITHUB_TOKEN is not set)
 endif

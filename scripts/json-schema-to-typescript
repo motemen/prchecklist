@@ -3,7 +3,26 @@
 const fs = require('fs');
 const compile = require('json-schema-to-typescript').compile;
 
-let schema = JSON.parse(fs.readFileSync(0))
+// Reading stdin synchronously can fail with EAGAIN when the writer (e.g. a Go
+// process) puts the shared pipe into non-blocking mode; retry until data is ready.
+function readStdinSync() {
+  const chunks = [];
+  const buf = Buffer.alloc(65536);
+  for (;;) {
+    try {
+      const bytesRead = fs.readSync(0, buf, 0, buf.length);
+      if (bytesRead === 0) break;
+      chunks.push(Buffer.from(buf.subarray(0, bytesRead)));
+    } catch (err) {
+      if (err.code === 'EAGAIN') continue;
+      if (err.code === 'EOF') break;
+      throw err;
+    }
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+let schema = JSON.parse(readStdinSync())
 schema.properties = Object.keys(schema.definitions).map(n => ({ "$ref": "#/definitions/" + n }))
 
 compile(schema, '', { bannerComment: '' })

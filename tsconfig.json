@@ -2,11 +2,13 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2015",
+    "lib": ["dom", "es2020"],
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "strictNullChecks": false,
     "sourceMap": false,
-    "jsx": "react"
+    "jsx": "react",
+    "types": ["jest"]
   }
 }

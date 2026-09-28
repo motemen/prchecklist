@@ -8,7 +8,7 @@ exports[` 1`] = `
 
 exports[` 2`] = `
 <section
-  className=""
+  class=""
 >
   <link
     href="https://fonts.googleapis.com/icon?family=Material+Icons"
@@ -16,7 +16,7 @@ exports[` 2`] = `
   />
   <nav>
     <div
-      className="logo"
+      class="logo"
     >
       <strong>
         <span>
@@ -25,17 +25,14 @@ exports[` 2`] = `
           test-repository
           #
           2
-          
         </span>
       </strong>
     </div>
     <div
-      className="stages"
+      class="stages"
     >
       <select
-        className="stages"
-        onChange={[Function]}
-        value="production"
+        class="stages"
       >
         <option>
           qa
@@ -46,14 +43,14 @@ exports[` 2`] = `
       </select>
     </div>
     <div
-      className="user-signedin"
+      class="user-signedin"
     >
       motemen
     </div>
   </nav>
   <h1>
     <span
-      className="title"
+      class="title"
     >
       <a
         href="https://github.com/motemen/test-repository/pull/2"
@@ -66,23 +63,22 @@ exports[` 2`] = `
     </span>
   </h1>
   <div
-    className="items"
+    class="items"
     id="checklist-items"
   >
     <ul>
       <li>
         <div
-          className="check"
+          class="check"
         >
           <button
-            className="checkbox material-icons checked"
-            onClick={[Function]}
+            class="checkbox material-icons checked"
           >
             thumb_up
           </button>
         </div>
         <div
-          className="number"
+          class="number"
         >
           <a
             href="https://github.com/motemen/test-repository/pull/1"
@@ -93,24 +89,24 @@ exports[` 2`] = `
         </div>
          
         <div
-          className="title"
+          class="title"
           title="feature-1"
         >
           feature-1
         </div>
          
         <div
-          className="user"
+          class="user"
         >
           @
           motemen
         </div>
          
         <div
-          className="checkedby"
+          class="checkedby"
         >
           <span
-            className="user"
+            class="user"
           >
             <img
               alt="motemen"
@@ -121,17 +117,16 @@ exports[` 2`] = `
       </li>
       <li>
         <div
-          className="check"
+          class="check"
         >
           <button
-            className="checkbox material-icons false"
-            onClick={[Function]}
+            class="checkbox material-icons false"
           >
             thumb_up
           </button>
         </div>
         <div
-          className="number"
+          class="number"
         >
           <a
             href="https://github.com/motemen/test-repository/pull/3"
@@ -142,36 +137,35 @@ exports[` 2`] = `
         </div>
          
         <div
-          className="title"
+          class="title"
           title="foo bar baz foo foo foo foo foo foo foof foohof ofhfof"
         >
           foo bar baz foo foo foo foo foo foo foof foohof ofhfof
         </div>
          
         <div
-          className="user"
+          class="user"
         >
           @
           motemen
         </div>
          
         <div
-          className="checkedby"
+          class="checkedby"
         />
       </li>
       <li>
         <div
-          className="check"
+          class="check"
         >
           <button
-            className="checkbox material-icons checked"
-            onClick={[Function]}
+            class="checkbox material-icons checked"
           >
             thumb_up
           </button>
         </div>
         <div
-          className="number"
+          class="number"
         >
           <a
             href="https://github.com/motemen/test-repository/pull/4"
@@ -182,24 +176,24 @@ exports[` 2`] = `
         </div>
          
         <div
-          className="title"
+          class="title"
           title="1403357307"
         >
           1403357307
         </div>
          
         <div
-          className="user"
+          class="user"
         >
           @
           motemen
         </div>
          
         <div
-          className="checkedby"
+          class="checkedby"
         >
           <span
-            className="user"
+            class="user"
           >
             <img
               alt="motemen"
@@ -210,17 +204,16 @@ exports[` 2`] = `
       </li>
       <li>
         <div
-          className="check"
+          class="check"
         >
           <button
-            className="checkbox material-icons false"
-            onClick={[Function]}
+            class="checkbox material-icons false"
           >
             thumb_up
           </button>
         </div>
         <div
-          className="number"
+          class="number"
         >
           <a
             href="https://github.com/motemen/test-repository/pull/7"
@@ -231,36 +224,35 @@ exports[` 2`] = `
         </div>
          
         <div
-          className="title"
+          class="title"
           title="feature-y"
         >
           feature-y
         </div>
          
         <div
-          className="user"
+          class="user"
         >
           @
           werckerbot
         </div>
          
         <div
-          className="checkedby"
+          class="checkedby"
         />
       </li>
       <li>
         <div
-          className="check"
+          class="check"
         >
           <button
-            className="checkbox material-icons false"
-            onClick={[Function]}
+            class="checkbox material-icons false"
           >
             thumb_up
           </button>
         </div>
         <div
-          className="number"
+          class="number"
         >
           <a
             href="https://github.com/motemen/test-repository/pull/33"
@@ -271,21 +263,21 @@ exports[` 2`] = `
         </div>
          
         <div
-          className="title"
+          class="title"
           title="mk-feature"
         >
           mk-feature
         </div>
          
         <div
-          className="user"
+          class="user"
         >
           @
           motemen
         </div>
          
         <div
-          className="checkedby"
+          class="checkedby"
         />
       </li>
     </ul>

@@ -14,7 +14,7 @@ module.exports = {
   module: {
     rules: [
       { test: /\.tsx?$/, use: [ 'ts-loader' ] },
-      { test: /\.scss$/, use: [ 'style-loader', 'css-loader', 'sass-loader' ] },
+      { test: /\.scss$/, use: [ 'style-loader', 'css-loader', { loader: 'sass-loader', options: { sassOptions: { loadPaths: [__dirname] } } } ] },
       { test: /\.css$/,  use: [ 'style-loader', 'css-loader' ] },
     ]
   },

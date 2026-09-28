@@ -11,8 +11,7 @@ export function getChecklist(
     Checklist: {
       URL: "https://github.com/motemen/test-repository/pull/2",
       Title: "Release 2017-10-11 20:18:22 +0900",
-      Body:
-        "Blah blah blah\n- [ ] #1 feature-1 @motemen\n- [ ] #3 foo bar baz foo foo foo foo foo foo foof foohof ofhfof @motemen\n- [ ] #33 mk-feature @motemen\n- [ ] #4 1403357307 @motemen\n- [ ] #7 feature-y @motemen",
+      Body: "Blah blah blah\n- [ ] #1 feature-1 @motemen\n- [ ] #3 foo bar baz foo foo foo foo foo foo foof foohof ofhfof @motemen\n- [ ] #33 mk-feature @motemen\n- [ ] #4 1403357307 @motemen\n- [ ] #7 feature-y @motemen",
       Owner: "motemen",
       Repo: "test-repository",
       Number: 2,
