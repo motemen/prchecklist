@@ -20,7 +20,7 @@ COPY static static
 COPY lib lib
 COPY cmd cmd
 COPY scripts scripts
-RUN make setup
+RUN PUPPETEER_SKIP_DOWNLOAD=true make setup
 RUN make build BUILDFLAGS='-mod=readonly'
 
 EXPOSE 8080
