@@ -72,6 +72,83 @@ stages:
 	)
 }
 
+func TestUseCase_GetChecklist_SkipsItemsByLabel(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	repo := repository_mock.NewMockCoreRepository(ctrl)
+	github := NewMockGitHubGateway(ctrl)
+
+	clRef := prchecklist.ChecklistRef{Owner: "test", Repo: "test", Number: 1, Stage: "qa"}
+
+	github.EXPECT().GetPullRequest(
+		gomock.Any(),
+		clRef,
+		true,
+	).Return(&prchecklist.PullRequest{
+		Owner: "test",
+		Repo:  "test",
+		Commits: []prchecklist.Commit{
+			{Message: "Merge pull request #2 "},
+			{Message: "Merge pull request #3 "},
+			{Message: "Merge pull request #4 "},
+		},
+		ConfigBlobID: "DUMMY-CONFIG-BLOB-ID",
+	}, context.Background(), nil)
+
+	github.EXPECT().GetPullRequest(
+		gomock.Any(),
+		prchecklist.ChecklistRef{Owner: "test", Repo: "test", Number: 2},
+		false,
+	).Return(&prchecklist.PullRequest{Number: 2, Labels: []string{"no-qa"}}, context.Background(), nil)
+
+	github.EXPECT().GetPullRequest(
+		gomock.Any(),
+		prchecklist.ChecklistRef{Owner: "test", Repo: "test", Number: 3},
+		false,
+	).Return(&prchecklist.PullRequest{Number: 3, Labels: []string{"no-production-check"}}, context.Background(), nil)
+
+	github.EXPECT().GetPullRequest(
+		gomock.Any(),
+		prchecklist.ChecklistRef{Owner: "test", Repo: "test", Number: 4},
+		false,
+	).Return(&prchecklist.PullRequest{Number: 4}, context.Background(), nil)
+
+	github.EXPECT().GetBlob(
+		gomock.Any(),
+		clRef,
+		"DUMMY-CONFIG-BLOB-ID",
+	).Return(
+		[]byte(`---
+stages:
+  - qa
+  - production
+skip:
+  labels:
+    - name: no-qa
+    - name: no-production-check
+      stages:
+        - production
+`),
+		nil,
+	)
+
+	repo.EXPECT().GetChecks(gomock.Any(), clRef).
+		Return(prchecklist.Checks{}, nil)
+
+	repo.EXPECT().GetUsers(gomock.Any(), gomock.Len(0)).
+		Return(map[int]prchecklist.GitHubUser{}, nil)
+
+	app := New(github, repo)
+
+	cl, err := app.GetChecklist(context.Background(), clRef)
+
+	assert.NoError(t, err)
+	assert.True(t, cl.Item(2).Skipped, "#2 has a label to skip on all stages")
+	assert.False(t, cl.Item(3).Skipped, "#3 has a label to skip only on production")
+	assert.False(t, cl.Item(4).Skipped, "#4 has no labels")
+}
+
 func setupMocks(clRef prchecklist.ChecklistRef, github *MockGitHubGateway, repo *repository_mock.MockCoreRepository) {
 	github.EXPECT().GetPullRequest(
 		gomock.Any(),

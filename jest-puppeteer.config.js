@@ -10,7 +10,7 @@ module.exports = {
     slowMo: debug ? 100 : 0,
   },
   server: {
-    command: "PRCHECKLIST_DATASOURCE=bolt:$(mktemp) yarn run serve",
+    command: "PRCHECKLIST_DATASOURCE=bolt:$(mktemp) pnpm run serve",
     port: 8080,
     launchTimeout: 30 * 1000,
   },

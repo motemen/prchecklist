@@ -18,6 +18,7 @@ export interface Checklist {
   ConfigBlobID: string;
   IsPrivate: boolean;
   Items: ChecklistItem[];
+  Labels: string[];
   Number: number;
   Owner: string;
   Repo: string;
@@ -51,6 +52,21 @@ export interface ChecklistConfig {
       OnRemove: string[];
     };
   };
+  /**
+   * Skip specifies the items that do not need to be checked.
+   */
+  Skip: {
+    Labels: SkipLabel[];
+  };
+  Stages: string[];
+}
+/**
+ * SkipLabel specifies a label of feature pull requests
+ * whose checklist items do not need to be checked.
+ * If Stages is empty, the label applies to all the stages.
+ */
+export interface SkipLabel {
+  Name: string;
   Stages: string[];
 }
 /**
@@ -66,9 +82,15 @@ export interface ChecklistItem {
   Commits: Commit[];
   ConfigBlobID: string;
   IsPrivate: boolean;
+  Labels: string[];
   Number: number;
   Owner: string;
   Repo: string;
+  /**
+   * Skipped is true when the item does not need to be checked,
+   * according to the Skip configuration.
+   */
+  Skipped: boolean;
   Title: string;
   URL: string;
   User: GitHubUserSimple;
@@ -134,6 +156,7 @@ export interface PullRequest {
   Commits: Commit[];
   ConfigBlobID: string;
   IsPrivate: boolean;
+  Labels: string[];
   Number: number;
   Owner: string;
   Repo: string;

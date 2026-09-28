@@ -110,6 +110,11 @@ type githubPullRequest struct {
 					}
 				}
 			} `graphql:"(first: 1)"`
+			Labels struct {
+				Nodes []struct {
+					Name string
+				}
+			} `graphql:"(first: 100)"`
 			BaseRef struct {
 				Name string
 			}
@@ -359,6 +364,10 @@ func (g githubGateway) getPullRequest(ctx context.Context, ref prchecklist.Check
 		User: prchecklist.GitHubUserSimple{
 			Login: qr.Repository.PullRequest.Author.Login,
 		},
+	}
+
+	for _, n := range qr.Repository.PullRequest.Labels.Nodes {
+		pullReq.Labels = append(pullReq.Labels, n.Name)
 	}
 
 	// prefer assignee

@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
 import * as API from "./api";
 import { ChecklistComponent } from "./ChecklistComponent";
@@ -13,7 +13,7 @@ const appVersion = document
   ?.getAttribute("content");
 
 if (/^\/([^/]+)\/([^/]+)\/pull\/(\d+)$/.test(location.pathname)) {
-  ReactDOM.render(
+  createRoot(document.querySelector("#main")!).render(
     <EnvContext.Provider value={{ appVersion }}>
       <ChecklistComponent
         checklistRef={{
@@ -23,13 +23,12 @@ if (/^\/([^/]+)\/([^/]+)\/pull\/(\d+)$/.test(location.pathname)) {
           Stage: "",
         }}
       />
-    </EnvContext.Provider>,
-    document.querySelector("#main")
+    </EnvContext.Provider>
   );
 } else if (
   /^\/([^/]+)\/([^/]+)\/pull\/(\d+)\/([^/]+)$/.test(location.pathname)
 ) {
-  ReactDOM.render(
+  createRoot(document.querySelector("#main")!).render(
     <EnvContext.Provider value={{ appVersion }}>
       <ChecklistComponent
         checklistRef={{
@@ -39,12 +38,11 @@ if (/^\/([^/]+)\/([^/]+)\/pull\/(\d+)$/.test(location.pathname)) {
           Stage: RegExp.$4,
         }}
       />
-    </EnvContext.Provider>,
-    document.querySelector("#main")
+    </EnvContext.Provider>
   );
 } else {
   API.getMe().then((data) => {
-    ReactDOM.render(
+    createRoot(document.querySelector("#main")!).render(
       <EnvContext.Provider value={{ appVersion }}>
         <section>
           <NavComponent me={data.Me} />
@@ -69,8 +67,7 @@ if (/^\/([^/]+)\/([^/]+)\/pull\/(\d+)$/.test(location.pathname)) {
             []
           )}
         </section>
-      </EnvContext.Provider>,
-      document.querySelector("#main")
+      </EnvContext.Provider>
     );
   });
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -54,8 +55,14 @@ func TestWeb_Static(t *testing.T) {
 	s := httptest.NewServer(web.Handler())
 	defer s.Close()
 
-	_, err := httputil.Successful(http.Get(s.URL + "/js/bundle.js"))
+	resp, err := httputil.Successful(http.Get(s.URL + "/js/bundle.js"))
 	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	// Drain the body; otherwise the server can block writing large assets
+	// while nothing reads the client-side connection.
+	if _, err := io.Copy(io.Discard, resp.Body); err != nil {
 		t.Fatal(err)
 	}
 }

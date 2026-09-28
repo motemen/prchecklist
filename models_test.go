@@ -75,6 +75,62 @@ func TestChecklist_CompletedChecksOfUser(t *testing.T) {
 
 }
 
+func TestChecklist_Completed_IgnoresSkippedItems(t *testing.T) {
+	checklist := makeStubChecklist()
+	checklist.Items[0].CheckedBy = append(checklist.Items[0].CheckedBy, GitHubUser{})
+	checklist.Items[1].Skipped = true
+	checklist.Items[2].Skipped = true
+
+	if expected, got := true, checklist.Completed(); got != expected {
+		t.Errorf("expected %v but got %v", expected, got)
+	}
+}
+
+func TestChecklist_CompletedChecksOfUser_IgnoresSkippedItems(t *testing.T) {
+	checklist := makeStubChecklist()
+	checklist.Items[0].CheckedBy = append(checklist.Items[0].CheckedBy, GitHubUser{})
+	checklist.Items[1].Skipped = true
+
+	if expected, got := true, checklist.CompletedChecksOfUser(GitHubUserSimple{Login: "foo"}); got != expected {
+		t.Errorf("expected %v but got %v", expected, got)
+	}
+	if expected, got := false, checklist.CompletedChecksOfUser(GitHubUserSimple{Login: "bar"}); got != expected {
+		t.Errorf("expected %v but got %v", expected, got)
+	}
+}
+
+func TestChecklistConfig_ShouldSkip(t *testing.T) {
+	config := &ChecklistConfig{}
+	config.Skip.Labels = []SkipLabel{
+		{Name: "no-qa"},
+		{Name: "no-production-check", Stages: []string{"production"}},
+	}
+
+	tests := []struct {
+		name     string
+		config   *ChecklistConfig
+		labels   []string
+		stage    string
+		expected bool
+	}{
+		{"label without stages applies to qa", config, []string{"no-qa"}, "qa", true},
+		{"label without stages applies to production", config, []string{"no-qa"}, "production", true},
+		{"label with stages applies to listed stage", config, []string{"no-production-check"}, "production", true},
+		{"label with stages does not apply to unlisted stage", config, []string{"no-production-check"}, "qa", false},
+		{"unconfigured label", config, []string{"bug"}, "qa", false},
+		{"no labels", config, nil, "qa", false},
+		{"nil config", nil, []string{"no-qa"}, "qa", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.config.ShouldSkip(tt.labels, tt.stage); got != tt.expected {
+				t.Errorf("expected %v but got %v", tt.expected, got)
+			}
+		})
+	}
+}
+
 func TestChecklist_Item(t *testing.T) {
 	checklist := makeStubChecklist()
 

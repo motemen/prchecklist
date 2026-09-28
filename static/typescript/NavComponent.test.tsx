@@ -1,11 +1,10 @@
 import * as React from "react";
-import * as renderer from "react-test-renderer";
+import { render } from "@testing-library/react";
 
 import { NavComponent } from "./NavComponent";
 
-test("", async () => {
-  const component = renderer.create(<NavComponent />);
+test("", () => {
+  const { container } = render(<NavComponent />);
 
-  const tree = component.toJSON();
-  expect(tree).toMatchSnapshot();
+  expect(container.firstChild).toMatchSnapshot();
 });

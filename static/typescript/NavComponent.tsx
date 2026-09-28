@@ -3,8 +3,8 @@ import * as API from "./api";
 import { EnvContext } from "./EnvContext";
 
 interface NavProps {
-  logo?: JSX.Element;
-  stages?: JSX.Element;
+  logo?: React.ReactNode;
+  stages?: React.ReactNode;
   me?: API.GitHubUser;
 }
 

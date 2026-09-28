@@ -3,17 +3,17 @@
 exports[` 1`] = `
 <nav>
   <div
-    className="logo"
+    class="logo"
   >
     <strong>
       prchecklist HEAD
     </strong>
   </div>
   <div
-    className="stages"
+    class="stages"
   />
   <a
-    className="user-signedin"
+    class="user-signedin"
     href="/auth?return_to=%2F"
   >
     Login

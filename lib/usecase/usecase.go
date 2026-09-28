@@ -109,6 +109,10 @@ func (u Usecase) GetChecklist(ctx context.Context, clRef prchecklist.ChecklistRe
 		}
 	}
 
+	for _, item := range checklist.Items {
+		item.Skipped = checklist.Config.ShouldSkip(item.Labels, checklist.Stage)
+	}
+
 	// may move to before fetching feature pullreqs
 	// for early return
 	checks, err := u.coreRepo.GetChecks(ctx, clRef)

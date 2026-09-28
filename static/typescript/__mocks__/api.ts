@@ -11,8 +11,7 @@ export function getChecklist(
     Checklist: {
       URL: "https://github.com/motemen/test-repository/pull/2",
       Title: "Release 2017-10-11 20:18:22 +0900",
-      Body:
-        "Blah blah blah\n- [ ] #1 feature-1 @motemen\n- [ ] #3 foo bar baz foo foo foo foo foo foo foof foohof ofhfof @motemen\n- [ ] #33 mk-feature @motemen\n- [ ] #4 1403357307 @motemen\n- [ ] #7 feature-y @motemen",
+      Body: "Blah blah blah\n- [ ] #1 feature-1 @motemen\n- [ ] #3 foo bar baz foo foo foo foo foo foo foof foohof ofhfof @motemen\n- [ ] #33 mk-feature @motemen\n- [ ] #4 1403357307 @motemen\n- [ ] #7 feature-y @motemen",
       Owner: "motemen",
       Repo: "test-repository",
       Number: 2,
@@ -68,6 +67,7 @@ export function getChecklist(
         },
       ],
       ConfigBlobID: "b85e23e129e68bcf5677dd17860fa90d654a95d8",
+      Labels: [],
       Stage: "qa",
       Items: [
         {
@@ -81,6 +81,8 @@ export function getChecklist(
           User: { Login: "motemen" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: [],
+          Skipped: false,
           CheckedBy: [
             {
               ID: 8465,
@@ -100,6 +102,8 @@ export function getChecklist(
           User: { Login: "motemen" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: ["no-qa"],
+          Skipped: true,
           CheckedBy: [],
         },
         {
@@ -113,6 +117,8 @@ export function getChecklist(
           User: { Login: "motemen" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: [],
+          Skipped: false,
           CheckedBy: [
             {
               ID: 8465,
@@ -132,6 +138,8 @@ export function getChecklist(
           User: { Login: "werckerbot" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: [],
+          Skipped: false,
           CheckedBy: [],
         },
         {
@@ -145,11 +153,16 @@ export function getChecklist(
           User: { Login: "motemen" },
           Commits: [],
           ConfigBlobID: "",
+          Labels: [],
+          Skipped: false,
           CheckedBy: [],
         },
       ],
       Config: {
         Stages: ["qa", "production"],
+        Skip: {
+          Labels: [{ Name: "no-qa", Stages: [] }],
+        },
         Notification: {
           Events: {
             OnComplete: ["default"],
